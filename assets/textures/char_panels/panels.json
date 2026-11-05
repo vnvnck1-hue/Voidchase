@@ -1,0 +1,71 @@
+{
+ "src_w": 1386,
+ "src_h": 518,
+ "pad": 10,
+ "panels": [
+  {
+   "file": "panel_01.png",
+   "cx": 368.0,
+   "cy": 190.5,
+   "w": 300,
+   "h": 229,
+   "empty": false
+  },
+  {
+   "file": "panel_02.png",
+   "cx": 661.0,
+   "cy": 161.5,
+   "w": 300,
+   "h": 229,
+   "empty": false
+  },
+  {
+   "file": "panel_03.png",
+   "cx": 953.0,
+   "cy": 132.5,
+   "w": 300,
+   "h": 229,
+   "empty": false
+  },
+  {
+   "file": "panel_04.png",
+   "cx": 1246.0,
+   "cy": 104.5,
+   "w": 300,
+   "h": 229,
+   "empty": true
+  },
+  {
+   "file": "panel_05.png",
+   "cx": 140.0,
+   "cy": 413.5,
+   "w": 300,
+   "h": 229,
+   "empty": true
+  },
+  {
+   "file": "panel_06.png",
+   "cx": 433.0,
+   "cy": 384.5,
+   "w": 300,
+   "h": 229,
+   "empty": false
+  },
+  {
+   "file": "panel_07.png",
+   "cx": 725.0,
+   "cy": 355.5,
+   "w": 300,
+   "h": 229,
+   "empty": false
+  },
+  {
+   "file": "panel_08.png",
+   "cx": 1018.0,
+   "cy": 327.5,
+   "w": 300,
+   "h": 229,
+   "empty": false
+  }
+ ]
+}

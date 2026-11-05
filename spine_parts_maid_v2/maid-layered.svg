@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="1325" height="1790" viewBox="0 0 1325 1790" stroke-linecap="round" stroke-linejoin="round">
+  <title>Maid character · restored animation artwork</title>
+  <defs>
+    <path id="aperture-left" d="M245 546 Q323 535 406 519 C428 535 446 569 438 608 C430 649 402 668 370 672 C307 679 256 630 245 546Z"/>
+    <path id="aperture-right" d="M500 504 Q593 485 684 465 C700 489 705 530 693 564 C680 602 655 625 617 628 C555 636 509 585 500 504Z"/>
+    <clipPath id="eye-left-clip"><use href="#aperture-left"/></clipPath>
+    <clipPath id="eye-right-clip"><use href="#aperture-right"/></clipPath>
+    <clipPath id="iris-left-fill">
+      <path d="M327 534 C328 507 350 488 375 490 C407 490 435 523 439 565 C444 608 426 641 395 647 C365 654 339 632 329 596 C324 577 323 554 327 534Z"/>
+    </clipPath>
+    <clipPath id="iris-right-fill">
+      <path d="M566 478 C571 452 590 435 617 433 C651 431 682 461 689 498 C698 539 684 580 652 595 C621 610 588 595 574 566 C560 540 559 503 566 478Z"/>
+    </clipPath>
+    <linearGradient id="iris-purple" x1="0" x2="0.16" y1="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#5845a7"/>
+      <stop offset="1" stop-color="#866fdb"/>
+    </linearGradient>
+    <linearGradient id="iris-pink" x1="0" x2="0.15" y1="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#fc8cc4"/>
+      <stop offset="1" stop-color="#f760a4"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" x2="0.24" y1="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#fff1b7"/>
+      <stop offset="1" stop-color="#e9b46d"/>
+    </linearGradient>
+  </defs>
+
+  <g id="hair_ponytail" data-part="head" data-pivot="826 190" inkscape:groupmode="layer" inkscape:label="Hair · ponytail">
+    <path d="M683 159 C720 84 827 20 892 13 C931 8 957 23 990 58 C1021 91 1044 126 1060 155 C1096 198 1143 234 1183 259 C1147 269 1118 264 1097 258 C1126 325 1132 415 1142 489 C1153 565 1210 604 1314 591 C1286 670 1207 720 1105 705 C1088 766 1086 827 1125 865 C1148 887 1176 896 1208 897 C1165 960 1073 1001 997 973 C936 956 892 925 859 869 C815 914 771 916 735 896 C714 883 712 867 715 853 C754 828 777 793 775 751 C771 710 749 689 715 670 C679 648 674 605 695 571 C729 518 731 464 697 414 C663 363 635 324 633 271 C631 225 649 187 683 159Z" fill="#272635" stroke="#0b0a11" stroke-width="15"/>
+    <path d="M685 163 C726 82 829 18 893 16 C932 14 956 37 984 65 C1011 94 1041 133 1055 159 C1086 198 1129 234 1173 256 Q1137 262 1098 251 C1057 242 1034 231 1012 224 C1042 244 1069 253 1094 260 C1123 335 1129 414 1137 488 C1146 565 1207 604 1306 598 C1287 651 1242 683 1197 697 C1131 720 1069 673 1041 615 C1019 568 1011 516 1000 460 C985 380 961 320 918 263 C873 204 807 176 742 174 Q708 175 682 192Z" fill="#454052"/>
+    <path d="M740 144 C772 102 809 75 844 64 C813 67 774 91 748 119 Q735 135 740 144Z" fill="#2b2b3a"/>
+    <path d="M906 174 C952 226 975 288 994 350 C972 288 941 233 906 181 Q899 172 906 174Z M1042 620 C1074 658 1110 686 1150 704 C1106 702 1067 679 1039 627 Q1035 617 1042 620Z" fill="#2e2c3b"/>
+    <path d="M903 315 Q939 323 973 348 Q939 337 905 326Z" fill="#171724"/>
+    <path d="M950 591 C952 652 941 693 919 734 M887 819 C903 864 945 908 1016 949" fill="none" stroke="#11111a" stroke-width="6"/>
+  </g>
+
+  <g id="hand_screen_left" data-part="arm_l" data-pivot="129 1060" inkscape:groupmode="layer" inkscape:label="Left · glove">
+    <path d="M110 1053 Q125 1039 146 1043 Q173 1049 184 1069 L197 1087 Q224 1090 232 1115 L225 1166 Q217 1176 198 1180 L169 1191 Q151 1200 136 1182 Q110 1155 101 1121 Q94 1088 110 1053Z" fill="#303342" stroke="#0c0b13" stroke-width="12"/>
+    <path d="M108 1097 Q134 1104 158 1126 L165 1154 Q147 1156 134 1148 Q116 1134 108 1097Z" fill="#222332"/>
+    <path d="M133 1062 Q148 1062 166 1079 L191 1109 Q175 1129 155 1134 Q136 1114 113 1106 Q119 1077 133 1062Z" fill="#3b3d50" stroke="#181824" stroke-width="6"/>
+    <path d="M176 1131 Q191 1132 206 1126 M178 1150 Q194 1150 207 1141" fill="none" stroke="#171724" stroke-width="5"/>
+  </g>
+
+  <g id="upper_arm_screen_left" data-part="arm_l" data-pivot="345 836" inkscape:groupmode="layer" inkscape:label="Left · upper arm">
+    <path d="M311 848 Q338 850 347 873 Q347 895 313 914 L263 937 Q234 943 216 918 Q203 900 215 885 Q223 873 248 866Z" fill="#e7c4a8" stroke="#0b0a11" stroke-width="12"/>
+    <path d="M303 855 Q318 862 326 882 L292 901 L223 888 L255 872Z" fill="#b88d90"/>
+    <path d="M317 781 C344 772 387 780 418 794 C425 818 407 846 385 874 Q365 898 336 919 Q319 909 310 885 Q300 865 292 847 Q307 828 309 803 Q311 789 317 781Z" fill="#303342" stroke="#0b0a11" stroke-width="14"/>
+    <path d="M320 789 Q338 808 340 851 Q342 879 359 901 L336 911 Q317 890 311 871 L299 847 Q314 822 320 789Z" fill="#222330"/>
+    <path d="M325 805 Q333 838 340 870" fill="none" stroke="#161723" stroke-width="7"/>
+  </g>
+
+  <g id="forearm_cuff_screen_left" data-part="arm_l" data-pivot="223 903" inkscape:groupmode="layer" inkscape:label="Left · forearm and cuff">
+    <path d="M215 905 Q228 884 247 886 Q267 888 274 908 Q276 926 258 943 L239 953 L208 937 Q201 919 215 905Z" fill="#e7c4a8"/>
+    <path d="M156 878 C191 878 237 906 271 928 Q287 941 291 959 C263 990 229 1031 192 1062 Q162 1075 135 1072 Q100 1052 79 1026 Q114 946 156 878Z" fill="#fffefe" stroke="#0b0a11" stroke-width="15"/>
+    <path d="M90 1024 Q111 1027 131 1045 Q162 1058 203 1046 L185 1064 Q158 1073 137 1066 Q111 1050 90 1024Z" fill="#b8b8d2"/>
+    <path d="M98 1036 Q118 1055 140 1065 Q167 1067 188 1057" fill="none" stroke="#34334c" stroke-width="6"/>
+    <path d="M222 937 Q209 948 199 972" fill="none" stroke="#a4a2b6" stroke-width="4"/>
+  </g>
+
+  <g id="shin_screen_left" data-part="leg_l" data-pivot="320 1428" inkscape:groupmode="layer" inkscape:label="Left · shin">
+    <path d="M253 1412 C253 1388 280 1375 316 1374 C351 1373 380 1384 384 1409 C385 1474 393 1582 412 1684 Q420 1714 406 1734 Q374 1754 338 1727 C313 1676 290 1607 269 1534 Q254 1482 253 1412Z" fill="#21222e" stroke="#0b0a11" stroke-width="13"/>
+    <path d="M256 1426 Q271 1436 277 1486 C286 1564 313 1661 344 1714 L333 1713 C308 1653 290 1601 269 1534 Q257 1486 256 1426Z" fill="#1b1c29"/>
+  </g>
+
+  <g id="shoe_screen_left" data-part="leg_l" data-pivot="372 1682" inkscape:groupmode="layer" inkscape:label="Left · shoe">
+    <path d="M320 1698 C323 1685 341 1675 356 1673 C382 1669 406 1680 416 1693 Q424 1716 429 1744 Q378 1759 331 1745 Q323 1723 320 1698Z" fill="#292c3d" stroke="#0b0a11" stroke-width="13"/>
+    <path d="M324 1701 C343 1718 388 1726 417 1703 L424 1736 Q384 1748 335 1738Z" fill="#252735"/>
+    <path d="M326 1702 Q362 1730 417 1703" fill="none" stroke="#151621" stroke-width="5"/>
+    <path d="M359 1710 Q364 1705 376 1709 Q372 1714 360 1714Z" fill="#484a5d"/>
+  </g>
+
+  <g id="thigh_screen_left" data-part="leg_l" data-pivot="301 1174" inkscape:groupmode="layer" inkscape:label="Left · thigh">
+    <path d="M220 1162 C215 1130 246 1107 288 1106 Q342 1102 366 1139 C375 1157 373 1193 377 1234 L377 1279 Q307 1285 236 1275 Q225 1219 220 1162Z" fill="#b78d8f"/>
+    <path d="M235 1270 Q308 1282 376 1275 L385 1442 Q321 1447 254 1442 L245 1354Z" fill="#21222e"/>
+    <path d="M244 1291 Q256 1354 263 1401 L272 1443 L255 1442 L246 1354Z" fill="#1b1c29"/>
+    <path d="M236 1272 Q305 1284 376 1276" fill="none" stroke="#0b0a11" stroke-width="10"/>
+    <path d="M253 1440 L245 1356 C239 1317 225 1234 220 1162 C215 1130 246 1107 288 1106 Q342 1102 366 1139 C375 1157 373 1193 377 1234 L384 1439" fill="none" stroke="#0b0a11" stroke-width="13" stroke-linecap="butt"/>
+  </g>
+
+  <g id="shin_screen_right" data-part="leg_r" data-pivot="638 1406" inkscape:groupmode="layer" inkscape:label="Right · shin">
+    <path d="M539 1409 C530 1387 553 1366 592 1351 C618 1341 645 1345 668 1369 C701 1403 727 1446 744 1493 C759 1547 768 1615 769 1707 Q771 1736 749 1748 Q712 1762 661 1741 C643 1679 625 1621 606 1562 Q580 1477 539 1409Z" fill="#303343" stroke="#0b0a11" stroke-width="13"/>
+    <path d="M546 1412 Q582 1450 601 1509 C629 1595 654 1687 669 1736 L661 1740 C638 1670 623 1615 605 1561 Q581 1488 546 1412Z" fill="#292c3c"/>
+  </g>
+
+  <g id="shoe_screen_right" data-part="leg_r" data-pivot="706 1712" inkscape:groupmode="layer" inkscape:label="Right · shoe">
+    <path d="M655 1718 C667 1704 691 1702 711 1710 Q729 1717 744 1735 Q756 1724 770 1718 Q773 1750 770 1775 Q724 1786 671 1779 Q664 1750 655 1718Z" fill="#2d3040" stroke="#0b0a11" stroke-width="13"/>
+    <path d="M663 1730 C687 1752 721 1762 744 1739 Q758 1733 768 1728 L766 1772 Q726 1784 675 1777Z" fill="#272a38"/>
+    <path d="M664 1734 Q704 1769 745 1736" fill="none" stroke="#171824" stroke-width="5"/>
+    <path d="M682 1743 Q687 1738 695 1745 Q692 1751 684 1749Z" fill="#565b72"/>
+  </g>
+
+  <g id="thigh_screen_right" data-part="leg_r" data-pivot="519 1173" inkscape:groupmode="layer" inkscape:label="Right · thigh">
+    <path d="M425 1175 C411 1144 435 1117 478 1105 C519 1093 551 1101 569 1125 Q590 1155 603 1192 Q619 1235 628 1269 Q562 1285 496 1294 C471 1247 442 1206 425 1175Z" fill="#e7c4a8"/>
+    <path d="M425 1175 C413 1146 440 1115 478 1105 C520 1093 551 1102 569 1125 Q600 1172 622 1251 Q532 1231 451 1211Z" fill="#b78d8f"/>
+    <path d="M495 1292 Q562 1282 628 1264 Q643 1310 657 1330 Q677 1366 693 1402 Q619 1405 557 1445Z" fill="#303343"/>
+    <path d="M494 1292 Q562 1279 627 1265" fill="none" stroke="#0b0a11" stroke-width="10"/>
+    <path d="M556 1442 Q521 1354 486 1289 C464 1247 440 1203 425 1175 C411 1144 435 1117 478 1105 C519 1093 551 1101 569 1125 Q590 1155 603 1192 C624 1248 638 1295 657 1330 Q674 1360 692 1399" fill="none" stroke="#0b0a11" stroke-width="13" stroke-linecap="butt"/>
+  </g>
+
+  <g id="dress_bodice" data-part="body" data-pivot="413 975" inkscape:groupmode="layer" inkscape:label="Dress · bodice">
+    <path d="M375 807 Q410 773 469 765 Q524 756 583 766 Q619 770 645 792 C624 835 592 878 570 929 Q555 964 558 994 Q466 1030 337 1006 Q306 1001 273 990 Q283 946 311 917 Q354 872 375 807Z" fill="#303342" stroke="#0b0a11" stroke-width="15"/>
+    <path d="M319 918 Q438 943 558 910 Q544 962 551 991 Q433 1023 283 985 Q299 942 319 918Z" fill="#252634"/>
+    <path d="M353 925 Q330 948 318 981 M514 924 Q493 954 493 990" fill="none" stroke="#1a1b27" stroke-width="8"/>
+    <path d="M430 802 Q461 782 503 777 L572 773 Q544 810 514 852 L488 901 Q436 890 389 897 Q409 859 430 802Z" fill="#303342" stroke="#101019" stroke-width="11"/>
+    <path d="M477 811 L522 819 Q513 838 499 852 L438 847 Q452 824 477 811Z" fill="url(#gold)" stroke="#0b0a11" stroke-width="9"/>
+    <path d="M474 823 Q479 830 491 830 M481 830 L475 838" fill="none" stroke="#634830" stroke-width="4"/>
+    <path d="M412 824 L474 778 L443 826 Q426 840 409 847Z" fill="#eeeef7" stroke="#0b0a11" stroke-width="7"/>
+  </g>
+
+  <g id="dress_skirt" data-part="body" data-pivot="395 979" inkscape:groupmode="layer" inkscape:label="Dress · skirt">
+    <path d="M262 967 C336 978 463 975 535 953 C568 987 588 1027 620 1067 Q648 1104 672 1152 C597 1166 502 1194 383 1195 C275 1199 187 1161 112 1103 C155 1054 205 1011 262 967Z" fill="#303343" stroke="#0b0a11" stroke-width="15"/>
+    <path d="M265 988 Q300 993 327 997 Q274 1071 250 1174 Q226 1168 207 1157 Q229 1067 265 988Z M483 994 L533 978 Q598 1066 634 1162 L585 1174 Q545 1068 483 994Z" fill="#232433"/>
+    <path d="M381 1007 Q370 1062 374 1126" fill="none" stroke="#242534" stroke-width="7"/>
+    <path d="M265 947 Q395 979 532 948 Q547 963 552 986 Q427 1021 247 989 Q247 970 265 947Z" fill="#3a3b4d" stroke="#0b0a11" stroke-width="11"/>
+    <path d="M275 959 Q397 984 532 956" fill="none" stroke="#4b4c60" stroke-width="5"/>
+  </g>
+
+  <g id="neck_collar" data-part="body" data-pivot="550 757" inkscape:groupmode="layer" inkscape:label="Dress · neck and collar">
+    <path d="M500 758 Q504 730 539 718 Q571 706 600 723 Q588 750 610 775 Q562 793 497 802Z" fill="#b38489" stroke="#0b0a11" stroke-width="12"/>
+    <path d="M503 771 Q555 765 596 747 Q597 767 619 778 Q567 798 499 808Z" fill="#caccE6" stroke="#0b0a11" stroke-width="10"/>
+    <path d="M506 778 Q551 769 588 759 Q578 774 563 781 Q532 793 507 794Z" fill="#dde0f2"/>
+  </g>
+
+  <g id="apron" data-part="body" data-pivot="390 965" inkscape:groupmode="layer" inkscape:label="Dress · apron">
+    <path d="M520 974 Q549 941 588 940 Q613 943 614 962 Q601 992 574 1013 L546 1000Z" fill="#f9f9ff" stroke="#0b0a11" stroke-width="11"/>
+    <path d="M536 972 Q573 949 603 956 Q597 976 575 990Z" fill="#c6c8e0"/>
+    <path d="M578 985 Q594 991 609 1004 L593 1028 Q575 1014 561 1009Z" fill="#d7d9ee" stroke="#0b0a11" stroke-width="10"/>
+    <path d="M319 904 Q300 902 282 915 L279 941 Q305 934 333 926Z" fill="#fdfdff" stroke="#0b0a11" stroke-width="11"/>
+    <path d="M473 787 C438 813 420 845 403 873 Q390 892 382 903 C412 896 454 898 489 905 C521 855 552 803 605 775 Q621 769 637 786 C589 807 560 853 531 911 Q515 943 516 965 C538 968 560 974 579 986 Q591 995 585 1012 C578 1026 569 1033 566 1046 C568 1063 563 1076 554 1088 Q548 1111 533 1122 Q526 1141 513 1148 Q504 1169 485 1176 Q465 1191 441 1192 Q428 1203 403 1205 Q387 1211 374 1208 C349 1224 316 1222 294 1204 Q266 1205 251 1187 Q236 1179 237 1158 Q218 1148 215 1125 Q209 1102 220 1082 Q209 1069 213 1047 Q221 1015 240 988 Q241 964 258 950 Q269 939 296 937 C322 939 342 913 359 889 Q376 866 391 831 Q412 798 450 787 Q463 783 473 787Z" fill="#fffefe" stroke="#0b0a11" stroke-width="14"/>
+    <path d="M318 947 Q343 981 374 998 Q447 1010 516 980 Q467 1011 369 1008 Q350 1009 344 995Z" fill="#d5d5e3"/>
+    <path d="M278 969 Q248 1005 246 1057 C238 1129 267 1159 331 1165 Q422 1169 502 1090 Q518 1072 535 1047" fill="none" stroke="#8b8b9f" stroke-width="7"/>
+    <path d="M280 1000 Q297 992 319 990 M316 950 Q331 975 348 995 M325 948 Q384 964 457 974" fill="none" stroke="#85869a" stroke-width="6"/>
+  </g>
+
+  <g id="hand_screen_right" data-part="arm_r" data-pivot="839 1312" inkscape:groupmode="layer" inkscape:label="Right · glove">
+    <path d="M770 1341 Q783 1315 828 1296 Q874 1271 899 1287 Q920 1297 941 1321 L966 1311 Q983 1324 1002 1356 Q998 1393 982 1428 Q928 1445 857 1437 L861 1464 Q826 1478 799 1485 Q787 1444 774 1413 Q760 1382 770 1341Z" fill="#303343" stroke="#0b0a11" stroke-width="14"/>
+    <path d="M780 1389 Q802 1417 833 1425 Q834 1454 847 1465 L802 1478 Q791 1448 783 1416Z" fill="#252635"/>
+    <path d="M775 1341 Q808 1311 854 1297 Q880 1284 902 1291 Q928 1311 954 1355 Q918 1402 836 1428 Q798 1424 769 1399Z" fill="#3a3c50" stroke="#12131c" stroke-width="10"/>
+    <path d="M818 1358 L901 1329 L930 1366 Q899 1388 852 1404Z" fill="url(#gold)" stroke="#0b0a11" stroke-width="9"/>
+    <path d="M861 1359 L874 1385" fill="none" stroke="#6b4a31" stroke-width="5"/>
+    <path d="M838 1427 Q858 1419 879 1418 M967 1327 Q974 1335 975 1344" fill="none" stroke="#131420" stroke-width="7"/>
+  </g>
+
+  <g id="forearm_cuff_screen_right" data-part="arm_r" data-pivot="700 1001" inkscape:groupmode="layer" inkscape:label="Right · forearm and cuff">
+    <path d="M651 995 Q649 975 676 965 Q708 952 731 973 Q745 1005 758 1037 L802 1127 Q767 1159 709 1175 C691 1142 664 1051 651 995Z" fill="#e7c4a8" stroke="#0b0a11" stroke-width="13"/>
+    <path d="M642 1228 C673 1180 733 1147 795 1120 Q833 1107 883 1100 Q941 1069 971 1064 C980 1083 993 1178 997 1248 Q992 1260 964 1273 Q938 1275 920 1284 Q885 1283 850 1300 Q792 1325 733 1365 Q710 1366 681 1320 Q657 1278 642 1228Z" fill="#fffefe" stroke="#0b0a11" stroke-width="15"/>
+    <path d="M649 1230 Q660 1216 685 1198 C724 1235 765 1271 813 1316 Q773 1336 733 1359 Q714 1358 687 1315Z" fill="#b6b7d2"/>
+    <path d="M746 1355 Q822 1313 851 1301 Q892 1281 923 1283 Q955 1273 977 1262 Q956 1284 929 1294 C883 1285 840 1313 788 1346 Q766 1360 746 1355Z" fill="#9899ba"/>
+    <path d="M914 1145 Q924 1170 932 1209 Q921 1192 912 1150Z" fill="#8e8da5"/>
+  </g>
+
+  <g id="upper_arm_screen_right" data-part="arm_r" data-pivot="638 849" inkscape:groupmode="layer" inkscape:label="Right · upper arm">
+    <path d="M640 935 Q668 917 714 929 Q729 959 735 990 Q735 998 726 1004 Q695 1003 667 1014 Q662 1015 660 1006 Q647 983 640 935Z" fill="#e7c4a8"/>
+    <path d="M654 1004 Q646 980 640 935 M714 929 Q729 960 739 992" fill="none" stroke="#0b0a11" stroke-width="13" stroke-linecap="butt"/>
+    <path d="M616 790 Q643 774 671 780 C708 791 740 811 761 853 Q761 871 727 898 L733 930 Q689 951 624 959 Q612 933 568 918 L524 950 C532 911 548 863 572 826 Q590 800 616 790Z" fill="#303343" stroke="#0b0a11" stroke-width="14"/>
+    <path d="M554 874 Q560 902 574 918 L529 943 Q540 905 554 874Z M576 917 Q598 911 625 933 Q657 934 727 920 L728 927 Q684 946 627 953 Q615 931 576 917Z" fill="#252636"/>
+    <path d="M625 920 Q644 890 683 871 M636 911 Q662 897 707 892" fill="none" stroke="#191a26" stroke-width="7"/>
+  </g>
+
+  <g id="hair_side_screen_left" data-part="head" data-pivot="222 414" inkscape:groupmode="layer" inkscape:label="Hair · left side lock">
+    <path d="M198 421 C219 380 262 368 285 394 C312 425 305 474 290 524 C270 585 264 657 294 708 Q305 728 318 738 C281 793 232 833 198 843 Q192 746 189 656 C186 568 175 490 198 421Z" fill="#262736" stroke="#0b0a11" stroke-width="14"/>
+    <path d="M198 451 C212 419 242 399 269 402 Q280 427 267 465 C245 519 230 594 232 649 Q234 715 247 788 Q214 822 202 831 C203 754 195 692 193 616 C192 551 186 491 198 451Z" fill="#2d2e3e"/>
+    <path d="M224 440 C201 513 204 587 209 643" fill="none" stroke="#1a1a27" stroke-width="5"/>
+  </g>
+
+  <g id="face_base" data-part="head" data-pivot="550 757" inkscape:groupmode="layer" inkscape:label="Face · skin">
+    <path d="M224 508 C224 410 248 343 302 299 C358 253 425 238 489 242 C565 246 628 277 672 330 C716 381 736 458 740 532 C762 559 792 567 822 565 C846 558 874 563 884 582 Q888 601 869 624 Q849 648 814 652 L763 648 C724 694 666 726 600 744 C533 764 468 767 410 761 C353 758 300 739 280 712 C250 671 228 591 224 508Z" fill="#e6c4a9" stroke="#0b0a11" stroke-width="14"/>
+    <path d="M235 515 C241 419 274 349 319 313 C369 273 429 259 490 263 C562 267 621 294 660 338 Q701 381 715 445 C655 390 596 360 527 356 C437 350 365 382 303 444 Q270 479 235 515Z" fill="#c99a92"/>
+    <path d="M283 688 C298 666 329 658 353 673 C375 688 390 716 379 748 Q321 744 291 715 Q283 705 283 688Z M606 648 C605 621 626 600 651 602 C679 604 691 622 691 648 Q689 684 656 705 C627 698 607 678 606 648Z" fill="#f5a784"/>
+    <path d="M825 587 C843 574 866 579 870 590 Q870 610 846 627 Q830 638 813 638 Q823 615 825 587Z" fill="#bf8f8c"/>
+    <path d="M838 593 Q852 586 859 594" fill="none" stroke="#a57577" stroke-width="4"/>
+  </g>
+
+  <g id="eye_white_screen_left" data-part="face" data-pivot="337 578" inkscape:groupmode="layer" inkscape:label="Face · left sclera">
+    <use href="#aperture-left" fill="#fefeff"/>
+    <path d="M245 540 L411 511 Q429 530 441 555 L247 601Z" fill="#cac9e1" clip-path="url(#eye-left-clip)"/>
+    <use href="#aperture-left" fill="none" stroke="#392d70" stroke-width="10"/>
+  </g>
+
+  <g id="eye_white_screen_right" data-part="face" data-pivot="604 537" inkscape:groupmode="layer" inkscape:label="Face · right sclera">
+    <use href="#aperture-right" fill="#fefeff"/>
+    <path d="M494 499 L690 457 Q703 484 706 519 L498 566Z" fill="#cac9e1" clip-path="url(#eye-right-clip)"/>
+    <use href="#aperture-right" fill="none" stroke="#392d70" stroke-width="10"/>
+  </g>
+
+  <g clip-path="url(#eye-left-clip)">
+    <g id="iris_screen_left" data-part="face" data-pivot="383 575" data-clip="aperture-left" inkscape:groupmode="layer" inkscape:label="Face · left iris">
+      <path d="M327 534 C328 507 350 488 375 490 C407 490 435 523 439 565 C444 608 426 641 395 647 C365 654 339 632 329 596 C324 577 323 554 327 534Z" fill="url(#iris-purple)"/>
+      <path d="M315 596 Q375 580 445 568 L451 664 L320 669Z" fill="url(#iris-pink)" clip-path="url(#iris-left-fill)"/>
+      <path d="M327 534 C328 507 350 488 375 490 C407 490 435 523 439 565 C444 608 426 641 395 647 C365 654 339 632 329 596 C324 577 323 554 327 534Z" fill="none" stroke="#382669" stroke-width="9"/>
+      <ellipse cx="394" cy="563" rx="10.8" ry="27" transform="rotate(-8 394 563)" fill="#0c0813"/>
+      <ellipse cx="319" cy="565" rx="18" ry="11" transform="rotate(-5 319 565)" fill="#fefeff"/>
+    </g>
+  </g>
+
+  <g clip-path="url(#eye-right-clip)">
+    <g id="iris_screen_right" data-part="face" data-pivot="623 527" data-clip="aperture-right" inkscape:groupmode="layer" inkscape:label="Face · right iris">
+      <path d="M566 478 C571 452 590 435 617 433 C651 431 682 461 689 498 C698 539 684 580 652 595 C621 610 588 595 574 566 C560 540 559 503 566 478Z" fill="url(#iris-purple)"/>
+      <path d="M554 552 Q614 536 701 523 L702 614 L557 616Z" fill="url(#iris-pink)" clip-path="url(#iris-right-fill)"/>
+      <path d="M566 478 C571 452 590 435 617 433 C651 431 682 461 689 498 C698 539 684 580 652 595 C621 610 588 595 574 566 C560 540 559 503 566 478Z" fill="none" stroke="#382669" stroke-width="9"/>
+      <ellipse cx="641" cy="513" rx="10.7" ry="27" transform="rotate(-8 641 513)" fill="#0c0813"/>
+    </g>
+  </g>
+
+  <g id="upper_lid_screen_left" data-part="face" data-pivot="336 543" inkscape:groupmode="layer" inkscape:label="Face · left upper lid">
+    <path d="M229 543 C287 535 362 520 408 514 Q420 514 427 523 C367 532 295 546 240 556 Q233 555 229 543Z" fill="#0a0911"/>
+    <path d="M284 504 Q322 490 358 490 Q367 491 373 496 C342 499 314 501 284 504Z" fill="#a47483"/>
+  </g>
+
+  <g id="upper_lid_screen_right" data-part="face" data-pivot="594 491" inkscape:groupmode="layer" inkscape:label="Face · right upper lid">
+    <path d="M488 499 C546 491 623 470 684 458 Q702 454 710 466 C637 478 557 499 500 512 Q491 510 488 499Z" fill="#0a0911"/>
+    <path d="M515 466 Q563 447 605 447 Q614 447 619 449 C590 456 549 461 515 466Z" fill="#9c6e80"/>
+  </g>
+
+  <g id="brow_screen_left" data-part="face" data-pivot="307 448" inkscape:groupmode="layer" inkscape:label="Face · left brow">
+    <path d="M245 448 C282 440 319 436 353 443 Q366 445 368 450 C324 447 284 454 247 454 Q241 453 245 448Z" fill="#15121d"/>
+  </g>
+
+  <g id="brow_screen_right" data-part="face" data-pivot="600 395" inkscape:groupmode="layer" inkscape:label="Face · right brow">
+    <path d="M509 411 C552 389 605 378 659 387 Q671 389 671 394 Q666 399 658 396 C609 390 555 402 513 417 Q507 418 509 411Z" fill="#15121d"/>
+  </g>
+
+  <g id="mouth" data-part="face" data-pivot="506 716" inkscape:groupmode="layer" inkscape:label="Face · mouth">
+    <path d="M498 713 Q505 712 515 718 Q519 722 513 722 Q502 721 497 716 Q496 714 498 713Z" fill="#936d70"/>
+  </g>
+
+  <g id="hair_side_screen_right" data-part="head" data-pivot="708 409" inkscape:groupmode="layer" inkscape:label="Hair · right side lock">
+    <path d="M679 352 C707 329 755 348 789 381 C827 416 849 474 848 531 C847 617 820 682 769 737 Q715 791 655 819 C672 768 682 714 688 659 C695 597 696 526 687 480 C678 428 661 378 679 352Z" fill="#433f50" stroke="#0b0a11" stroke-width="14"/>
+    <path d="M699 510 C721 568 712 664 685 735 C696 711 721 690 731 637 Q747 554 718 516Z" fill="#302d40"/>
+    <path d="M725 548 Q743 594 715 675" fill="none" stroke="#312e40" stroke-width="6"/>
+  </g>
+
+  <g id="hair_fringe" data-part="head" data-pivot="486 274" inkscape:groupmode="layer" inkscape:label="Hair · fringe">
+    <path d="M185 350 C249 265 317 198 411 166 C510 134 605 152 687 195 C752 227 810 288 853 371 C901 433 966 502 1040 547 C994 572 952 584 902 583 C831 582 766 562 722 512 Q704 486 693 457 C643 434 598 391 560 332 C533 412 514 494 482 612 C412 563 363 480 323 384 C276 469 224 550 178 622 Q161 643 135 647 Q65 659 9 646 C79 603 109 531 140 459 Q160 400 185 350Z" fill="#454052" stroke="#0b0a11" stroke-width="15"/>
+    <path d="M20 641 Q106 590 155 543 Q158 590 175 620 Q154 640 130 641 Q63 651 20 641Z" fill="#292939"/>
+    <path d="M178 619 C153 559 149 483 173 405 C157 476 158 554 183 607Z" fill="#1b1a28"/>
+    <path d="M323 384 Q321 360 316 334 Q330 360 333 403Z M559 340 Q554 329 566 303 Q568 322 559 340Z" fill="#191824"/>
+    <path d="M367 355 C360 410 387 501 416 535 C393 491 378 423 374 360 Q371 350 367 355Z M422 475 C421 497 430 515 437 525 Q442 529 438 520 Q429 497 428 480 Q427 472 422 475Z" fill="#302e3f"/>
+    <path d="M756 493 Q758 517 786 541 C766 531 752 515 748 498 Q745 482 751 488Z" fill="#312e3e"/>
+    <path d="M744 344 C800 411 867 462 948 501 Q974 514 1006 529 C929 506 864 475 798 416 Q765 385 744 350 Q740 343 744 344Z" fill="#6b617b"/>
+    <path d="M528 238 Q535 233 531 241 C508 274 494 317 477 371 Q484 324 498 286 C484 305 471 321 463 317 Q448 307 462 292 Q468 284 483 289 Q495 272 504 275 Q516 249 528 238Z" fill="#6e647d"/>
+    <path d="M255 302 Q268 297 263 308 Q251 325 244 324 Q238 323 243 316Z M356 315 Q366 310 369 323 Q368 331 363 329 Q357 327 356 315Z M376 314 Q377 299 384 305 Q392 310 392 334 Q392 344 385 342 Q378 337 376 314Z M691 279 C700 275 716 290 719 301 Q721 313 710 309 Q701 303 697 307 Q689 308 684 300 Q681 294 690 292 Q685 283 691 279Z" fill="#b5b3ba"/>
+  </g>
+
+  <g id="headpiece" data-part="head" data-pivot="488 180" inkscape:groupmode="layer" inkscape:label="Hair · headpiece">
+    <path d="M152 307 C174 226 221 172 308 149 C315 154 322 149 323 140 C370 95 469 62 529 92 Q540 96 545 103 C612 77 693 96 746 134 Q770 148 774 173 Q777 190 792 189 C842 193 889 265 911 356 Q887 371 844 375 C794 313 740 255 666 223 C590 191 514 184 446 194 C339 209 258 269 193 348 Q168 331 152 307Z" fill="#fffefe" stroke="#0b0a11" stroke-width="15"/>
+    <path d="M325 198 Q337 211 344 228 L340 232 Q326 217 322 200Z M535 132 Q542 159 543 186 L537 187 Q533 161 532 135Z M759 214 Q753 234 731 255 L725 253 Q739 231 759 214Z" fill="#bcbcd2"/>
+    <path d="M169 298 Q183 311 197 319 C244 270 280 241 322 221 Q261 270 194 336 Q181 325 169 298Z" fill="#eeedf5"/>
+  </g>
+
+  <g id="fx_heart" data-part="fx" data-pivot="72 370" inkscape:groupmode="layer" inkscape:label="Effect · heart">
+    <path d="M56 393 C51 377 44 356 48 342 C50 328 58 326 65 335 Q73 344 75 363 C88 358 98 357 107 364 Q116 370 102 378 C91 384 71 389 56 393Z" fill="#ed5c99" stroke="#262334" stroke-width="8"/>
+    <path d="M53 343 Q57 336 61 345 Q64 352 65 361" fill="none" stroke="#ff94c0" stroke-width="4"/>
+  </g>
+</svg>

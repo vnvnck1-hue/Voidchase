@@ -1,0 +1,881 @@
+{
+  "version": 2,
+  "canvas": {
+    "height": 1790,
+    "width": 1325
+  },
+  "coordinates": "Pixels, origin at top left, x increases right and y increases down",
+  "drawOrder": "Back to front",
+  "clipping": {
+    "aperture-left": [
+      [
+        245,
+        546
+      ],
+      [
+        260.4,
+        543.8
+      ],
+      [
+        275.9,
+        541.5
+      ],
+      [
+        291.3,
+        539.1
+      ],
+      [
+        306.7,
+        536.6
+      ],
+      [
+        322.1,
+        534.1
+      ],
+      [
+        337.5,
+        531.5
+      ],
+      [
+        352.9,
+        528.8
+      ],
+      [
+        368.2,
+        526.1
+      ],
+      [
+        383.6,
+        523.2
+      ],
+      [
+        398.9,
+        520.4
+      ],
+      [
+        412.5,
+        524.3
+      ],
+      [
+        422.8,
+        536
+      ],
+      [
+        430.8,
+        549.4
+      ],
+      [
+        436.4,
+        563.9
+      ],
+      [
+        439.4,
+        579.2
+      ],
+      [
+        439.8,
+        594.8
+      ],
+      [
+        437.5,
+        610.2
+      ],
+      [
+        433,
+        625.1
+      ],
+      [
+        425.9,
+        639
+      ],
+      [
+        416.1,
+        651.1
+      ],
+      [
+        403.8,
+        660.6
+      ],
+      [
+        389.7,
+        667.3
+      ],
+      [
+        374.6,
+        671.3
+      ],
+      [
+        359.1,
+        672.7
+      ],
+      [
+        343.6,
+        671.6
+      ],
+      [
+        328.4,
+        668.1
+      ],
+      [
+        314,
+        662.1
+      ],
+      [
+        300.7,
+        654
+      ],
+      [
+        288.8,
+        643.9
+      ],
+      [
+        278.4,
+        632.3
+      ],
+      [
+        269.5,
+        619.5
+      ],
+      [
+        262,
+        605.8
+      ],
+      [
+        255.9,
+        591.4
+      ],
+      [
+        251.2,
+        576.6
+      ],
+      [
+        247.5,
+        561.4
+      ]
+    ],
+    "aperture-right": [
+      [
+        500,
+        504
+      ],
+      [
+        516,
+        500.7
+      ],
+      [
+        532,
+        497.4
+      ],
+      [
+        548,
+        494.1
+      ],
+      [
+        564,
+        490.8
+      ],
+      [
+        580,
+        487.4
+      ],
+      [
+        596,
+        484
+      ],
+      [
+        611.9,
+        480.6
+      ],
+      [
+        627.9,
+        477.2
+      ],
+      [
+        643.9,
+        473.7
+      ],
+      [
+        659.9,
+        470.3
+      ],
+      [
+        675.8,
+        466.8
+      ],
+      [
+        688,
+        471.9
+      ],
+      [
+        694.2,
+        487
+      ],
+      [
+        698,
+        502.8
+      ],
+      [
+        699.6,
+        519.1
+      ],
+      [
+        699.1,
+        535.4
+      ],
+      [
+        696.6,
+        551.5
+      ],
+      [
+        691.9,
+        567.2
+      ],
+      [
+        685.3,
+        582.1
+      ],
+      [
+        676.6,
+        595.9
+      ],
+      [
+        665.6,
+        608
+      ],
+      [
+        652.4,
+        617.6
+      ],
+      [
+        637.5,
+        624.1
+      ],
+      [
+        621.5,
+        627.5
+      ],
+      [
+        605.3,
+        628.8
+      ],
+      [
+        589,
+        627.5
+      ],
+      [
+        573.3,
+        623.2
+      ],
+      [
+        558.7,
+        615.9
+      ],
+      [
+        545.6,
+        606.2
+      ],
+      [
+        534.3,
+        594.4
+      ],
+      [
+        524.8,
+        581.1
+      ],
+      [
+        516.9,
+        566.8
+      ],
+      [
+        510.7,
+        551.7
+      ],
+      [
+        505.9,
+        536.1
+      ],
+      [
+        502.4,
+        520.2
+      ]
+    ]
+  },
+  "sprites": [
+    {
+      "name": "hair_ponytail",
+      "group": "head",
+      "x": 619,
+      "y": -2,
+      "width": 709,
+      "height": 998,
+      "pivot": [
+        826,
+        190
+      ],
+      "pivotInSprite": [
+        207,
+        192
+      ],
+      "drawOrder": 0,
+      "clipTo": ""
+    },
+    {
+      "name": "hand_screen_left",
+      "group": "arm_l",
+      "x": 86,
+      "y": 1030,
+      "width": 158,
+      "height": 177,
+      "pivot": [
+        129,
+        1060
+      ],
+      "pivotInSprite": [
+        43,
+        30
+      ],
+      "drawOrder": 1,
+      "clipTo": ""
+    },
+    {
+      "name": "upper_arm_screen_left",
+      "group": "arm_l",
+      "x": 197,
+      "y": 764,
+      "width": 236,
+      "height": 187,
+      "pivot": [
+        345,
+        836
+      ],
+      "pivotInSprite": [
+        148,
+        72
+      ],
+      "drawOrder": 2,
+      "clipTo": ""
+    },
+    {
+      "name": "forearm_cuff_screen_left",
+      "group": "arm_l",
+      "x": 65,
+      "y": 864,
+      "width": 240,
+      "height": 222,
+      "pivot": [
+        223,
+        903
+      ],
+      "pivotInSprite": [
+        158,
+        39
+      ],
+      "drawOrder": 3,
+      "clipTo": ""
+    },
+    {
+      "name": "shin_screen_left",
+      "group": "leg_l",
+      "x": 240,
+      "y": 1361,
+      "width": 188,
+      "height": 394,
+      "pivot": [
+        320,
+        1428
+      ],
+      "pivotInSprite": [
+        80,
+        67
+      ],
+      "drawOrder": 4,
+      "clipTo": ""
+    },
+    {
+      "name": "shoe_screen_left",
+      "group": "leg_l",
+      "x": 307,
+      "y": 1659,
+      "width": 135,
+      "height": 106,
+      "pivot": [
+        372,
+        1682
+      ],
+      "pivotInSprite": [
+        65,
+        23
+      ],
+      "drawOrder": 5,
+      "clipTo": ""
+    },
+    {
+      "name": "thigh_screen_left",
+      "group": "leg_l",
+      "x": 207,
+      "y": 1093,
+      "width": 190,
+      "height": 358,
+      "pivot": [
+        301,
+        1174
+      ],
+      "pivotInSprite": [
+        94,
+        81
+      ],
+      "drawOrder": 6,
+      "clipTo": ""
+    },
+    {
+      "name": "shin_screen_right",
+      "group": "leg_r",
+      "x": 524,
+      "y": 1333,
+      "width": 258,
+      "height": 433,
+      "pivot": [
+        638,
+        1406
+      ],
+      "pivotInSprite": [
+        114,
+        73
+      ],
+      "drawOrder": 7,
+      "clipTo": ""
+    },
+    {
+      "name": "shoe_screen_right",
+      "group": "leg_r",
+      "x": 642,
+      "y": 1692,
+      "width": 142,
+      "height": 103,
+      "pivot": [
+        706,
+        1712
+      ],
+      "pivotInSprite": [
+        64,
+        20
+      ],
+      "drawOrder": 8,
+      "clipTo": ""
+    },
+    {
+      "name": "thigh_screen_right",
+      "group": "leg_r",
+      "x": 408,
+      "y": 1087,
+      "width": 296,
+      "height": 364,
+      "pivot": [
+        519,
+        1173
+      ],
+      "pivotInSprite": [
+        111,
+        86
+      ],
+      "drawOrder": 9,
+      "clipTo": ""
+    },
+    {
+      "name": "dress_bodice",
+      "group": "body",
+      "x": 259,
+      "y": 747,
+      "width": 400,
+      "height": 282,
+      "pivot": [
+        413,
+        975
+      ],
+      "pivotInSprite": [
+        154,
+        228
+      ],
+      "drawOrder": 10,
+      "clipTo": ""
+    },
+    {
+      "name": "dress_skirt",
+      "group": "body",
+      "x": 98,
+      "y": 935,
+      "width": 588,
+      "height": 274,
+      "pivot": [
+        395,
+        979
+      ],
+      "pivotInSprite": [
+        297,
+        44
+      ],
+      "drawOrder": 11,
+      "clipTo": ""
+    },
+    {
+      "name": "neck_collar",
+      "group": "body",
+      "x": 485,
+      "y": 701,
+      "width": 145,
+      "height": 118,
+      "pivot": [
+        550,
+        757
+      ],
+      "pivotInSprite": [
+        65,
+        56
+      ],
+      "drawOrder": 12,
+      "clipTo": ""
+    },
+    {
+      "name": "apron",
+      "group": "body",
+      "x": 198,
+      "y": 760,
+      "width": 452,
+      "height": 472,
+      "pivot": [
+        390,
+        965
+      ],
+      "pivotInSprite": [
+        192,
+        205
+      ],
+      "drawOrder": 13,
+      "clipTo": ""
+    },
+    {
+      "name": "hand_screen_right",
+      "group": "arm_r",
+      "x": 752,
+      "y": 1267,
+      "width": 263,
+      "height": 231,
+      "pivot": [
+        839,
+        1312
+      ],
+      "pivotInSprite": [
+        87,
+        45
+      ],
+      "drawOrder": 14,
+      "clipTo": ""
+    },
+    {
+      "name": "forearm_cuff_screen_right",
+      "group": "arm_r",
+      "x": 628,
+      "y": 947,
+      "width": 383,
+      "height": 432,
+      "pivot": [
+        700,
+        1001
+      ],
+      "pivotInSprite": [
+        72,
+        54
+      ],
+      "drawOrder": 15,
+      "clipTo": ""
+    },
+    {
+      "name": "upper_arm_screen_right",
+      "group": "arm_r",
+      "x": 511,
+      "y": 765,
+      "width": 263,
+      "height": 255,
+      "pivot": [
+        638,
+        849
+      ],
+      "pivotInSprite": [
+        127,
+        84
+      ],
+      "drawOrder": 16,
+      "clipTo": ""
+    },
+    {
+      "name": "hair_side_screen_left",
+      "group": "head",
+      "x": 170,
+      "y": 367,
+      "width": 161,
+      "height": 489,
+      "pivot": [
+        222,
+        414
+      ],
+      "pivotInSprite": [
+        52,
+        47
+      ],
+      "drawOrder": 17,
+      "clipTo": ""
+    },
+    {
+      "name": "face_base",
+      "group": "head",
+      "x": 211,
+      "y": 228,
+      "width": 687,
+      "height": 549,
+      "pivot": [
+        550,
+        757
+      ],
+      "pivotInSprite": [
+        339,
+        529
+      ],
+      "drawOrder": 18,
+      "clipTo": ""
+    },
+    {
+      "name": "eye_white_screen_left",
+      "group": "face",
+      "x": 234,
+      "y": 508,
+      "width": 217,
+      "height": 176,
+      "pivot": [
+        337,
+        578
+      ],
+      "pivotInSprite": [
+        103,
+        70
+      ],
+      "drawOrder": 19,
+      "clipTo": ""
+    },
+    {
+      "name": "eye_white_screen_right",
+      "group": "face",
+      "x": 489,
+      "y": 454,
+      "width": 222,
+      "height": 186,
+      "pivot": [
+        604,
+        537
+      ],
+      "pivotInSprite": [
+        115,
+        83
+      ],
+      "drawOrder": 20,
+      "clipTo": ""
+    },
+    {
+      "name": "iris_screen_left",
+      "group": "face",
+      "x": 295,
+      "y": 479,
+      "width": 156,
+      "height": 180,
+      "pivot": [
+        383,
+        575
+      ],
+      "pivotInSprite": [
+        88,
+        96
+      ],
+      "drawOrder": 21,
+      "clipTo": "aperture-left"
+    },
+    {
+      "name": "iris_screen_right",
+      "group": "face",
+      "x": 551,
+      "y": 422,
+      "width": 152,
+      "height": 190,
+      "pivot": [
+        623,
+        527
+      ],
+      "pivotInSprite": [
+        72,
+        105
+      ],
+      "drawOrder": 22,
+      "clipTo": "aperture-right"
+    },
+    {
+      "name": "upper_lid_screen_left",
+      "group": "face",
+      "x": 223,
+      "y": 484,
+      "width": 210,
+      "height": 78,
+      "pivot": [
+        336,
+        543
+      ],
+      "pivotInSprite": [
+        113,
+        59
+      ],
+      "drawOrder": 23,
+      "clipTo": ""
+    },
+    {
+      "name": "upper_lid_screen_right",
+      "group": "face",
+      "x": 482,
+      "y": 441,
+      "width": 234,
+      "height": 77,
+      "pivot": [
+        594,
+        491
+      ],
+      "pivotInSprite": [
+        112,
+        50
+      ],
+      "drawOrder": 24,
+      "clipTo": ""
+    },
+    {
+      "name": "brow_screen_left",
+      "group": "face",
+      "x": 237,
+      "y": 433,
+      "width": 137,
+      "height": 27,
+      "pivot": [
+        307,
+        448
+      ],
+      "pivotInSprite": [
+        70,
+        15
+      ],
+      "drawOrder": 25,
+      "clipTo": ""
+    },
+    {
+      "name": "brow_screen_right",
+      "group": "face",
+      "x": 502,
+      "y": 377,
+      "width": 175,
+      "height": 47,
+      "pivot": [
+        600,
+        395
+      ],
+      "pivotInSprite": [
+        98,
+        18
+      ],
+      "drawOrder": 26,
+      "clipTo": ""
+    },
+    {
+      "name": "mouth",
+      "group": "face",
+      "x": 490,
+      "y": 706,
+      "width": 33,
+      "height": 22,
+      "pivot": [
+        506,
+        716
+      ],
+      "pivotInSprite": [
+        16,
+        10
+      ],
+      "drawOrder": 27,
+      "clipTo": ""
+    },
+    {
+      "name": "hair_side_screen_right",
+      "group": "head",
+      "x": 642,
+      "y": 328,
+      "width": 219,
+      "height": 504,
+      "pivot": [
+        708,
+        409
+      ],
+      "pivotInSprite": [
+        66,
+        81
+      ],
+      "drawOrder": 28,
+      "clipTo": ""
+    },
+    {
+      "name": "hair_fringe",
+      "group": "head",
+      "x": -5,
+      "y": 136,
+      "width": 1059,
+      "height": 531,
+      "pivot": [
+        486,
+        274
+      ],
+      "pivotInSprite": [
+        491,
+        138
+      ],
+      "drawOrder": 29,
+      "clipTo": ""
+    },
+    {
+      "name": "headpiece",
+      "group": "head",
+      "x": 138,
+      "y": 67,
+      "width": 787,
+      "height": 322,
+      "pivot": [
+        488,
+        180
+      ],
+      "pivotInSprite": [
+        350,
+        113
+      ],
+      "drawOrder": 30,
+      "clipTo": ""
+    },
+    {
+      "name": "fx_heart",
+      "group": "fx",
+      "x": 36,
+      "y": 319,
+      "width": 85,
+      "height": 84,
+      "pivot": [
+        72,
+        370
+      ],
+      "pivotInSprite": [
+        36,
+        51
+      ],
+      "drawOrder": 31,
+      "clipTo": ""
+    }
+  ]
+}

@@ -1,0 +1,1353 @@
+{
+  "canvas_px": [
+    1672,
+    941
+  ],
+  "source_sha256": "41E6732709BF671FFE1C455B1ACC7EA1923DD981EEDC239E28E521B37527B9DD",
+  "asset_root": "res://assets/void_defense_original/",
+  "layer_order": "Back to front, positions are unscaled PNG top-lefts in source pixels. Clip to the canvas.",
+  "layers": [
+    {
+      "path": "background/far_background.png",
+      "position_px": [
+        0,
+        0
+      ],
+      "size_px": [
+        1672,
+        941
+      ],
+      "pivot_px": [
+        836,
+        470
+      ],
+      "reference_only": false,
+      "visible_pixels": 248119,
+      "restored_pixels": 1325233
+    },
+    {
+      "path": "background/reference_edge_matte.png",
+      "position_px": [
+        -4,
+        -4
+      ],
+      "size_px": [
+        1680,
+        949
+      ],
+      "pivot_px": [
+        840,
+        474
+      ],
+      "reference_only": true,
+      "visible_pixels": 69177,
+      "restored_pixels": 0
+    },
+    {
+      "path": "background/props/arch_left.png",
+      "position_px": [
+        25,
+        169
+      ],
+      "size_px": [
+        230,
+        287
+      ],
+      "pivot_px": [
+        104,
+        132
+      ],
+      "reference_only": false,
+      "visible_pixels": 30704,
+      "restored_pixels": 8080
+    },
+    {
+      "path": "background/props/rock_left_tilted.png",
+      "position_px": [
+        296,
+        174
+      ],
+      "size_px": [
+        111,
+        137
+      ],
+      "pivot_px": [
+        55,
+        66
+      ],
+      "reference_only": false,
+      "visible_pixels": 9158,
+      "restored_pixels": 0
+    },
+    {
+      "path": "background/props/chip_left.png",
+      "position_px": [
+        245,
+        258
+      ],
+      "size_px": [
+        26,
+        36
+      ],
+      "pivot_px": [
+        13,
+        18
+      ],
+      "reference_only": false,
+      "visible_pixels": 363,
+      "restored_pixels": 0
+    },
+    {
+      "path": "background/props/rock_left_block.png",
+      "position_px": [
+        242,
+        295
+      ],
+      "size_px": [
+        103,
+        83
+      ],
+      "pivot_px": [
+        53,
+        36
+      ],
+      "reference_only": false,
+      "visible_pixels": 4522,
+      "restored_pixels": 1004
+    },
+    {
+      "path": "background/props/rock_back_left.png",
+      "position_px": [
+        -29,
+        366
+      ],
+      "size_px": [
+        211,
+        257
+      ],
+      "pivot_px": [
+        104,
+        83
+      ],
+      "reference_only": false,
+      "visible_pixels": 15520,
+      "restored_pixels": 19180
+    },
+    {
+      "path": "background/props/chip_center_left.png",
+      "position_px": [
+        585,
+        183
+      ],
+      "size_px": [
+        37,
+        53
+      ],
+      "pivot_px": [
+        18,
+        25
+      ],
+      "reference_only": false,
+      "visible_pixels": 999,
+      "restored_pixels": 0
+    },
+    {
+      "path": "background/props/chip_center_right.png",
+      "position_px": [
+        802,
+        197
+      ],
+      "size_px": [
+        45,
+        43
+      ],
+      "pivot_px": [
+        22,
+        21
+      ],
+      "reference_only": false,
+      "visible_pixels": 796,
+      "restored_pixels": 0
+    },
+    {
+      "path": "background/props/column_center.png",
+      "position_px": [
+        674,
+        118
+      ],
+      "size_px": [
+        129,
+        192
+      ],
+      "pivot_px": [
+        67,
+        80
+      ],
+      "reference_only": false,
+      "visible_pixels": 13207,
+      "restored_pixels": 3062
+    },
+    {
+      "path": "background/props/rock_column_foot.png",
+      "position_px": [
+        630,
+        237
+      ],
+      "size_px": [
+        93,
+        77
+      ],
+      "pivot_px": [
+        45,
+        36
+      ],
+      "reference_only": false,
+      "visible_pixels": 2975,
+      "restored_pixels": 1316
+    },
+    {
+      "path": "background/props/chip_rear_slab.png",
+      "position_px": [
+        846,
+        223
+      ],
+      "size_px": [
+        76,
+        55
+      ],
+      "pivot_px": [
+        35,
+        26
+      ],
+      "reference_only": false,
+      "visible_pixels": 1274,
+      "restored_pixels": 936
+    },
+    {
+      "path": "background/props/rock_rear_moss.png",
+      "position_px": [
+        905,
+        155
+      ],
+      "size_px": [
+        133,
+        97
+      ],
+      "pivot_px": [
+        75,
+        50
+      ],
+      "reference_only": false,
+      "visible_pixels": 4835,
+      "restored_pixels": 2528
+    },
+    {
+      "path": "background/props/arch_high.png",
+      "position_px": [
+        1185,
+        -35
+      ],
+      "size_px": [
+        196,
+        254
+      ],
+      "pivot_px": [
+        82,
+        126
+      ],
+      "reference_only": false,
+      "visible_pixels": 11878,
+      "restored_pixels": 8924
+    },
+    {
+      "path": "background/props/arch_right_rear.png",
+      "position_px": [
+        1368,
+        68
+      ],
+      "size_px": [
+        133,
+        255
+      ],
+      "pivot_px": [
+        62,
+        102
+      ],
+      "reference_only": false,
+      "visible_pixels": 8307,
+      "restored_pixels": 11946
+    },
+    {
+      "path": "background/props/arch_right_front.png",
+      "position_px": [
+        1421,
+        150
+      ],
+      "size_px": [
+        225,
+        311
+      ],
+      "pivot_px": [
+        111,
+        145
+      ],
+      "reference_only": false,
+      "visible_pixels": 33501,
+      "restored_pixels": 5943
+    },
+    {
+      "path": "background/props/rock_right_hidden.png",
+      "position_px": [
+        1582,
+        377
+      ],
+      "size_px": [
+        56,
+        48
+      ],
+      "pivot_px": [
+        26,
+        23
+      ],
+      "reference_only": false,
+      "visible_pixels": 1419,
+      "restored_pixels": 0
+    },
+    {
+      "path": "background/props/rock_right_edge.png",
+      "position_px": [
+        1627,
+        338
+      ],
+      "size_px": [
+        80,
+        66
+      ],
+      "pivot_px": [
+        27,
+        34
+      ],
+      "reference_only": false,
+      "visible_pixels": 1915,
+      "restored_pixels": 1173
+    },
+    {
+      "path": "background/main_platform.png",
+      "position_px": [
+        31,
+        197
+      ],
+      "size_px": [
+        1604,
+        669
+      ],
+      "pivot_px": [
+        803,
+        321
+      ],
+      "reference_only": false,
+      "visible_pixels": 379215,
+      "restored_pixels": 368774
+    },
+    {
+      "path": "background/props/star_banner.png",
+      "position_px": [
+        135,
+        488
+      ],
+      "size_px": [
+        160,
+        250
+      ],
+      "pivot_px": [
+        79,
+        157
+      ],
+      "reference_only": false,
+      "visible_pixels": 21929,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/effects/tile_tint_mage.png",
+      "position_px": [
+        413,
+        343
+      ],
+      "size_px": [
+        193,
+        97
+      ],
+      "pivot_px": [
+        92,
+        52
+      ],
+      "reference_only": true,
+      "visible_pixels": 4893,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/selection_mage.png",
+      "position_px": [
+        416,
+        343
+      ],
+      "size_px": [
+        183,
+        95
+      ],
+      "pivot_px": [
+        89,
+        52
+      ],
+      "reference_only": false,
+      "visible_pixels": 1469,
+      "restored_pixels": 698
+    },
+    {
+      "path": "characters/effects/tile_tint_gunner.png",
+      "position_px": [
+        262,
+        488
+      ],
+      "size_px": [
+        187,
+        92
+      ],
+      "pivot_px": [
+        86,
+        48
+      ],
+      "reference_only": true,
+      "visible_pixels": 3850,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/selection_gunner.png",
+      "position_px": [
+        262,
+        488
+      ],
+      "size_px": [
+        185,
+        90
+      ],
+      "pivot_px": [
+        86,
+        48
+      ],
+      "reference_only": false,
+      "visible_pixels": 1809,
+      "restored_pixels": 708
+    },
+    {
+      "path": "characters/effects/tile_tint_knight.png",
+      "position_px": [
+        609,
+        530
+      ],
+      "size_px": [
+        196,
+        101
+      ],
+      "pivot_px": [
+        93,
+        55
+      ],
+      "reference_only": true,
+      "visible_pixels": 2451,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/selection_knight.png",
+      "position_px": [
+        609,
+        530
+      ],
+      "size_px": [
+        195,
+        99
+      ],
+      "pivot_px": [
+        93,
+        55
+      ],
+      "reference_only": false,
+      "visible_pixels": 1890,
+      "restored_pixels": 1460
+    },
+    {
+      "path": "characters/effects/tile_tint_healer.png",
+      "position_px": [
+        407,
+        669
+      ],
+      "size_px": [
+        204,
+        104
+      ],
+      "pivot_px": [
+        99,
+        48
+      ],
+      "reference_only": true,
+      "visible_pixels": 4208,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/selection_healer.png",
+      "position_px": [
+        412,
+        669
+      ],
+      "size_px": [
+        198,
+        102
+      ],
+      "pivot_px": [
+        94,
+        48
+      ],
+      "reference_only": false,
+      "visible_pixels": 2322,
+      "restored_pixels": 842
+    },
+    {
+      "path": "characters/effects/ambient_cast_light.png",
+      "position_px": [
+        442,
+        53
+      ],
+      "size_px": [
+        1075,
+        652
+      ],
+      "pivot_px": [
+        628,
+        337
+      ],
+      "reference_only": true,
+      "visible_pixels": 115586,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/mage/weapon_staff.png",
+      "position_px": [
+        530,
+        243
+      ],
+      "size_px": [
+        117,
+        132
+      ],
+      "pivot_px": [
+        23,
+        103
+      ],
+      "reference_only": false,
+      "visible_pixels": 4728,
+      "restored_pixels": 340
+    },
+    {
+      "path": "characters/mage/body.png",
+      "position_px": [
+        465,
+        313
+      ],
+      "size_px": [
+        100,
+        103
+      ],
+      "pivot_px": [
+        42,
+        94
+      ],
+      "reference_only": false,
+      "visible_pixels": 4560,
+      "restored_pixels": 808
+    },
+    {
+      "path": "characters/mage/head.png",
+      "position_px": [
+        404,
+        213
+      ],
+      "size_px": [
+        180,
+        168
+      ],
+      "pivot_px": [
+        111,
+        107
+      ],
+      "reference_only": false,
+      "visible_pixels": 16979,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/gunner/weapon_pistol.png",
+      "position_px": [
+        360,
+        441
+      ],
+      "size_px": [
+        103,
+        69
+      ],
+      "pivot_px": [
+        26,
+        40
+      ],
+      "reference_only": false,
+      "visible_pixels": 2593,
+      "restored_pixels": 1237
+    },
+    {
+      "path": "characters/gunner/body.png",
+      "position_px": [
+        302,
+        464
+      ],
+      "size_px": [
+        118,
+        90
+      ],
+      "pivot_px": [
+        50,
+        80
+      ],
+      "reference_only": false,
+      "visible_pixels": 4120,
+      "restored_pixels": 859
+    },
+    {
+      "path": "characters/gunner/head.png",
+      "position_px": [
+        214,
+        363
+      ],
+      "size_px": [
+        191,
+        171
+      ],
+      "pivot_px": [
+        132,
+        116
+      ],
+      "reference_only": false,
+      "visible_pixels": 18085,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/knight/body.png",
+      "position_px": [
+        584,
+        487
+      ],
+      "size_px": [
+        172,
+        116
+      ],
+      "pivot_px": [
+        124,
+        103
+      ],
+      "reference_only": false,
+      "visible_pixels": 7422,
+      "restored_pixels": 2810
+    },
+    {
+      "path": "characters/knight/weapon_sword.png",
+      "position_px": [
+        599,
+        519
+      ],
+      "size_px": [
+        97,
+        91
+      ],
+      "pivot_px": [
+        67,
+        19
+      ],
+      "reference_only": false,
+      "visible_pixels": 3272,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/knight/weapon_shield.png",
+      "position_px": [
+        727,
+        467
+      ],
+      "size_px": [
+        91,
+        125
+      ],
+      "pivot_px": [
+        20,
+        62
+      ],
+      "reference_only": false,
+      "visible_pixels": 7296,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/knight/head.png",
+      "position_px": [
+        602,
+        400
+      ],
+      "size_px": [
+        177,
+        132
+      ],
+      "pivot_px": [
+        106,
+        99
+      ],
+      "reference_only": false,
+      "visible_pixels": 12282,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/healer/weapon_staff.png",
+      "position_px": [
+        527,
+        580
+      ],
+      "size_px": [
+        77,
+        155
+      ],
+      "pivot_px": [
+        22,
+        99
+      ],
+      "reference_only": false,
+      "visible_pixels": 3180,
+      "restored_pixels": 490
+    },
+    {
+      "path": "characters/healer/body.png",
+      "position_px": [
+        432,
+        646
+      ],
+      "size_px": [
+        128,
+        95
+      ],
+      "pivot_px": [
+        64,
+        85
+      ],
+      "reference_only": false,
+      "visible_pixels": 5817,
+      "restored_pixels": 635
+    },
+    {
+      "path": "characters/healer/head.png",
+      "position_px": [
+        376,
+        545
+      ],
+      "size_px": [
+        182,
+        159
+      ],
+      "pivot_px": [
+        130,
+        116
+      ],
+      "reference_only": false,
+      "visible_pixels": 17155,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/effects/muzzle_flash.png",
+      "position_px": [
+        444,
+        438
+      ],
+      "size_px": [
+        81,
+        49
+      ],
+      "pivot_px": [
+        9,
+        25
+      ],
+      "reference_only": false,
+      "visible_pixels": 1006,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/effects/heal_plus_small.png",
+      "position_px": [
+        535,
+        548
+      ],
+      "size_px": [
+        42,
+        46
+      ],
+      "pivot_px": [
+        21,
+        21
+      ],
+      "reference_only": false,
+      "visible_pixels": 788,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/effects/heal_plus_large.png",
+      "position_px": [
+        576,
+        637
+      ],
+      "size_px": [
+        53,
+        56
+      ],
+      "pivot_px": [
+        27,
+        29
+      ],
+      "reference_only": false,
+      "visible_pixels": 1337,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/monsters/void_lord.png",
+      "position_px": [
+        893,
+        92
+      ],
+      "size_px": [
+        585,
+        383
+      ],
+      "pivot_px": [
+        299,
+        345
+      ],
+      "reference_only": false,
+      "visible_pixels": 108052,
+      "restored_pixels": 24
+    },
+    {
+      "path": "characters/monsters/voidling_back.png",
+      "position_px": [
+        813,
+        269
+      ],
+      "size_px": [
+        149,
+        113
+      ],
+      "pivot_px": [
+        78,
+        94
+      ],
+      "reference_only": false,
+      "visible_pixels": 7985,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/monsters/voidling_mid.png",
+      "position_px": [
+        970,
+        423
+      ],
+      "size_px": [
+        188,
+        127
+      ],
+      "pivot_px": [
+        77,
+        106
+      ],
+      "reference_only": false,
+      "visible_pixels": 10501,
+      "restored_pixels": 0
+    },
+    {
+      "path": "characters/monsters/voidling_front.png",
+      "position_px": [
+        1230,
+        479
+      ],
+      "size_px": [
+        174,
+        122
+      ],
+      "pivot_px": [
+        98,
+        101
+      ],
+      "reference_only": false,
+      "visible_pixels": 10603,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/hud_bottom_tray.png",
+      "position_px": [
+        60,
+        791
+      ],
+      "size_px": [
+        1553,
+        154
+      ],
+      "pivot_px": [
+        776,
+        79
+      ],
+      "reference_only": false,
+      "visible_pixels": 110012,
+      "restored_pixels": 111843
+    },
+    {
+      "path": "ui/wordmark.png",
+      "position_px": [
+        -4,
+        -4
+      ],
+      "size_px": [
+        489,
+        104
+      ],
+      "pivot_px": [
+        4,
+        4
+      ],
+      "reference_only": false,
+      "visible_pixels": 43414,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/wave_2_of_5.png",
+      "position_px": [
+        16,
+        92
+      ],
+      "size_px": [
+        241,
+        58
+      ],
+      "pivot_px": [
+        121,
+        29
+      ],
+      "reference_only": false,
+      "visible_pixels": 10945,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/boss_name.png",
+      "position_px": [
+        654,
+        9
+      ],
+      "size_px": [
+        330,
+        72
+      ],
+      "pivot_px": [
+        165,
+        41
+      ],
+      "reference_only": false,
+      "visible_pixels": 14612,
+      "restored_pixels": 1549
+    },
+    {
+      "path": "ui/boss_hp_track.png",
+      "position_px": [
+        536,
+        68
+      ],
+      "size_px": [
+        601,
+        52
+      ],
+      "pivot_px": [
+        301,
+        26
+      ],
+      "reference_only": false,
+      "visible_pixels": 11509,
+      "restored_pixels": 14258
+    },
+    {
+      "path": "ui/boss_hp_fill.png",
+      "position_px": [
+        543,
+        75
+      ],
+      "size_px": [
+        503,
+        37
+      ],
+      "pivot_px": [
+        6,
+        19
+      ],
+      "reference_only": false,
+      "visible_pixels": 14258,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/mana_120.png",
+      "position_px": [
+        1472,
+        17
+      ],
+      "size_px": [
+        187,
+        68
+      ],
+      "pivot_px": [
+        90,
+        36
+      ],
+      "reference_only": false,
+      "visible_pixels": 9487,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/portrait_gunner.png",
+      "position_px": [
+        164,
+        807
+      ],
+      "size_px": [
+        161,
+        115
+      ],
+      "pivot_px": [
+        79,
+        59
+      ],
+      "reference_only": false,
+      "visible_pixels": 15749,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/portrait_mage.png",
+      "position_px": [
+        354,
+        807
+      ],
+      "size_px": [
+        160,
+        115
+      ],
+      "pivot_px": [
+        79,
+        59
+      ],
+      "reference_only": false,
+      "visible_pixels": 15642,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/portrait_knight.png",
+      "position_px": [
+        543,
+        807
+      ],
+      "size_px": [
+        159,
+        115
+      ],
+      "pivot_px": [
+        78,
+        59
+      ],
+      "reference_only": false,
+      "visible_pixels": 15464,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/portrait_healer.png",
+      "position_px": [
+        730,
+        807
+      ],
+      "size_px": [
+        158,
+        115
+      ],
+      "pivot_px": [
+        78,
+        59
+      ],
+      "reference_only": false,
+      "visible_pixels": 15500,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/slot_locked_left.png",
+      "position_px": [
+        917,
+        808
+      ],
+      "size_px": [
+        128,
+        112
+      ],
+      "pivot_px": [
+        64,
+        56
+      ],
+      "reference_only": false,
+      "visible_pixels": 12270,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/slot_locked_right.png",
+      "position_px": [
+        1065,
+        808
+      ],
+      "size_px": [
+        127,
+        112
+      ],
+      "pivot_px": [
+        63,
+        56
+      ],
+      "reference_only": false,
+      "visible_pixels": 12166,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/hud_divider.png",
+      "position_px": [
+        1233,
+        830
+      ],
+      "size_px": [
+        12,
+        69
+      ],
+      "pivot_px": [
+        6,
+        34
+      ],
+      "reference_only": false,
+      "visible_pixels": 244,
+      "restored_pixels": 0
+    },
+    {
+      "path": "ui/placement_done.png",
+      "position_px": [
+        1280,
+        815
+      ],
+      "size_px": [
+        290,
+        99
+      ],
+      "pivot_px": [
+        145,
+        49
+      ],
+      "reference_only": false,
+      "visible_pixels": 24808,
+      "restored_pixels": 0
+    }
+  ],
+  "rigs": {
+    "gunner": {
+      "root_px": [
+        352,
+        544
+      ],
+      "parts": [
+        {
+          "path": "characters/gunner/weapon_pistol.png",
+          "pivot_px": [
+            26,
+            40
+          ],
+          "offset_from_root_px": [
+            34,
+            -63
+          ],
+          "z_index": 0
+        },
+        {
+          "path": "characters/gunner/body.png",
+          "pivot_px": [
+            50,
+            80
+          ],
+          "offset_from_root_px": [
+            0,
+            0
+          ],
+          "z_index": 1
+        },
+        {
+          "path": "characters/gunner/head.png",
+          "pivot_px": [
+            132,
+            116
+          ],
+          "offset_from_root_px": [
+            -6,
+            -65
+          ],
+          "z_index": 2
+        }
+      ]
+    },
+    "mage": {
+      "root_px": [
+        507,
+        407
+      ],
+      "parts": [
+        {
+          "path": "characters/mage/weapon_staff.png",
+          "pivot_px": [
+            23,
+            103
+          ],
+          "offset_from_root_px": [
+            46,
+            -61
+          ],
+          "z_index": 0
+        },
+        {
+          "path": "characters/mage/body.png",
+          "pivot_px": [
+            42,
+            94
+          ],
+          "offset_from_root_px": [
+            0,
+            0
+          ],
+          "z_index": 1
+        },
+        {
+          "path": "characters/mage/head.png",
+          "pivot_px": [
+            111,
+            107
+          ],
+          "offset_from_root_px": [
+            8,
+            -87
+          ],
+          "z_index": 2
+        }
+      ]
+    },
+    "knight": {
+      "root_px": [
+        708,
+        590
+      ],
+      "parts": [
+        {
+          "path": "characters/knight/body.png",
+          "pivot_px": [
+            124,
+            103
+          ],
+          "offset_from_root_px": [
+            0,
+            0
+          ],
+          "z_index": 0
+        },
+        {
+          "path": "characters/knight/weapon_sword.png",
+          "pivot_px": [
+            67,
+            19
+          ],
+          "offset_from_root_px": [
+            -42,
+            -52
+          ],
+          "z_index": 1
+        },
+        {
+          "path": "characters/knight/weapon_shield.png",
+          "pivot_px": [
+            20,
+            62
+          ],
+          "offset_from_root_px": [
+            39,
+            -61
+          ],
+          "z_index": 2
+        },
+        {
+          "path": "characters/knight/head.png",
+          "pivot_px": [
+            106,
+            99
+          ],
+          "offset_from_root_px": [
+            0,
+            -91
+          ],
+          "z_index": 3
+        }
+      ]
+    },
+    "healer": {
+      "root_px": [
+        496,
+        731
+      ],
+      "parts": [
+        {
+          "path": "characters/healer/weapon_staff.png",
+          "pivot_px": [
+            22,
+            99
+          ],
+          "offset_from_root_px": [
+            53,
+            -52
+          ],
+          "z_index": 0
+        },
+        {
+          "path": "characters/healer/body.png",
+          "pivot_px": [
+            64,
+            85
+          ],
+          "offset_from_root_px": [
+            0,
+            0
+          ],
+          "z_index": 1
+        },
+        {
+          "path": "characters/healer/head.png",
+          "pivot_px": [
+            130,
+            116
+          ],
+          "offset_from_root_px": [
+            10,
+            -70
+          ],
+          "z_index": 2
+        }
+      ]
+    }
+  }
+}

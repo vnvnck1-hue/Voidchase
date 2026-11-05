@@ -1,0 +1,1230 @@
+{
+  "canvas_px": [
+    1672,
+    941
+  ],
+  "coordinates": "Pixels from the upper-left; positive X right, positive Y down. Asset paths are relative to res://assets/void_defense_concept/.",
+  "assets": {
+    "background/far_background.png": {
+      "size_px": [
+        1672,
+        941
+      ],
+      "alpha": false
+    },
+    "background/main_platform.png": {
+      "size_px": [
+        1623,
+        821
+      ],
+      "alpha": true
+    },
+    "background/props/arch_high_broken.png": {
+      "size_px": [
+        374,
+        433
+      ],
+      "alpha": true,
+      "pivot_px": [
+        187,
+        217
+      ]
+    },
+    "background/props/arch_left_moss.png": {
+      "size_px": [
+        344,
+        453
+      ],
+      "alpha": true,
+      "pivot_px": [
+        172,
+        227
+      ]
+    },
+    "background/props/arch_right_front.png": {
+      "size_px": [
+        380,
+        449
+      ],
+      "alpha": true,
+      "pivot_px": [
+        190,
+        225
+      ]
+    },
+    "background/props/arch_right_rear.png": {
+      "size_px": [
+        260,
+        465
+      ],
+      "alpha": true,
+      "pivot_px": [
+        130,
+        233
+      ]
+    },
+    "background/props/chip_center_left.png": {
+      "size_px": [
+        113,
+        137
+      ],
+      "alpha": true,
+      "pivot_px": [
+        57,
+        69
+      ]
+    },
+    "background/props/chip_center_right.png": {
+      "size_px": [
+        156,
+        141
+      ],
+      "alpha": true,
+      "pivot_px": [
+        78,
+        71
+      ]
+    },
+    "background/props/chip_far_left.png": {
+      "size_px": [
+        124,
+        178
+      ],
+      "alpha": true,
+      "pivot_px": [
+        62,
+        89
+      ]
+    },
+    "background/props/chip_rear_slab.png": {
+      "size_px": [
+        190,
+        115
+      ],
+      "alpha": true,
+      "pivot_px": [
+        95,
+        58
+      ]
+    },
+    "background/props/column_center.png": {
+      "size_px": [
+        275,
+        456
+      ],
+      "alpha": true,
+      "pivot_px": [
+        138,
+        228
+      ]
+    },
+    "background/props/rock_column_foot.png": {
+      "size_px": [
+        200,
+        165
+      ],
+      "alpha": true,
+      "pivot_px": [
+        100,
+        83
+      ]
+    },
+    "background/props/rock_left_block.png": {
+      "size_px": [
+        200,
+        208
+      ],
+      "alpha": true,
+      "pivot_px": [
+        100,
+        104
+      ]
+    },
+    "background/props/rock_left_tilted.png": {
+      "size_px": [
+        273,
+        376
+      ],
+      "alpha": true,
+      "pivot_px": [
+        137,
+        188
+      ]
+    },
+    "background/props/rock_rear_moss.png": {
+      "size_px": [
+        345,
+        282
+      ],
+      "alpha": true,
+      "pivot_px": [
+        173,
+        141
+      ]
+    },
+    "background/props/rock_right_edge.png": {
+      "size_px": [
+        264,
+        211
+      ],
+      "alpha": true,
+      "pivot_px": [
+        132,
+        106
+      ]
+    },
+    "background/props/rock_right_hidden.png": {
+      "size_px": [
+        216,
+        206
+      ],
+      "alpha": true,
+      "pivot_px": [
+        108,
+        103
+      ]
+    },
+    "background/props/star_banner.png": {
+      "size_px": [
+        244,
+        464
+      ],
+      "alpha": true,
+      "pivot_px": [
+        122,
+        232
+      ]
+    },
+    "characters/effects/heal_plus.png": {
+      "size_px": [
+        301,
+        304
+      ],
+      "alpha": true,
+      "pivot_px": [
+        151,
+        152
+      ]
+    },
+    "characters/effects/muzzle_flash.png": {
+      "size_px": [
+        378,
+        286
+      ],
+      "alpha": true,
+      "pivot_px": [
+        41,
+        139
+      ]
+    },
+    "characters/gunner/body.png": {
+      "size_px": [
+        475,
+        428
+      ],
+      "alpha": true,
+      "pivot_px": [
+        228,
+        415
+      ]
+    },
+    "characters/gunner/head.png": {
+      "size_px": [
+        656,
+        625
+      ],
+      "alpha": true,
+      "pivot_px": [
+        488,
+        419
+      ]
+    },
+    "characters/gunner/weapon_pistol.png": {
+      "size_px": [
+        358,
+        244
+      ],
+      "alpha": true,
+      "pivot_px": [
+        61,
+        160
+      ]
+    },
+    "characters/healer/body.png": {
+      "size_px": [
+        419,
+        383
+      ],
+      "alpha": true,
+      "pivot_px": [
+        188,
+        370
+      ]
+    },
+    "characters/healer/head.png": {
+      "size_px": [
+        653,
+        555
+      ],
+      "alpha": true,
+      "pivot_px": [
+        451,
+        391
+      ]
+    },
+    "characters/healer/weapon_staff.png": {
+      "size_px": [
+        318,
+        573
+      ],
+      "alpha": true,
+      "pivot_px": [
+        110,
+        339
+      ]
+    },
+    "characters/knight/body.png": {
+      "size_px": [
+        580,
+        452
+      ],
+      "alpha": true,
+      "pivot_px": [
+        345,
+        438
+      ]
+    },
+    "characters/knight/head.png": {
+      "size_px": [
+        600,
+        517
+      ],
+      "alpha": true,
+      "pivot_px": [
+        408,
+        383
+      ]
+    },
+    "characters/knight/weapon_shield.png": {
+      "size_px": [
+        280,
+        368
+      ],
+      "alpha": true,
+      "pivot_px": [
+        142,
+        156
+      ]
+    },
+    "characters/knight/weapon_sword.png": {
+      "size_px": [
+        384,
+        343
+      ],
+      "alpha": true,
+      "pivot_px": [
+        294,
+        88
+      ]
+    },
+    "characters/mage/body.png": {
+      "size_px": [
+        441,
+        434
+      ],
+      "alpha": true,
+      "pivot_px": [
+        188,
+        422
+      ]
+    },
+    "characters/mage/head.png": {
+      "size_px": [
+        683,
+        638
+      ],
+      "alpha": true,
+      "pivot_px": [
+        460,
+        426
+      ]
+    },
+    "characters/mage/weapon_staff.png": {
+      "size_px": [
+        502,
+        567
+      ],
+      "alpha": true,
+      "pivot_px": [
+        120,
+        443
+      ]
+    },
+    "characters/monsters/void_lord.png": {
+      "size_px": [
+        626,
+        513
+      ],
+      "alpha": true,
+      "pivot_px": [
+        319,
+        505
+      ]
+    },
+    "characters/monsters/voidling_back.png": {
+      "size_px": [
+        284,
+        208
+      ],
+      "alpha": true,
+      "pivot_px": [
+        145,
+        200
+      ]
+    },
+    "characters/monsters/voidling_front.png": {
+      "size_px": [
+        365,
+        233
+      ],
+      "alpha": true,
+      "pivot_px": [
+        186,
+        225
+      ]
+    },
+    "characters/monsters/voidling_mid.png": {
+      "size_px": [
+        367,
+        246
+      ],
+      "alpha": true,
+      "pivot_px": [
+        187,
+        238
+      ]
+    },
+    "ui/boss_hp_fill.png": {
+      "size_px": [
+        1925,
+        104
+      ],
+      "alpha": true
+    },
+    "ui/boss_hp_sample.png": {
+      "size_px": [
+        458,
+        70
+      ],
+      "alpha": true
+    },
+    "ui/boss_hp_track.png": {
+      "size_px": [
+        2014,
+        152
+      ],
+      "alpha": true
+    },
+    "ui/boss_name.png": {
+      "size_px": [
+        452,
+        122
+      ],
+      "alpha": true
+    },
+    "ui/bottom_tray.png": {
+      "size_px": [
+        467,
+        160
+      ],
+      "alpha": true
+    },
+    "ui/mana_120.png": {
+      "size_px": [
+        343,
+        133
+      ],
+      "alpha": true
+    },
+    "ui/placement_done.png": {
+      "size_px": [
+        452,
+        167
+      ],
+      "alpha": true
+    },
+    "ui/portrait_gunner.png": {
+      "size_px": [
+        315,
+        233
+      ],
+      "alpha": true
+    },
+    "ui/portrait_healer.png": {
+      "size_px": [
+        314,
+        237
+      ],
+      "alpha": true
+    },
+    "ui/portrait_knight.png": {
+      "size_px": [
+        315,
+        234
+      ],
+      "alpha": true
+    },
+    "ui/portrait_mage.png": {
+      "size_px": [
+        314,
+        233
+      ],
+      "alpha": true
+    },
+    "ui/selection_tile.png": {
+      "size_px": [
+        898,
+        483
+      ],
+      "alpha": true,
+      "pivot_px": [
+        449,
+        242
+      ]
+    },
+    "ui/slot_locked.png": {
+      "size_px": [
+        285,
+        235
+      ],
+      "alpha": true
+    },
+    "ui/wave_2_of_5.png": {
+      "size_px": [
+        376,
+        97
+      ],
+      "alpha": true
+    },
+    "ui/wordmark.png": {
+      "size_px": [
+        508,
+        129
+      ],
+      "alpha": true
+    }
+  },
+  "rigs": {
+    "gunner": {
+      "preview_root_px": [
+        346,
+        553
+      ],
+      "preview_scale": 0.242,
+      "parts": [
+        {
+          "path": "characters/gunner/body.png",
+          "pivot_px": [
+            228,
+            415
+          ],
+          "offset_px": [
+            0,
+            0
+          ],
+          "scale": 1,
+          "z_index": 0
+        },
+        {
+          "path": "characters/gunner/weapon_pistol.png",
+          "pivot_px": [
+            61,
+            160
+          ],
+          "offset_px": [
+            198,
+            -348
+          ],
+          "scale": 0.76,
+          "z_index": 2
+        },
+        {
+          "path": "characters/gunner/head.png",
+          "pivot_px": [
+            488,
+            419
+          ],
+          "offset_px": [
+            -19,
+            -374
+          ],
+          "scale": 0.91,
+          "z_index": 4
+        }
+      ]
+    },
+    "mage": {
+      "preview_root_px": [
+        508,
+        410
+      ],
+      "preview_scale": 0.224,
+      "parts": [
+        {
+          "path": "characters/mage/body.png",
+          "pivot_px": [
+            188,
+            422
+          ],
+          "offset_px": [
+            0,
+            0
+          ],
+          "scale": 1,
+          "z_index": 0
+        },
+        {
+          "path": "characters/mage/weapon_staff.png",
+          "pivot_px": [
+            120,
+            443
+          ],
+          "offset_px": [
+            109,
+            -263
+          ],
+          "scale": 0.84,
+          "z_index": 1
+        },
+        {
+          "path": "characters/mage/head.png",
+          "pivot_px": [
+            460,
+            426
+          ],
+          "offset_px": [
+            21,
+            -374
+          ],
+          "scale": 0.86,
+          "z_index": 4
+        }
+      ]
+    },
+    "knight": {
+      "preview_root_px": [
+        699,
+        605
+      ],
+      "preview_scale": 0.24,
+      "parts": [
+        {
+          "path": "characters/knight/body.png",
+          "pivot_px": [
+            345,
+            438
+          ],
+          "offset_px": [
+            0,
+            0
+          ],
+          "scale": 1,
+          "z_index": 0
+        },
+        {
+          "path": "characters/knight/weapon_sword.png",
+          "pivot_px": [
+            294,
+            88
+          ],
+          "offset_px": [
+            -46,
+            -228
+          ],
+          "scale": 0.91,
+          "z_index": 1
+        },
+        {
+          "path": "characters/knight/weapon_shield.png",
+          "pivot_px": [
+            142,
+            156
+          ],
+          "offset_px": [
+            184,
+            -271
+          ],
+          "scale": 0.99,
+          "z_index": 3
+        },
+        {
+          "path": "characters/knight/head.png",
+          "pivot_px": [
+            408,
+            383
+          ],
+          "offset_px": [
+            9,
+            -397
+          ],
+          "scale": 0.96,
+          "z_index": 4
+        }
+      ]
+    },
+    "healer": {
+      "preview_root_px": [
+        501,
+        738
+      ],
+      "preview_scale": 0.253,
+      "parts": [
+        {
+          "path": "characters/healer/body.png",
+          "pivot_px": [
+            188,
+            370
+          ],
+          "offset_px": [
+            0,
+            0
+          ],
+          "scale": 1,
+          "z_index": 0
+        },
+        {
+          "path": "characters/healer/weapon_staff.png",
+          "pivot_px": [
+            110,
+            339
+          ],
+          "offset_px": [
+            176,
+            -291
+          ],
+          "scale": 0.91,
+          "z_index": 2
+        },
+        {
+          "path": "characters/healer/head.png",
+          "pivot_px": [
+            451,
+            391
+          ],
+          "offset_px": [
+            31,
+            -329
+          ],
+          "scale": 0.9,
+          "z_index": 4
+        }
+      ]
+    }
+  },
+  "preview_layers": [
+    {
+      "path": "background/far_background.png",
+      "rect": [
+        0,
+        0,
+        1672,
+        941
+      ]
+    },
+    {
+      "path": "background/props/chip_far_left.png",
+      "rect": [
+        247,
+        263,
+        19,
+        28
+      ]
+    },
+    {
+      "path": "background/props/rock_left_tilted.png",
+      "rect": [
+        302,
+        178,
+        101,
+        131
+      ]
+    },
+    {
+      "path": "background/props/rock_left_block.png",
+      "rect": [
+        243,
+        297,
+        97,
+        99
+      ]
+    },
+    {
+      "path": "background/props/chip_center_left.png",
+      "rect": [
+        586,
+        186,
+        33,
+        44
+      ]
+    },
+    {
+      "path": "background/props/chip_center_right.png",
+      "rect": [
+        808,
+        201,
+        37,
+        34
+      ]
+    },
+    {
+      "path": "background/props/chip_rear_slab.png",
+      "rect": [
+        850,
+        222,
+        70,
+        44
+      ]
+    },
+    {
+      "path": "background/props/rock_rear_moss.png",
+      "rect": [
+        926,
+        160,
+        105,
+        86
+      ]
+    },
+    {
+      "path": "background/props/rock_column_foot.png",
+      "rect": [
+        637,
+        240,
+        81,
+        73
+      ]
+    },
+    {
+      "path": "background/props/rock_right_edge.png",
+      "rect": [
+        1619,
+        341,
+        72,
+        57
+      ]
+    },
+    {
+      "path": "background/props/rock_right_hidden.png",
+      "rect": [
+        1573,
+        372,
+        64,
+        55
+      ]
+    },
+    {
+      "path": "background/props/arch_left_moss.png",
+      "rect": [
+        26,
+        163,
+        220,
+        276
+      ]
+    },
+    {
+      "path": "background/props/column_center.png",
+      "rect": [
+        679,
+        120,
+        124,
+        199
+      ]
+    },
+    {
+      "path": "background/props/arch_high_broken.png",
+      "rect": [
+        1179,
+        -52,
+        208,
+        248
+      ]
+    },
+    {
+      "path": "background/props/arch_right_rear.png",
+      "rect": [
+        1369,
+        69,
+        149,
+        257
+      ]
+    },
+    {
+      "path": "background/props/arch_right_front.png",
+      "rect": [
+        1400,
+        154,
+        246,
+        280
+      ]
+    },
+    {
+      "path": "background/main_platform.png",
+      "rect": [
+        29,
+        199,
+        1602,
+        670
+      ]
+    },
+    {
+      "path": "background/props/star_banner.png",
+      "rect": [
+        142,
+        490,
+        141,
+        246
+      ]
+    },
+    {
+      "path": "ui/selection_tile.png",
+      "rect": [
+        414,
+        347,
+        187,
+        94
+      ]
+    },
+    {
+      "path": "ui/selection_tile.png",
+      "rect": [
+        253,
+        482,
+        190,
+        98
+      ]
+    },
+    {
+      "path": "ui/selection_tile.png",
+      "rect": [
+        612,
+        531,
+        194,
+        99
+      ]
+    },
+    {
+      "path": "ui/selection_tile.png",
+      "rect": [
+        406,
+        673,
+        203,
+        99
+      ]
+    },
+    {
+      "path": "characters/monsters/voidling_back.png",
+      "rect": [
+        813,
+        267,
+        151,
+        111
+      ]
+    },
+    {
+      "path": "characters/monsters/void_lord.png",
+      "rect": [
+        893,
+        91,
+        581,
+        395
+      ]
+    },
+    {
+      "path": "characters/monsters/voidling_mid.png",
+      "rect": [
+        961,
+        438,
+        184,
+        119
+      ]
+    },
+    {
+      "path": "characters/monsters/voidling_front.png",
+      "rect": [
+        1231,
+        476,
+        174,
+        116
+      ]
+    },
+    {
+      "path": "characters/mage/body.png",
+      "rect": [
+        465.888,
+        315.472,
+        98.784,
+        97.216
+      ]
+    },
+    {
+      "path": "characters/mage/weapon_staff.png",
+      "rect": [
+        509.8368,
+        267.7331,
+        94.4563,
+        106.6867
+      ]
+    },
+    {
+      "path": "characters/mage/head.png",
+      "rect": [
+        424.0896,
+        244.1594,
+        131.5731,
+        122.9043
+      ]
+    },
+    {
+      "path": "characters/gunner/body.png",
+      "rect": [
+        290.824,
+        452.57,
+        114.95,
+        103.576
+      ]
+    },
+    {
+      "path": "characters/gunner/weapon_pistol.png",
+      "rect": [
+        382.6969,
+        439.3568,
+        65.8434,
+        44.8765
+      ]
+    },
+    {
+      "path": "characters/gunner/head.png",
+      "rect": [
+        233.9346,
+        370.2198,
+        144.4643,
+        137.6375
+      ]
+    },
+    {
+      "path": "characters/knight/body.png",
+      "rect": [
+        616.2,
+        499.88,
+        139.2,
+        108.48
+      ]
+    },
+    {
+      "path": "characters/knight/weapon_sword.png",
+      "rect": [
+        623.7504,
+        531.0608,
+        83.8656,
+        74.9112
+      ]
+    },
+    {
+      "path": "characters/knight/weapon_shield.png",
+      "rect": [
+        709.4208,
+        502.8944,
+        66.528,
+        87.4368
+      ]
+    },
+    {
+      "path": "characters/knight/head.png",
+      "rect": [
+        607.1568,
+        421.4768,
+        138.24,
+        119.1168
+      ]
+    },
+    {
+      "path": "characters/healer/body.png",
+      "rect": [
+        453.436,
+        644.39,
+        106.007,
+        96.899
+      ]
+    },
+    {
+      "path": "characters/healer/weapon_staff.png",
+      "rect": [
+        520.2027,
+        586.329,
+        73.2131,
+        131.9218
+      ]
+    },
+    {
+      "path": "characters/healer/head.png",
+      "rect": [
+        406.1503,
+        565.7323,
+        148.6881,
+        126.3735
+      ]
+    },
+    {
+      "path": "characters/effects/muzzle_flash.png",
+      "rect": [
+        440,
+        430,
+        79,
+        46
+      ]
+    },
+    {
+      "path": "characters/effects/heal_plus.png",
+      "rect": [
+        536,
+        548,
+        38,
+        38
+      ]
+    },
+    {
+      "path": "characters/effects/heal_plus.png",
+      "rect": [
+        573,
+        629,
+        49,
+        49
+      ]
+    },
+    {
+      "path": "ui/bottom_tray.png",
+      "rect": [
+        63,
+        793,
+        1559,
+        154
+      ],
+      "mode": "slice_x"
+    },
+    {
+      "path": "ui/portrait_gunner.png",
+      "rect": [
+        166,
+        808,
+        156,
+        114
+      ]
+    },
+    {
+      "path": "ui/portrait_mage.png",
+      "rect": [
+        355,
+        808,
+        156,
+        114
+      ]
+    },
+    {
+      "path": "ui/portrait_knight.png",
+      "rect": [
+        545,
+        808,
+        156,
+        114
+      ]
+    },
+    {
+      "path": "ui/portrait_healer.png",
+      "rect": [
+        732,
+        808,
+        156,
+        114
+      ]
+    },
+    {
+      "path": "ui/slot_locked.png",
+      "rect": [
+        920,
+        811,
+        121,
+        108
+      ]
+    },
+    {
+      "path": "ui/slot_locked.png",
+      "rect": [
+        1067,
+        811,
+        121,
+        108
+      ]
+    },
+    {
+      "path": "ui/placement_done.png",
+      "rect": [
+        1277,
+        811,
+        290,
+        108
+      ]
+    },
+    {
+      "path": "ui/wordmark.png",
+      "rect": [
+        -14,
+        -15,
+        490,
+        120
+      ]
+    },
+    {
+      "path": "ui/wave_2_of_5.png",
+      "rect": [
+        15,
+        92,
+        243,
+        59
+      ]
+    },
+    {
+      "path": "ui/boss_name.png",
+      "rect": [
+        657,
+        9,
+        324,
+        76
+      ]
+    },
+    {
+      "path": "ui/boss_hp_sample.png",
+      "rect": [
+        538,
+        66,
+        597,
+        54
+      ]
+    },
+    {
+      "path": "ui/mana_120.png",
+      "rect": [
+        1474,
+        15,
+        186,
+        71
+      ]
+    }
+  ],
+  "hp_bar": {
+    "track": "ui/boss_hp_track.png",
+    "fill": "ui/boss_hp_fill.png",
+    "fill_origin_in_track_px": [
+      45,
+      26
+    ]
+  }
+}

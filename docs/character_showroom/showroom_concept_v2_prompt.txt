@@ -1,0 +1,28 @@
+Use case: precise-object-edit and compositing. Create one final ULTRAWIDE 2.38:1 in-game showroom concept. Image 1 is the user's ORIGINAL composition and the ONLY visual style authority. Image 2 supplies previous information content, but its thin ornate rectangular overlay has been rejected: DO NOT reuse its panel appearance. The user requires the new information area to feel made by the same artist as the EXISTING LEFT CHARACTER SELECTION UI in Image 1.
+
+Study Image 1's actual design vocabulary: saturated medium-violet diagonal stage slab, huge low-contrast background lettering, chunky rounded lavender frame around roster portraits, pale lavender glossy corner highlight, darker purple offset solid shadow, white compact BOLD sticker-like text in purple badge on each portrait, friendly thick clean cel outlines. It is a playful hand-illustrated mobile anime character selector. Apply THESE specific materials, contours, type weights and proportions to the new info cards. Design cohesion is critical. Do not introduce delicate line frames, fantasy ornament, glowing holy 3D icons, hairline separators, generic translucent desktop panels, glassmorphism, or technological HUD.
+
+Preserve the user's source screenshot everywhere outside the designated information region. The same original blonde maid remains large on the left, exact existing anatomy, full-body silhouette and outfit, purple stage, original arrow buttons, and the original two-row portrait grid from Image 1. Original cute colorful portraits and badges remain. The board already sits shifted right and dimmed behind the UI; retain that same rendering as a quiet dark background. Do not change battlefield squad when browsing. Keep the ultrawide framing. Remove debug text at the top edge only. Do not add a permanent squad tray.
+
+Design the new character info composition in Image 1's marked central-right region: roughly x40%–78%, y7%–70%. A coherent FAMILY OF CHUNKY VIOLET CARDS, assembled on a low-contrast dark purple angled backing ribbon that visually continues the left stage's upward-right diagonal. Use generous round 18–24px corners, 5–7px lavender outer rims and offset dark purple hard shadows (at 2048px frame width), exactly like the existing roster frames. Not one gigantic generic rectangular framed window. Add a small white corner shine to frames like the source portraits. Major headings are compact heavy rounded Korean sans lettering, white fill with dark purple outlines/shadows like the original LV badges. Body text has generous contrast, short lines and readable spacing. Card interiors matte deep purple #342b50 with restrained violet tonal gradients, local lavender badges #9d75db. Accent surfaces in original stage purple #8456bc. Avoid any big pink or mint area. Small friendly icons drawn flat in 2–3 cel colors with dark purple outlines, matching the character illustration. No intricate fine-line ornament. The new UI should clearly belong to the original game's visual system, not a new genre.
+
+Arrangement:
+Top name/title '힐러' with rounded purple sticker 'LV.2' aligned beside it and small '회복 · 지원' subtitle. Put a small section badge '캐릭터 정보' above. Near top right a simple rounded pill 'Tab 닫기' matching original badge style.
+Under name place a single shallow rounded stat card divided into four spacious simple columns, tiny cute icons: 'HP 110', '공격력 20', '사거리 2칸', '공격 간격 1.2초'.
+Next '고유 스킬 · 궁극기' as bold purple-shadow white section text.
+Two equally sized rounded skill cards side-by-side with the exact SAME rim thickness and corner highlights as portrait cards. Each has a square icon tile on the left and readable descriptions to the right. Soft cartoon yellow cross-and-ring for '성역', ivory angel wing-and-star for '부활의 빛'. Tiles in restrained violet backgrounds. Exact text:
+'성역'
+'고유 스킬 · 마나 100'
+'주변 3×3 아군 HP 25% 회복'
+'2초 동안 받는 피해 감소'
+and
+'부활의 빛'
+'궁극기'
+'범위 내 영웅 1명 HP 40% 부활'
+'아군 전원 회복'.
+Next '패시브' heading with THREE compact rounded matching cards, icons and text:
+'응급 처치' / '회복 확률 +20%/Lv'
+'수호 결계' / '주변 아군 피해 −6%/Lv'
+'은총' / '적 처치 시 마나 +8/Lv'.
+Bottom quiet '장비' heading then three shallow rounded lavender-rimmed empty slots, labels '무기', '방어구', '장신구', with a small dash.
+Use badges and purple solid shadows to visually group information; no tiny decorative divider lines. Keep all cards in assigned central-right region and leave the far right as dimmed battlefield context. Keep skill descriptions accurate. This must be a CONTEXT-MATCHED revision of the actual original screenshot, especially the left portrait UI, with premium spacing and legible Korean. Single full game screen without external captions or markup.

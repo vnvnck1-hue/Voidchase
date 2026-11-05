@@ -1,0 +1,7 @@
+Source SHA-256: 41E6732709BF671FFE1C455B1ACC7EA1923DD981EEDC239E28E521B37527B9DD
+Canvas: 1672 x 941
+Verified decoded PNG files: 64
+Opaque background PNGs: 1
+PNG sprites with transparent outer border: 63
+Pixels different from source after compositing PNG files by assembly.json: 0 of 1573352
+Pixels different from the saved reassembled preview: 0 of 1573352

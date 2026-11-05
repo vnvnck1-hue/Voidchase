@@ -1,0 +1,16 @@
+# Godot
+.godot/
+override.cfg
+*.translation
+
+# Build output
+build/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store

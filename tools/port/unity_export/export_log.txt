@@ -1,0 +1,4 @@
+Opened Assets/KSC_251206/Scenes/Touch_Game_demo.unity
+Wrote scene json Assets/KSC_251206/Scenes/Touch_Game_demo.unity
+Opened Assets/KSC_251206/Scenes/Touch_Game_demo_anim.unity
+Wrote scene json Assets/KSC_251206/Scenes/Touch_Game_demo_anim.unity
