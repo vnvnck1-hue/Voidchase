@@ -20,6 +20,8 @@ var _quitting := false
 var _rooms_visited: Array[int] = []
 var _formation_checked := 0
 var _casts_seen := 0
+var auto_ult := false        # --autoult: 궁극기가 차면 자동 조준으로 쓴다 (플레이에선 카드 탭)
+var _ults_seen := 0
 
 
 func _ready() -> void:
@@ -32,9 +34,12 @@ func _ready() -> void:
 			timeout = float(a.substr(10))
 		elif a.begins_with("--speed="):
 			speed = float(a.substr(8))
+		elif a == "--autoult":
+			auto_ult = true
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	_b = load("res://scenes/void_defense/VoidDefense.tscn").instantiate()
 	add_child(_b)
+	_b.auto_ult = auto_ult
 	_b.wave_cleared.connect(_on_cleared)
 	_b.game_over.connect(_on_game_over)
 	_b.state_changed.connect(_on_state)
@@ -65,6 +70,12 @@ func _process(delta: float) -> void:
 		if casts > _casts_seen:
 			_casts_seen = casts
 			_skill_shot_later(casts)
+		var ult_n := 0
+		for k in _b.ults.cast_count:
+			ult_n += int(_b.ults.cast_count[k])
+		if ult_n > _ults_seen:
+			_ults_seen = ult_n
+			_ult_shot_later(ult_n)
 		# 전투 중 여러 장: 교전이 붙는 1.5초 뒤부터 0.35초 간격으로 6장
 		var idx := int((_battle_t - 1.5) / 0.35)
 		if idx >= 0 and idx < 6 and not _battle_shots.has(idx):
@@ -90,6 +101,9 @@ func _on_state(s: int) -> void:
 			print("[runner] sfx plays: %s" % str(_b.audio.play_count))
 			print("[runner] vfx plays: %s" % str(_b.vfx.play_count))
 			print("[runner] skill casts: %s" % str(_b.skills.cast_count))
+			print("[runner] tactics: retreats=%s taunts=%d" % [str(_b.tactics.retreat_count), _b.tactics.taunt_count])
+			print("[runner] impact: %s  flow: %s" % [str(_b.impact.count), str(_b.flow.count)])
+			print("[runner] ultimate casts: %s  intro_log=%s" % [str(_b.ults.cast_count), str(_b.ult.cast_log)])
 			print("[runner] damage numbers spawned: %d  preset=%s" % [_b.dmg_log.count_spawned, VDDamageLog.preset])
 			_quit(0)
 		else:
@@ -97,6 +111,12 @@ func _on_state(s: int) -> void:
 			_battle_shots.clear()
 			_battle_t = 0.0
 			_b.call_deferred("start_battle")
+
+
+func _ult_shot_later(n: int) -> void:
+	await get_tree().create_timer(0.25).timeout
+	if is_inside_tree():
+		_shot("06_ult_%02d" % n)
 
 
 func _skill_shot_later(n: int) -> void:

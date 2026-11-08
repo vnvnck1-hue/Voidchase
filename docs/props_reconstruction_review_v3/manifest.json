@@ -1,0 +1,240 @@
+[
+  {
+    "name": "arch_left",
+    "logical_size": [
+      230,
+      287
+    ],
+    "source_size": [
+      1122,
+      1402
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 8080,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "rock_left_tilted",
+    "logical_size": [
+      111,
+      137
+    ],
+    "source_size": [
+      1129,
+      1393
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 0,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "chip_left",
+    "logical_size": [
+      26,
+      36
+    ],
+    "source_size": [
+      1066,
+      1476
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 0,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "rock_left_block",
+    "logical_size": [
+      103,
+      83
+    ],
+    "source_size": [
+      1397,
+      1126
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 1004,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "rock_back_left",
+    "logical_size": [
+      211,
+      257
+    ],
+    "source_size": [
+      1136,
+      1384
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 19180,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "chip_center_left",
+    "logical_size": [
+      37,
+      53
+    ],
+    "source_size": [
+      1048,
+      1501
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 0,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "chip_center_right",
+    "logical_size": [
+      45,
+      43
+    ],
+    "source_size": [
+      1283,
+      1226
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 0,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "column_center",
+    "logical_size": [
+      129,
+      192
+    ],
+    "source_size": [
+      1028,
+      1530
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 3062,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "rock_column_foot",
+    "logical_size": [
+      93,
+      77
+    ],
+    "source_size": [
+      1378,
+      1141
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 1316,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "chip_rear_slab",
+    "logical_size": [
+      76,
+      55
+    ],
+    "source_size": [
+      1474,
+      1067
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 936,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "rock_rear_moss",
+    "logical_size": [
+      133,
+      97
+    ],
+    "source_size": [
+      1469,
+      1071
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 2528,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "arch_high",
+    "logical_size": [
+      196,
+      254
+    ],
+    "source_size": [
+      1102,
+      1428
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 8924,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "arch_right_rear",
+    "logical_size": [
+      133,
+      255
+    ],
+    "source_size": [
+      906,
+      1736
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 11946,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "arch_right_front",
+    "logical_size": [
+      225,
+      311
+    ],
+    "source_size": [
+      1067,
+      1474
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 5943,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "rock_right_hidden",
+    "logical_size": [
+      56,
+      48
+    ],
+    "source_size": [
+      1355,
+      1161
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 0,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "rock_right_edge",
+    "logical_size": [
+      80,
+      66
+    ],
+    "source_size": [
+      1381,
+      1139
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 1173,
+    "status": "approved_and_applied"
+  },
+  {
+    "name": "star_banner",
+    "logical_size": [
+      160,
+      250
+    ],
+    "source_size": [
+      1003,
+      1568
+    ],
+    "alpha_corner": 0,
+    "original_restored_pixels": 0,
+    "status": "approved_and_applied"
+  }
+]

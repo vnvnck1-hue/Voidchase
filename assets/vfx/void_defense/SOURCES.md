@@ -20,3 +20,5 @@
 | vr_portal_swirl.png (4x4, 16f, 512px, add, loop) | VFX연구 portal_swirl | 적 등장 균열 |
 | vr_lightning_bolt.png (4x4, 16f, 512px, add) | VFX연구 lightning_bolt | 영웅 전투불능 |
 | vr_magic_circle.png (1장, 1024px, add) | VFX연구 magic_circle | 힐러 시전 마법진 |
+
+기사 검기는 플립북이 아니라 셰이더다: `scripts/void_defense/vd_sword_slash.gd` + `shaders/sword_slash_cel.gdshader` (VFX연구 vfx/sword_slash 의 CEL 셀 초승달, 2026-11-06).

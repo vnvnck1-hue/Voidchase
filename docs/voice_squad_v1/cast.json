@@ -1,0 +1,69 @@
+{
+  "note": "분대 나머지 3명(기사·마법사·힐러) 스킬·피격 추임새 v1 (2026-11-06). 건너 2차 피드백(짧고 임팩트, 미소녀 서브컬처풍)을 처음부터 적용: 한 음절 위주, 다듬기 최대 0.8초. 캐릭터마다 목소리 후보 2개 × 문구 10개 × 테이크 2개.",
+  "model": "Eleven v4 (웹 화면, 안정성 50% · 유사성 75% · 언어 자동). 한 번 생성에 테이크 2개(t1·t2)",
+  "chars": {
+    "knight": {
+      "name": "기사", "look": "금발 기사 (검·방패)", "persona": "직설적이고 따뜻함", "skill": "용맹한 강습 (가장 먼 적에게 도약)",
+      "voices": {
+        "lola":   { "name": "Lola",   "full": "Lola - Female Action Character", "note": "여성 액션 캐릭터" },
+        "aisyah": { "name": "Aisyah", "full": "Aisyah - Energetic Anime Character", "note": "활기찬 애니 캐릭터" }
+      },
+      "skill": [
+        { "label": "\"하아앗!\"", "text": "[brave young female knight, fierce leaping battle cry] 하아앗!" },
+        { "label": "\"타앗!\"", "text": "[brave young female knight, sharp kiai] 타앗!" },
+        { "label": "\"얍!\"", "text": "[brave young female knight, strong short shout] 얍!" },
+        { "label": "\"흡… 핫!\"", "text": "[brave young female knight, quick breath then leaps] 흡… 핫!" },
+        { "label": "\"세잇!\"", "text": "[brave young female knight, heroic short shout] 세잇!" }
+      ],
+      "hurt": [
+        { "label": "\"큭!\"", "text": "[young female knight, tough, short pained grunt] 큭!" },
+        { "label": "\"윽!\"", "text": "[young female knight, hit hard, gritting teeth] 윽!" },
+        { "label": "\"크읏!\"", "text": "[young female knight, short pained gasp] 크읏!" },
+        { "label": "\"흐읍!\"", "text": "[young female knight, blocking a heavy blow, strained] 흐읍!" },
+        { "label": "\"아윽!\"", "text": "[young female knight, pained but brave] 아윽!" }
+      ]
+    },
+    "mage": {
+      "name": "마법사", "look": "보라 메이드 (오브 지팡이)", "persona": "조용하고 건조한 유머", "skill": "절대 영도 (모든 적 빙결)",
+      "voices": {
+        "suzu":  { "name": "Suzu",  "full": "Suzu - Cute, Clear & Calm", "note": "맑고 차분함" },
+        "ayame": { "name": "Ayame", "full": "Ayame - Anime", "note": "애니" }
+      },
+      "skill": [
+        { "label": "\"흥.\"", "text": "[calm cool anime girl, quiet confident huff] 흥." },
+        { "label": "\"핫.\"", "text": "[calm cool anime girl, soft but sharp] 핫." },
+        { "label": "\"후우…\"", "text": "[calm cool anime girl, cold breath while casting ice] 후우…" },
+        { "label": "\"얍.\"", "text": "[calm cool anime girl, short cold kiai] 얍." },
+        { "label": "\"에잇.\"", "text": "[calm cool anime girl, flat and unimpressed] 에잇." }
+      ],
+      "hurt": [
+        { "label": "\"읏.\"", "text": "[calm cool anime girl, short quiet pained gasp] 읏." },
+        { "label": "\"앗.\"", "text": "[calm cool anime girl, small surprised hurt] 앗." },
+        { "label": "\"큿…\"", "text": "[calm cool anime girl, annoyed, pained] 큿…" },
+        { "label": "\"흣.\"", "text": "[calm cool anime girl, small pained breath] 흣." },
+        { "label": "\"으읏.\"", "text": "[calm cool anime girl, quiet pain] 으읏." }
+      ]
+    },
+    "healer": {
+      "name": "힐러", "look": "금발 메이드 (십자 지팡이)", "persona": "다정함", "skill": "생명의 축복 (아군 전체 회복)",
+      "voices": {
+        "koume": { "name": "Koume", "full": "Koume – Sweet & Playful", "note": "달콤·장난스러움" },
+        "kano":  { "name": "Kano",  "full": "Kano - Cute & Anime", "note": "귀여운 애니 (건너 1차 후보였던 목소리)" }
+      },
+      "skill": [
+        { "label": "\"에잇~!\"", "text": "[gentle sweet anime girl, cheerful casting] 에잇~!" },
+        { "label": "\"하앗~\"", "text": "[gentle sweet anime girl, hopeful soft shout] 하앗~" },
+        { "label": "\"야앗!\"", "text": "[sweet anime girl, bright little shout] 야앗!" },
+        { "label": "\"하잇~!\"", "text": "[gentle sweet anime girl, warm and bright] 하잇~!" },
+        { "label": "\"얍~!\"", "text": "[sweet anime girl, encouraging little kiai] 얍~!" }
+      ],
+      "hurt": [
+        { "label": "\"꺄앗!\"", "text": "[gentle sweet anime girl, startled pained yelp] 꺄앗!" },
+        { "label": "\"아앗!\"", "text": "[sweet anime girl, short hurt cry] 아앗!" },
+        { "label": "\"히잉!\"", "text": "[sweet anime girl, whimpering in pain] 히잉!" },
+        { "label": "\"앗…!\"", "text": "[gentle anime girl, small pained gasp] 앗…!" },
+        { "label": "\"꺅!\"", "text": "[sweet anime girl, sharp sudden pain] 꺅!" }
+      ]
+    }
+  }
+}

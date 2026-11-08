@@ -7,16 +7,20 @@ extends RefCounted
 const SOURCE := "res://scenes/void_defense/VoidDefenseVisualTest.tscn"
 ## 원화 캔버스의 타일(약 192x96)을 그레이박스 타일(128x64)에 맞추는 배율.
 const HERO_SCALE := 0.66
+## 영웅 머리를 조립 씬 위치보다 몸통 쪽(아래)으로 내리는 양(원화 px). 조립 씬 그대로면 목이 살짝 떠 보인다 (2026-11-06).
+const HEAD_DROP := 5.0
 ## 적 타입 → 조립 씬의 몬스터 스프라이트와 배율·틴트. 몬스터 원화는 왼쪽(아군 쪽)을 바라본다.
 const ENEMY_ART := {
 	"normal": {"sprite": "voidling_front", "scale": 0.6, "tint": Color(1, 1, 1)},
 	"boss":   {"sprite": "void_lord", "scale": 0.42, "tint": Color(1, 1, 1)},
 }
 ## 독립 스프라이트의 전장 표시 너비와 발밑에서 띄우는 높이(px).
+## foot: 원본 이미지에서 발이 땅에 닿는 중심의 y(px, 없으면 이미지 맨 아래). 다리가 여럿인 원화는 맨 아래 발끝이 아니라 발들의 가운데가 셀 중심에 와야 뜨지 않는다.
 const SPECIALIST_ART := {
 	"fast": {"texture": preload("res://assets/void_defense_enemies/void_shard.png"), "width": 104.0, "lift": 0.0},
 	"skirmisher": {"texture": preload("res://assets/void_defense_enemies/void_spore.png"), "width": 90.0, "lift": 12.0},
 	"tank": {"texture": preload("res://assets/void_defense_enemies/void_bulwark.png"), "width": 138.0, "lift": 0.0},
+	"longneck": {"texture": preload("res://assets/void_defense_enemies/void_longneck.png"), "width": 200.0, "lift": 0.0, "foot": 605.0},
 }
 
 ## 노드 경로(Canvas 아래, "Heroes/mage/body" 등) → {"type", "props"}
@@ -62,6 +66,8 @@ static func build(id: String, team: int) -> Node2D:
 			if str(path).begins_with(prefix) and not str(path).trim_prefix(prefix).contains("/") and _nodes[path]["type"] == &"Sprite2D":
 				var sp := _sprite(_nodes[path]["props"])
 				sp.name = str(path).trim_prefix(prefix)
+				if sp.name == "head":
+					sp.position.y += HEAD_DROP
 				parts.append(sp)
 		# 파츠 z_index 를 그대로 두면 다른 유닛과의 y 정렬을 뚫고 올라오므로 자식 순서로 바꾼다
 		parts.sort_custom(func(a: Sprite2D, b: Sprite2D) -> bool: return a.z_index < b.z_index)
@@ -77,7 +83,7 @@ static func build(id: String, team: int) -> Node2D:
 		sp.centered = false
 		var size := sp.texture.get_size()
 		var zoom: float = art["width"] / size.x
-		sp.offset = Vector2(-size.x * 0.5, -size.y - art["lift"] / zoom)
+		sp.offset = Vector2(-size.x * 0.5, -float(art.get("foot", size.y)) - art["lift"] / zoom)
 		root.add_child(sp)
 		root.scale = Vector2.ONE * zoom
 	else:

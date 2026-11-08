@@ -38,6 +38,7 @@ func cast(u: VDUnit) -> bool:
 		cast_count[u.id] = int(cast_count.get(u.id, 0)) + 1
 		print("[VD] skill: %s -> %s" % [u.display_name, sk["name"]])
 		u.cast_pulse()
+		b.audio.voice(u.id, "skill")   # 캐릭터 추임새 (없는 캐릭터는 조용히 건너뜀)
 		b.dmg_log.spawn_status(b._chest(u) + Vector2(0, -30), sk["name"] + "!", u.color.lightened(0.35), u)
 		b.vfx.spawn("burst", b.fx_root, b._chest(u), 0.4, 0.0, u.color.lightened(0.3))
 	return ok
@@ -49,12 +50,12 @@ func _valiant_assault(u: VDUnit, sk: Dictionary) -> bool:
 	var target := _farthest(u, _alive(b.enemies))
 	if target == null:
 		return false
-	var land := _landing_cell(u, target.cell)
+	var land := _landing_cell(u, target)
 	var run := b._run_id
 	u.casting = true
 	u.guard_timer = float(sk["guard"])
 	u.guard_reduce = float(sk["guard_reduce"])
-	b.audio.play("knight_attack", 0.05, 2.0)
+	b.audio.play("whoosh", 0.03, 3.5, 0.7)   # TrioChess 도약: 낮은 whoosh
 	b.vfx.spawn("dash", b.ground_fx, u.position, 1.3, 0.0, Color(0.7, 0.85, 1.0), Vector2.ONE, VDData.to_screen(Vector2(land)).x < u.position.x)
 	u.leap_to(land, LEAP_SEC, LEAP_HEIGHT)
 	_knight_land(u, sk, target, land, run)
@@ -69,14 +70,17 @@ func _knight_land(u: VDUnit, sk: Dictionary, target: VDUnit, land: Vector2i, run
 	var foot := VDData.to_screen(Vector2(land))
 	b.vfx.spawn("slam", b.fx_root, foot, 1.4, 0.0, Color(0.7, 0.85, 1.0))
 	b.vfx.spawn("shockwave", b.ground_fx, foot, 0.75, 0.0, Color(0.55, 0.75, 1.0), Vector2(1.0, 0.5))
+	b.shockwave.add(foot, "slam")
 	b.vfx.spawn("dust", b.ground_fx, foot, 1.8, 0.0, Color(1, 1, 1, 0.8))
-	b.audio.play("knight_hit", 0.05, 3.0)
+	b.audio.play("boss_slam", 0.03, -1.5, 0.8)   # TrioChess 궁극기 충격파
+	b.audio.play("knight_hit", 0.05)
 	b.camera.shake(0.9)
 	b.camera.hitstop(0.09)
 	var base := floorf(u.atk * float(sk["dmg"]))
 	for e in _alive(b.enemies):
 		var on_target := e == target
-		var near := absi(e.cell.x - land.x) <= 1 and absi(e.cell.y - land.y) <= 1
+		var gap := VDData.rect_gap(e.cell, e.size, land, 1)
+		var near := gap.x <= 1 and gap.y <= 1
 		if not on_target and not near:
 			continue
 		var dmg := 0.0
@@ -89,16 +93,17 @@ func _knight_land(u: VDUnit, sk: Dictionary, target: VDUnit, land: Vector2i, run
 		_hit(e, dmg, "hit_heavy", Color(0.85, 0.92, 1.0), 2.0)
 
 
-## 대상 바로 옆(방 안, 빈 칸) 중 지금 자리에서 가까운 칸. 없으면 대상에 가장 가까운 빈 칸.
-func _landing_cell(u: VDUnit, goal: Vector2i) -> Vector2i:
+## 대상 바로 옆(방 안, 빈 칸) 중 지금 자리에서 가까운 칸. 없으면 대상에 가장 가까운 빈 칸. 대형 대상은 footprint 둘레를 본다.
+func _landing_cell(u: VDUnit, target: VDUnit) -> Vector2i:
+	var goal := target.cell
 	var best := u.cell
 	var best_score := 1 << 30
-	for a in range(-3, 4):
-		for c in range(-3, 4):
+	for a in range(-3, 3 + target.size):
+		for c in range(-3, 3 + target.size):
 			var cell := goal + Vector2i(a, c)
 			if not VDMap.in_room(b.room, cell) or (b._occupied(cell) and cell != u.cell):
 				continue
-			var score := VDData.manhattan(cell, goal) * 100 + VDData.manhattan(cell, u.cell)
+			var score := target.dist_to_cell(cell) * 100 + VDData.manhattan(cell, u.cell)
 			if score < best_score:
 				best_score = score
 				best = cell
@@ -133,7 +138,7 @@ func _multi_shot_run(u: VDUnit, sk: Dictionary, run: int) -> void:
 		if not _still_on(run) or not u.alive:
 			u.casting = false
 			return
-	foes.sort_custom(func(x: VDUnit, y: VDUnit) -> bool: return VDData.manhattan(u.cell, x.cell) < VDData.manhattan(u.cell, y.cell))
+	foes.sort_custom(func(x: VDUnit, y: VDUnit) -> bool: return u.dist_to(x) < u.dist_to(y))
 	var dmg := floorf(u.atk * float(sk["dmg"]))
 	for i in mini(int(sk["targets"]), foes.size()):
 		var t: VDUnit = foes[i]
@@ -145,7 +150,7 @@ func _multi_shot_run(u: VDUnit, sk: Dictionary, run: int) -> void:
 		u.face(to.x - from.x)
 		b.vfx.spawn("hit_light", b.fx_root, from + dir * 40.0, 1.8, dir.angle(), Color(1.0, 0.85, 0.4))
 		VDFx.tracer(b.fx_root, from + dir * 40.0, to, Color(1.0, 0.8, 0.35))
-		b.audio.play("gun", 0.05, 3.0)
+		b.audio.play("gun", 0.05, 4.0)
 		b.camera.shake(0.4)
 		_hit(t, dmg, "gun_hit", Color(1.0, 0.9, 0.5), 0.8)
 		await b.get_tree().create_timer(0.11).timeout
@@ -158,6 +163,7 @@ func _multi_shot_run(u: VDUnit, sk: Dictionary, run: int) -> void:
 
 func _absolute_zero(u: VDUnit, sk: Dictionary) -> bool:
 	u.casting = true
+	b.audio.play("whoosh", 0.03, 4.5, 0.5)   # TrioChess 냉기 시전
 	b.audio.play("mage_cast", 0.03, 3.0)
 	b.vfx.loop("magic_circle", b.ground_fx, u.position, 0.6, 0.28, 0.0, Color(0.5, 0.8, 1.0), Vector2(1.0, 0.5), 0.3, 2.0)
 	b.vfx.spawn("shockwave", b.ground_fx, u.position, 2.2, 0.0, Color(0.55, 0.85, 1.0), Vector2(1.0, 0.5), false, 0.8)
@@ -170,7 +176,8 @@ func _absolute_zero_hit(u: VDUnit, sk: Dictionary, run: int) -> void:
 	u.casting = false
 	if not _still_on(run):
 		return
-	b.audio.play("mage_hit", 0.03, 3.0)
+	b.audio.play("frost", 0.03)
+	b.audio.play("mage_hit", 0.03, -2.0)
 	b.camera.shake(0.7)
 	b.camera.hitstop(0.07)
 	var dmg := floorf(u.atk * float(sk["dmg"]))
@@ -184,6 +191,7 @@ func _absolute_zero_hit(u: VDUnit, sk: Dictionary, run: int) -> void:
 
 func _blessing(u: VDUnit, sk: Dictionary) -> bool:
 	b.audio.play("heal", 0.03, 3.0)
+	b.audio.play("chime", 0.03, -6.0, 1.1)
 	b.vfx.loop("magic_circle", b.ground_fx, u.position, 0.8, 0.32, 0.0, Color(0.6, 1.0, 0.7), Vector2(1.0, 0.5), 0.35, 1.5)
 	for a in _alive(b.allies):
 		var amount := floorf(a.max_hp * float(sk["heal_hp"]) + u.atk * float(sk["heal_atk"]))
@@ -225,7 +233,7 @@ func _farthest(u: VDUnit, foes: Array[VDUnit]) -> VDUnit:
 	var best: VDUnit = null
 	var best_d := -1
 	for f in foes:
-		var d := VDData.manhattan(u.cell, f.cell)
+		var d := u.dist_to(f)
 		if d > best_d:
 			best_d = d
 			best = f
@@ -235,5 +243,5 @@ func _farthest(u: VDUnit, foes: Array[VDUnit]) -> VDUnit:
 func _min_foe_dist(cell: Vector2i, foes: Array[VDUnit]) -> int:
 	var m := 1 << 30
 	for f in foes:
-		m = mini(m, VDData.manhattan(cell, f.cell))
+		m = mini(m, f.dist_to_cell(cell))
 	return m

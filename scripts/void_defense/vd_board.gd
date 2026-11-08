@@ -4,7 +4,7 @@
 class_name VDBoard
 extends Node2D
 
-const FACE_H := 44.0
+const FACE_H := 44.0 * VDData.TILE_SCALE
 const HALF_W := VDData.TILE_W * 0.5
 const HALF_H := VDData.TILE_H * 0.5
 const GROUND_SIZE := Vector2(VDData.TILE_W, VDData.TILE_H + FACE_H)
@@ -40,6 +40,7 @@ var hover_valid := false
 var hover_on := false
 var exits: Array = []
 var show_exits := false
+var exit_hover := -1            # 길 선택 버튼에 마우스를 올린 출구: 그 길만 밝게, 나머지는 흐리게
 
 ## 새 타일 솟아오르기: 셀 -> 시작 시각(_clock 기준). 끝난 셀은 지운다.
 const RISE_SEC := 0.5
@@ -233,16 +234,24 @@ func _draw_overlay() -> void:
 	# 1) 출구 표시 (갈림길 선택 중)
 	if show_exits:
 		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0)
+		var t := Time.get_ticks_msec() / 1000.0
 		for i in exits.size():
 			var ex: Dictionary = exits[i]
-			var gold := Color(1.0, 0.85, 0.35)
-			for cell in ex["corridor"]:
+			var hot := exit_hover == i
+			var dim := exit_hover >= 0 and not hot
+			var gold := Color(1.0, 0.95, 0.7) if hot else Color(1.0, 0.85, 0.35)
+			var a := 0.35 if dim else 1.0
+			var cells: Array = ex["corridor"]
+			for j in cells.size():
+				var cell: Vector2i = cells[j]
 				var pts := VDData.diamond(VDData.to_screen(Vector2(cell)), 4.0)
-				o.draw_colored_polygon(pts, Color(gold, 0.18 + 0.18 * pulse))
-				o.draw_polyline(pts, Color(gold, 0.9), 2.0)
-			var first: Vector2i = ex["corridor"][0]
-			var p := VDData.to_screen(Vector2(first)) + Vector2(0, -40)
-			o.draw_string(VDData.font(), p + Vector2(-80, 0), "길 %d  %s" % [i + 1, ex["label"]], HORIZONTAL_ALIGNMENT_CENTER, 160.0, 22, gold)
+				# 올린 길: 입구에서 출구 쪽으로 빛이 흘러간다
+				var wave := 0.5 + 0.5 * sin(t * 8.0 - j * 0.9) if hot else pulse
+				o.draw_colored_polygon(pts, Color(gold, (0.18 + 0.18 * wave + (0.25 if hot else 0.0)) * a))
+				o.draw_polyline(pts, Color(gold, 0.9 * a), 3.5 if hot else 2.0)
+			var first: Vector2i = cells[0]
+			var p := VDData.to_screen(Vector2(first)) + Vector2(0, -40 - (8.0 + 4.0 * sin(t * 6.0) if hot else 0.0))
+			o.draw_string(VDData.font(), p + Vector2(-80, 0), "길 %d  %s" % [i + 1, ex["label"]], HORIZONTAL_ALIGNMENT_CENTER, 160.0, 26 if hot else 22, Color(gold, a))
 	# 2) 드래그 중 대상 셀
 	if hover_on and hover_cell != Vector2i(-1, -1):
 		var pts := VDData.diamond(VDData.to_screen(Vector2(hover_cell)), 3.0)

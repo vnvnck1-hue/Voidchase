@@ -3,31 +3,33 @@
 ##
 ## "치열한 곳" = 아군-적 쌍의 중간점을 거리로 가중한 평균(가까이 붙은 쌍일수록 무겁게, 보스는 더 무겁게)
 ##             + 최근 명중 지점의 열기(add_heat, 서서히 식음) + 전체 유닛 중심을 조금(시야가 너무 좁아지지 않게).
-## 줌 = 살아 있는 유닛이 모두 화면(HUD 를 뺀 영역)에 여유 있게 들어오는 배율을 기본 전투 줌의 ±12% 안으로.
+## 줌 = 살아 있는 유닛이 모두 화면(HUD 를 뺀 영역)에 여유 있게 들어오는 배율을 기본 전투 줌의 -7%~+6% 안으로.
+## 위치는 방 중심에서 교전 중심 쪽으로 PAN_K 만큼만, 최대 MAX_PAN 까지 간다(전장을 크게 휘젓지 않게).
 ##
-## 예민하지 않게 세 단계로 거른다:
+## 튀지 않게 세 단계로 거르되, 굼뜨지 않게 각 단계는 짧게:
 ##   1) 원시 목표를 RAW_TAU 로 저역 통과 → 순간적인 튐(유닛 하나 돌진, 사망 등) 제거
 ##   2) 데드존(히스테리시스): 걸러진 목표가 지금 목표에서 DEAD_PX / DEAD_ZOOM 이상 벗어날 때만 목표를 옮긴다
-##   3) 카메라는 목표로 smooth damp(임계 감쇠 스프링) → 멈춘 상태에서 천천히 출발해 미끄러지듯 멈춘다
+##   3) 카메라는 목표로 smooth damp(임계 감쇠 스프링) → 빠르게 붙되 오버슈트 없이 멈춘다
 ## 시간은 실제 시간(히트스탑·배속과 무관)으로 흐른다.
 extends RefCounted
 
-const ENGAGE_DIST := 200.0              # 아군-적 거리가 이만큼이면 가중치 절반 (가까울수록 교전으로 봄)
+const ENGAGE_DIST := 200.0 * VDData.TILE_SCALE             # 아군-적 거리가 이만큼이면 가중치 절반 (가까울수록 교전으로 봄)
 const BOSS_WEIGHT := 1.6
 const CONTEXT := 0.2                    # 전체 유닛 중심을 섞는 비율
 const HEAT_DECAY := 1.6                 # 명중 열기가 식는 시간 상수(s)
 const HEAT_WEIGHT := 0.6                # 명중 한 번의 무게 (교전 쌍 하나 ≈ 1)
-const MAX_PAN := 320.0                  # 방 중심에서 벗어날 수 있는 최대 거리(px) — 맵 밖을 비추지 않게
-const ZOOM_OUT_K := 0.88                # 기본 전투 줌 대비 최대 줌아웃 (전장이 넓을 때)
-const ZOOM_IN_K := 1.12                 # 기본 전투 줌 대비 최대 줌인 (모여 있을 때)
+const PAN_K := 0.55                     # 방 중심 → 교전 중심 중 실제로 따라가는 비율
+const MAX_PAN := 150.0 * VDData.TILE_SCALE                 # 방 중심에서 벗어날 수 있는 최대 거리(px) — 320 은 전장이 너무 크게 움직였다
+const ZOOM_OUT_K := 0.93                # 기본 전투 줌 대비 최대 줌아웃 (전장이 넓을 때)
+const ZOOM_IN_K := 1.06                 # 기본 전투 줌 대비 최대 줌인 (모여 있을 때)
 const PAD := Vector2(150, 170)          # 유닛 위치(발밑) 둘레 여유: 캐릭터 키·HP바·이름
 const HUD_H := 270.0                    # 화면 위아래 HUD 가 가리는 높이 (위 120 + 아래 분대 바 150)
 const FILL := 0.85                      # 유닛 묶음이 쓸 수 있는 화면 비율
-const RAW_TAU := 0.6                    # 1단계 저역 통과 시간 상수(s)
-const DEAD_PX := 30.0                   # 2단계 위치 데드존(px) — 방이 작아 교전 중심은 보통 방 중심에서 50~150px 안에서 움직인다
-const DEAD_ZOOM := 0.035                # 2단계 줌 데드존(비율)
-const MOVE_TIME := 0.9                  # 3단계 위치 smooth damp 시간(s)
-const ZOOM_TIME := 1.3                  # 3단계 줌 smooth damp 시간(s)
+const RAW_TAU := 0.25                   # 1단계 저역 통과 시간 상수(s)
+const DEAD_PX := 18.0 * VDData.TILE_SCALE                  # 2단계 위치 데드존(px) — 방이 작아 교전 중심은 보통 방 중심에서 50~150px 안에서 움직인다
+const DEAD_ZOOM := 0.025                # 2단계 줌 데드존(비율)
+const MOVE_TIME := 0.38                 # 3단계 위치 smooth damp 시간(s) — 0.9 는 허우적거렸다
+const ZOOM_TIME := 0.6                  # 3단계 줌 smooth damp 시간(s)
 
 var pos := Vector2.ZERO                 # 카메라에 넣을 위치
 var zoom := 1.0                         # 카메라에 넣을 base_zoom
@@ -55,6 +57,14 @@ func sync_zoom(z: float) -> void:
 	zoom = z
 	_raw_zoom = z
 	_goal_zoom = z
+	_zvel = 0.0
+
+
+## 다른 연출(궁극기 클로즈업)이 카메라를 옮겨 놓은 자리에서 이어 받는다: 위치·줌만 맞추고 목표는 그대로 → 부드럽게 돌아간다.
+func hold_at(p: Vector2, z: float) -> void:
+	pos = p
+	zoom = z
+	_vel = Vector2.ZERO
 	_zvel = 0.0
 
 
@@ -103,7 +113,8 @@ func track(dt: float, allies: Array, enemies: Array, room_center: Vector2, view:
 	var fight := all_c if wsum < 0.0001 else sum / wsum
 	var target := all_c.lerp(fight, 1.0 - CONTEXT)
 	# 맵 밖을 비추지 않게 방 중심 둘레로 제한
-	var off := target - room_center
+	var off := (target - room_center) * PAN_K
+	target = room_center + off
 	if off.length() > MAX_PAN:
 		target = room_center + off.limit_length(MAX_PAN)
 	# 줌: 목표 지점 기준으로 모든 유닛이 들어오는 배율
@@ -119,7 +130,7 @@ func track(dt: float, allies: Array, enemies: Array, room_center: Vector2, view:
 
 ## 전투 밖: 주어진 지점으로 부드럽게 (줌은 건드리지 않는다). quick 이면 이동 중 분대를 놓치지 않게 빠르게 따라간다.
 func follow(dt: float, target: Vector2, quick := false) -> void:
-	_step(dt, target, zoom, false, MOVE_TIME * (0.3 if quick else 0.8))
+	_step(dt, target, zoom, false, 0.27 if quick else 0.5)
 	_zvel = 0.0
 
 

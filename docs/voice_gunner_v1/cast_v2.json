@@ -1,0 +1,37 @@
+{
+  "character": "gunner",
+  "note": "2차(2026-11-06): 1차 피드백 \"대부분 너무 길다, 더 임팩트 있게 짧게, 미소녀 서브컬처 게임에 어울리게\" → 1차에서 고른 Irohauta 한 목소리로 한 음절 위주 기합·비명. 다듬기 최대 0.8초.",
+  "model": "Eleven v4 (웹 화면, 안정성 50% · 유사성 75% · 언어 자동). 한 번 생성에 테이크 2개(t1·t2)",
+  "voices": {
+    "v2iro": { "name": "Irohauta", "full": "Irohauta - Bratty Anime female", "note": "1차에서 고른 목소리" }
+  },
+  "ingame": [
+    { "id": "iro_skill-01-t1", "group": "skill", "label": "기합 \"하앗!\" · 1차 테이크 1" },
+    { "id": "iro_skill-01-t2", "group": "skill", "label": "기합 \"하앗!\" · 1차 테이크 2" },
+    { "id": "iro_skill-03-t2", "group": "skill", "label": "다부진 \"에잇!\" · 1차 테이크 2" }
+  ],
+  "groups": {
+    "skill": {
+      "name": "스킬 사용 (다중 사격)",
+      "lines": [
+        { "label": "\"핫!\"", "text": "[short sharp anime girl battle shout] 핫!" },
+        { "label": "\"얍!\"", "text": "[cute anime girl, quick fierce kiai] 얍!" },
+        { "label": "\"타앗!\"", "text": "[anime heroine attack shout, crisp] 타앗!" },
+        { "label": "\"세잇!\"", "text": "[confident anime girl, short shout] 세잇!" },
+        { "label": "\"하잇!\"", "text": "[energetic gacha game heroine, short] 하잇!" },
+        { "label": "숨 내뱉는 \"흣!\"", "text": "[cool anime girl, short sharp exhale while shooting] 흣!" }
+      ]
+    },
+    "hurt": {
+      "name": "피격",
+      "lines": [
+        { "label": "\"꺅!\"", "text": "[cute anime girl, short pained yelp] 꺅!" },
+        { "label": "\"읏!\"", "text": "[anime girl, short hurt gasp] 읏!" },
+        { "label": "\"아읏!\"", "text": "[anime girl, quick pained cry] 아읏!" },
+        { "label": "\"히앗!\"", "text": "[cute anime girl, surprised hurt squeal] 히앗!" },
+        { "label": "\"큿!\"", "text": "[anime heroine, short pained grunt] 큿!" },
+        { "label": "\"꺄웃!\"", "text": "[cute anime girl, startled cry] 꺄웃!" }
+      ]
+    }
+  }
+}

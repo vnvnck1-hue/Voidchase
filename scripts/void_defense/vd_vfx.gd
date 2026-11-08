@@ -110,6 +110,9 @@ func _make(name: String, pos: Vector2, scl: float, rot: float, tint: Color, stre
 	s.scale = Vector2(scl, scl) * stretch
 	if flip:
 		s.scale.x = -s.scale.x
+	s.set_meta("rot", rot)
+	s.set_meta("stretch", stretch)
+	s.set_meta("base_scale", Vector2(-scl if flip else scl, scl))
 	s.modulate = tint
 	var pivot: Vector2 = info.get("pivot", Vector2(0.5, 0.5))
 	s.offset = (Vector2(0.5, 0.5) - pivot) * float(info["size"])

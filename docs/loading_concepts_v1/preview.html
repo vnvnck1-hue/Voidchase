@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>로딩 마스코트 — 두 가지 시안</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101014;color:#f4f3f6;font-family:system-ui,"Malgun Gothic",sans-serif;padding:38px 24px 60px}main{max-width:1120px;margin:auto}h1{font-size:27px;margin:0 0 9px;letter-spacing:-1px}.intro{color:#aaa7b3;font-size:14px;margin:0 0 26px;line-height:1.7}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}article{border:1px solid #33313d;border-radius:16px;overflow:hidden;background:#19181e}.label{padding:20px 22px 0;font-size:12px;letter-spacing:2px;color:#c9b6ff}h2{font-size:21px;margin:8px 22px 17px;letter-spacing:-.6px}.stage{height:260px;background:#000;display:flex;align-items:center;justify-content:center;gap:5px;padding:24px}.word{font-family:Impact,"Arial Black",sans-serif;font-size:clamp(23px,3vw,39px);font-weight:950;font-style:italic;white-space:nowrap;letter-spacing:-1px}.sub{font-family:system-ui,sans-serif;display:block;font-style:normal;font-size:9px;letter-spacing:5px;margin:7px 0 0 3px;color:#aaa}canvas{width:146px;height:146px;flex-shrink:0}.description{padding:19px 22px 22px;line-height:1.8;color:#bbb7c5;font-size:14px;min-height:112px}.controls{display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin:24px 0 16px;padding:16px 20px;border:1px solid #33313d;border-radius:12px;font-size:14px;background:#19181e}button{background:#e0d1ff;border:0;border-radius:7px;color:#201630;padding:9px 16px;font-weight:700;cursor:pointer}button.secondary{background:#302b3d;color:#ded5ee}input{accent-color:#c4a4ff;width:125px}output{color:#c9b6ff;min-width:90px;font-variant-numeric:tabular-nums}.note{color:#8b8796;font-size:12px;line-height:1.8}details{margin-top:25px}summary{cursor:pointer;color:#c9b6ff;font-size:14px}.sheets{margin-top:18px;display:grid;gap:16px}.sheets img{width:100%;display:block;background:#000;border-radius:12px}a{color:#c9b6ff}.error{color:#ffb5b5}@media(max-width:850px){.grid{grid-template-columns:1fr}.stage{height:235px}.word{font-size:37px}}@media(prefers-reduced-motion:reduce){.note::after{content:' · 기기 설정에 따라 처음에는 일시정지됩니다.'}}
+</style>
+<main>
+<h1>작은 움직임으로 기다리는 시간까지 귀엽게.</h1>
+<p class="intro">흑백 실루엣 로딩 마스코트 · 8프레임 루프 시안<br>두 캐릭터를 같은 크기와 속도로 비교해 보세요.</p>
+<div class="grid">
+<article><div class="label">CONCEPT A</div><h2>카드 메이드</h2><div class="stage"><div class="word">NOW LOADING<span class="sub">VOID DEFENSE</span></div><canvas id="maid" width="292" height="292" aria-label="별 카드를 안고 뛰는 메이드의 반복 애니메이션"></canvas></div><div class="description">별 카드를 꼭 안고, 사뿐사뿐 점프.<br>머리와 리본이 뒤따라 흔들리는 경쾌한 루프.</div></article>
+<article><div class="label">CONCEPT B</div><h2>왕관 공허젤리</h2><div class="stage"><div class="word">NOW LOADING<span class="sub">VOID DEFENSE</span></div><canvas id="jelly" width="292" height="292" aria-label="몸이 말랑하게 눌리고 왕관이 늦게 따라오는 공허젤리 반복 애니메이션"></canvas></div><div class="description">말랑한 몸이 꾸욱 눌렸다가 다시 통통.<br>떠 있는 왕관이 한 박자 늦게 따라오는 느긋한 루프.</div></article>
+</div>
+<div class="controls"><button id="play">일시정지</button><button id="step" class="secondary">한 프레임씩</button><label for="fps">재생 속도</label><input id="fps" type="range" min="4" max="12" value="8"><output id="speed">8 fps · 1.00초</output><output id="frame">01 / 08</output></div>
+<p class="note" id="status">왼쪽 위부터 오른쪽으로 4칸, 다음 줄 4칸 순서로 재생합니다. 마지막 프레임에서 첫 프레임으로 돌아갑니다.<br>검정 배경을 포함한 콘셉트 PNG입니다. 실제 게임 연결 전에는 프레임 간 형태와 기준점을 한 번 더 다듬을 수 있습니다.</p>
+<details><summary>원본 스프라이트 시트 보기 / 다운로드</summary><div class="sheets"><a href="a_card_maid_sheet.png" download>시안 A PNG 다운로드</a><img src="a_card_maid_sheet.png" alt="카드 메이드 4×2 시트"><a href="b_void_jelly_sheet.png" download>시안 B PNG 다운로드</a><img src="b_void_jelly_sheet.png" alt="공허젤리 4×2 시트"></div></details>
+</main>
+<script>
+const configs=[{id:'maid',file:'a_card_maid_sheet.png'},{id:'jelly',file:'b_void_jelly_sheet.png'}];
+let playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,frame=0,fps=8,last=0,ready=false;
+const play=document.getElementById('play'),speed=document.getElementById('speed'),counter=document.getElementById('frame');
+function updatePlay(){play.textContent=playing?'일시정지':'재생'}
+function draw(){if(!ready)return;for(const c of configs){const canvas=document.getElementById(c.id),ctx=canvas.getContext('2d');const col=frame%4,row=Math.floor(frame/4);const x=Math.round(col*c.image.naturalWidth/4),y=Math.round(row*c.image.naturalHeight/2);const right=Math.round((col+1)*c.image.naturalWidth/4),bottom=Math.round((row+1)*c.image.naturalHeight/2);ctx.fillStyle='#000';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(c.image,x,y,right-x,bottom-y,0,0,canvas.width,canvas.height)}counter.textContent=String(frame+1).padStart(2,'0')+' / 08'}
+play.onclick=()=>{playing=!playing;last=performance.now();updatePlay()};document.getElementById('step').onclick=()=>{playing=false;updatePlay();frame=(frame+1)%8;draw()};document.getElementById('fps').oninput=e=>{fps=Number(e.target.value);speed.textContent=fps+' fps · '+(8/fps).toFixed(2)+'초';last=performance.now()};
+Promise.all(configs.map(c=>new Promise((resolve,reject)=>{c.image=new Image();c.image.onload=resolve;c.image.onerror=reject;c.image.src=c.file}))).then(()=>{ready=true;draw()}).catch(()=>{document.getElementById('status').textContent='PNG 파일을 불러오지 못했습니다. HTML과 PNG 두 장을 같은 폴더에 두고 열어 주세요.';document.getElementById('status').className='error'});
+function loop(now){if(playing&&ready&&now-last>=1000/fps){const steps=Math.floor((now-last)/(1000/fps));frame=(frame+steps)%8;last=now-(now-last)%(1000/fps);draw()}if(!playing||!ready)last=now;requestAnimationFrame(loop)}updatePlay();requestAnimationFrame(loop);
+</script>
+</html>

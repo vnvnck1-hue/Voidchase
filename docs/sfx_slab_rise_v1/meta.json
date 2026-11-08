@@ -1,0 +1,102 @@
+{
+  "slab-a-1": {
+    "lead_cut": 0,
+    "sec": 2,
+    "rms_db": -19.3
+  },
+  "slab-a-2": {
+    "lead_cut": 0,
+    "sec": 2,
+    "rms_db": -22.5
+  },
+  "slab-a-3": {
+    "lead_cut": 0,
+    "sec": 2,
+    "rms_db": -28.4
+  },
+  "slab-a-4": {
+    "lead_cut": 0,
+    "sec": 2,
+    "rms_db": -18.5
+  },
+  "slab-b-1": {
+    "lead_cut": 0.13,
+    "sec": 1.87,
+    "rms_db": -26.1
+  },
+  "slab-b-2": {
+    "lead_cut": 0.08,
+    "sec": 1.92,
+    "rms_db": -26.7
+  },
+  "slab-b-3": {
+    "lead_cut": 0,
+    "sec": 2,
+    "rms_db": -26.2
+  },
+  "slab-b-4": {
+    "lead_cut": 0,
+    "sec": 2,
+    "rms_db": -33.6
+  },
+  "slab-c-1": {
+    "lead_cut": 0.03,
+    "sec": 1.96,
+    "rms_db": -20.6
+  },
+  "slab-c-2": {
+    "lead_cut": 0.06,
+    "sec": 1.94,
+    "rms_db": -30.3
+  },
+  "slab-c-3": {
+    "lead_cut": 0.09,
+    "sec": 1.91,
+    "rms_db": -32.4
+  },
+  "slab-c-4": {
+    "lead_cut": 0.09,
+    "sec": 1.91,
+    "rms_db": -30.8
+  },
+  "slab-d-1": {
+    "lead_cut": 0,
+    "sec": 2,
+    "rms_db": -21.7
+  },
+  "slab-d-2": {
+    "lead_cut": 0,
+    "sec": 2,
+    "rms_db": -24.4
+  },
+  "slab-d-3": {
+    "lead_cut": 0.02,
+    "sec": 1.98,
+    "rms_db": -22.9
+  },
+  "slab-d-4": {
+    "lead_cut": 0,
+    "sec": 2,
+    "rms_db": -18.5
+  },
+  "slab-e-1": {
+    "lead_cut": 0.02,
+    "sec": 1.98,
+    "rms_db": -30.4
+  },
+  "slab-e-2": {
+    "lead_cut": 0,
+    "sec": 2,
+    "rms_db": -19.4
+  },
+  "slab-e-3": {
+    "lead_cut": 0,
+    "sec": 2,
+    "rms_db": -20.5
+  },
+  "slab-e-4": {
+    "lead_cut": 0,
+    "sec": 2,
+    "rms_db": -22
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "character": "gunner",
+  "note": "핑크 건너(SMG 메이드). 눈치 빠른 관찰자. 스킬 '다중 사격'(한 칸 물러나 가장 가까운 적 3명에게 강탄) · 피격 추임새. 말 없는 짧은 추임새만.",
+  "model": "Eleven v4 (웹 화면, 안정성 50% · 유사성 75% · 언어 자동). 한 번 생성에 테이크 2개(t1·t2)",
+  "voices": {
+    "iro":  { "name": "Irohauta", "full": "Irohauta - Bratty Anime female", "note": "새침·건방진 애니 소녀" },
+    "kano": { "name": "Kano",     "full": "Kano - Cute & Anime",           "note": "귀여운 애니 소녀" },
+    "pipi": { "name": "Pipi",     "full": "Pipi - Cute & Anime",           "note": "귀엽고 앳된 애니 소녀" }
+  },
+  "groups": {
+    "skill": {
+      "name": "스킬 사용 (다중 사격)",
+      "lines": [
+        { "label": "기합 \"하앗!\"", "text": "[fierce battle cry] 하앗!" },
+        { "label": "숨 들이쉬고 \"흡… 하앗!\"", "text": "[quick sharp inhale] 흡… [shouts] 하앗!" },
+        { "label": "다부진 \"에잇!\"", "text": "[determined, firing guns] 에잇!" },
+        { "label": "자신만만 \"후훗~ 하앗!\"", "text": "[smug little laugh] 후훗~ [battle cry] 하앗!" }
+      ]
+    },
+    "hurt": {
+      "name": "피격",
+      "lines": [
+        { "label": "놀란 \"꺄앗!\"", "text": "[startled, pained yelp] 꺄앗!" },
+        { "label": "짧은 신음 \"윽…!\"", "text": "[pained grunt, hit hard] 윽…!" },
+        { "label": "\"아얏!\"", "text": "[sharp pain] 아얏!" },
+        { "label": "이 악문 \"큭… 으읏!\"", "text": "[gritting teeth in pain] 큭… 으읏!" }
+      ]
+    }
+  }
+}

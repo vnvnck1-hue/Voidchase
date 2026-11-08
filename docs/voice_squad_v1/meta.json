@@ -1,0 +1,964 @@
+{
+  "clips": {
+    "healer_kano_hurt-01-t1": {
+      "raw_sec": 1.96,
+      "sec": 0.44,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 735
+    },
+    "healer_kano_hurt-01-t2": {
+      "raw_sec": 1.96,
+      "sec": 0.46,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 788
+    },
+    "healer_kano_hurt-02-t1": {
+      "raw_sec": 1.23,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 1,
+      "kept": 1,
+      "f0": 649
+    },
+    "healer_kano_hurt-02-t2": {
+      "raw_sec": 2.27,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 538
+    },
+    "healer_kano_hurt-03-t1": {
+      "raw_sec": 1.41,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 1,
+      "kept": 1,
+      "f0": 525
+    },
+    "healer_kano_hurt-03-t2": {
+      "raw_sec": 2.51,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 474
+    },
+    "healer_kano_hurt-04-t1": {
+      "raw_sec": 1.96,
+      "sec": 0.48,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 474
+    },
+    "healer_kano_hurt-04-t2": {
+      "raw_sec": 2.59,
+      "sec": 0.4,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 428
+    },
+    "healer_kano_hurt-05-t1": {
+      "raw_sec": 1.57,
+      "sec": 0.52,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 723
+    },
+    "healer_kano_hurt-05-t2": {
+      "raw_sec": 1.8,
+      "sec": 0.5,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 747
+    },
+    "healer_kano_skill-01-t1": {
+      "raw_sec": 1.23,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 1,
+      "kept": 1,
+      "f0": 450
+    },
+    "healer_kano_skill-01-t2": {
+      "raw_sec": 2.35,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 432
+    },
+    "healer_kano_skill-02-t1": {
+      "raw_sec": 2.12,
+      "sec": 0.56,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 408
+    },
+    "healer_kano_skill-02-t2": {
+      "raw_sec": 2.12,
+      "sec": 0.56,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 531
+    },
+    "healer_kano_skill-03-t1": {
+      "raw_sec": 0.91,
+      "sec": 0.42,
+      "cut": false,
+      "segs": 1,
+      "kept": 1,
+      "f0": 428
+    },
+    "healer_kano_skill-03-t2": {
+      "raw_sec": 0.99,
+      "sec": 0.38,
+      "cut": false,
+      "segs": 1,
+      "kept": 1,
+      "f0": 604
+    },
+    "healer_kano_skill-04-t1": {
+      "raw_sec": 1.15,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 1,
+      "kept": 1,
+      "f0": 416
+    },
+    "healer_kano_skill-04-t2": {
+      "raw_sec": 2.12,
+      "sec": 0.44,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 412
+    },
+    "healer_kano_skill-05-t1": {
+      "raw_sec": 1.96,
+      "sec": 0.3,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 531
+    },
+    "healer_kano_skill-05-t2": {
+      "raw_sec": 2.04,
+      "sec": 0.32,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 596
+    },
+    "healer_koume_hurt-01-t1": {
+      "raw_sec": 1.88,
+      "sec": 0.44,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 848
+    },
+    "healer_koume_hurt-01-t2": {
+      "raw_sec": 1.8,
+      "sec": 0.42,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 788
+    },
+    "healer_koume_hurt-02-t1": {
+      "raw_sec": 2.04,
+      "sec": 0.54,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 437
+    },
+    "healer_koume_hurt-02-t2": {
+      "raw_sec": 2.04,
+      "sec": 0.5,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 538
+    },
+    "healer_koume_hurt-03-t1": {
+      "raw_sec": 1.41,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 1,
+      "kept": 1,
+      "f0": 525
+    },
+    "healer_koume_hurt-03-t2": {
+      "raw_sec": 2.27,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 490
+    },
+    "healer_koume_hurt-04-t1": {
+      "raw_sec": 1.88,
+      "sec": 0.48,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 380
+    },
+    "healer_koume_hurt-04-t2": {
+      "raw_sec": 3,
+      "sec": 0.36,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 428
+    },
+    "healer_koume_hurt-05-t1": {
+      "raw_sec": 1.23,
+      "sec": 0.34,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 747
+    },
+    "healer_koume_hurt-05-t2": {
+      "raw_sec": 1.65,
+      "sec": 0.38,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 735
+    },
+    "healer_koume_skill-01-t1": {
+      "raw_sec": 1.23,
+      "sec": 0.48,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 394
+    },
+    "healer_koume_skill-01-t2": {
+      "raw_sec": 1.31,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 1,
+      "kept": 1,
+      "f0": 364
+    },
+    "healer_koume_skill-02-t1": {
+      "raw_sec": 2.35,
+      "sec": 0.48,
+      "cut": false,
+      "segs": 4,
+      "kept": 1,
+      "f0": 496
+    },
+    "healer_koume_skill-02-t2": {
+      "raw_sec": 2.43,
+      "sec": 0.5,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 412
+    },
+    "healer_koume_skill-03-t1": {
+      "raw_sec": 0.91,
+      "sec": 0.38,
+      "cut": false,
+      "segs": 1,
+      "kept": 1,
+      "f0": 580
+    },
+    "healer_koume_skill-03-t2": {
+      "raw_sec": 0.91,
+      "sec": 0.38,
+      "cut": false,
+      "segs": 1,
+      "kept": 1,
+      "f0": 613
+    },
+    "healer_koume_skill-04-t1": {
+      "raw_sec": 1.15,
+      "sec": 0.42,
+      "cut": false,
+      "segs": 1,
+      "kept": 1,
+      "f0": 416
+    },
+    "healer_koume_skill-04-t2": {
+      "raw_sec": 0.99,
+      "sec": 0.42,
+      "cut": false,
+      "segs": 1,
+      "kept": 1,
+      "f0": 424
+    },
+    "healer_koume_skill-05-t1": {
+      "raw_sec": 1.07,
+      "sec": 0.26,
+      "cut": false,
+      "segs": 1,
+      "kept": 1,
+      "f0": 405
+    },
+    "healer_koume_skill-05-t2": {
+      "raw_sec": 1.8,
+      "sec": 0.26,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 507
+    },
+    "knight_aisyah_hurt-01-t1": {
+      "raw_sec": 1.49,
+      "sec": 0.24,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 565
+    },
+    "knight_aisyah_hurt-01-t2": {
+      "raw_sec": 1.57,
+      "sec": 0.26,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 630
+    },
+    "knight_aisyah_hurt-02-t1": {
+      "raw_sec": 2.27,
+      "sec": 0.4,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 538
+    },
+    "knight_aisyah_hurt-02-t2": {
+      "raw_sec": 2.77,
+      "sec": 0.26,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 490
+    },
+    "knight_aisyah_hurt-03-t1": {
+      "raw_sec": 2.27,
+      "sec": 0.3,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 747
+    },
+    "knight_aisyah_hurt-03-t2": {
+      "raw_sec": 2.27,
+      "sec": 0.22,
+      "cut": false,
+      "segs": 4,
+      "kept": 1,
+      "f0": 368
+    },
+    "knight_aisyah_hurt-04-t1": {
+      "raw_sec": 2.51,
+      "sec": 0.42,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 735
+    },
+    "knight_aisyah_hurt-04-t2": {
+      "raw_sec": 1.72,
+      "sec": 0.26,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 639
+    },
+    "knight_aisyah_hurt-05-t1": {
+      "raw_sec": 1.8,
+      "sec": 0.5,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 551
+    },
+    "knight_aisyah_hurt-05-t2": {
+      "raw_sec": 1.96,
+      "sec": 0.58,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 639
+    },
+    "knight_aisyah_skill-01-t1": {
+      "raw_sec": 1.49,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 513
+    },
+    "knight_aisyah_skill-01-t2": {
+      "raw_sec": 1.31,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 464
+    },
+    "knight_aisyah_skill-02-t1": {
+      "raw_sec": 0.99,
+      "sec": 0.34,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 630
+    },
+    "knight_aisyah_skill-02-t2": {
+      "raw_sec": 1.07,
+      "sec": 0.42,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 723
+    },
+    "knight_aisyah_skill-03-t1": {
+      "raw_sec": 1.31,
+      "sec": 0.24,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 604
+    },
+    "knight_aisyah_skill-03-t2": {
+      "raw_sec": 1.49,
+      "sec": 0.22,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 551
+    },
+    "knight_aisyah_skill-04-t1": {
+      "raw_sec": 2.12,
+      "sec": 0.4,
+      "cut": false,
+      "segs": 3,
+      "kept": 2,
+      "f0": 735
+    },
+    "knight_aisyah_skill-04-t2": {
+      "raw_sec": 2.59,
+      "sec": 0.4,
+      "cut": false,
+      "segs": 4,
+      "kept": 2,
+      "f0": 596
+    },
+    "knight_aisyah_skill-05-t1": {
+      "raw_sec": 0.99,
+      "sec": 0.34,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 621
+    },
+    "knight_aisyah_skill-05-t2": {
+      "raw_sec": 1.07,
+      "sec": 0.38,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 639
+    },
+    "knight_lola_hurt-01-t1": {
+      "raw_sec": 1.65,
+      "sec": 0.32,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 551
+    },
+    "knight_lola_hurt-01-t2": {
+      "raw_sec": 1.72,
+      "sec": 0.36,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 544
+    },
+    "knight_lola_hurt-02-t1": {
+      "raw_sec": 1.8,
+      "sec": 0.42,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 450
+    },
+    "knight_lola_hurt-02-t2": {
+      "raw_sec": 1.88,
+      "sec": 0.52,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 490
+    },
+    "knight_lola_hurt-03-t1": {
+      "raw_sec": 1.8,
+      "sec": 0.42,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 459
+    },
+    "knight_lola_hurt-03-t2": {
+      "raw_sec": 1.8,
+      "sec": 0.42,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 551
+    },
+    "knight_lola_hurt-04-t1": {
+      "raw_sec": 1.8,
+      "sec": 0.3,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 490
+    },
+    "knight_lola_hurt-04-t2": {
+      "raw_sec": 1.8,
+      "sec": 0.44,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 573
+    },
+    "knight_lola_hurt-05-t1": {
+      "raw_sec": 1.72,
+      "sec": 0.46,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 490
+    },
+    "knight_lola_hurt-05-t2": {
+      "raw_sec": 1.8,
+      "sec": 0.5,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 558
+    },
+    "knight_lola_skill-01-t1": {
+      "raw_sec": 2.51,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 501
+    },
+    "knight_lola_skill-01-t2": {
+      "raw_sec": 1.41,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 474
+    },
+    "knight_lola_skill-02-t1": {
+      "raw_sec": 1.65,
+      "sec": 0.3,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 538
+    },
+    "knight_lola_skill-02-t2": {
+      "raw_sec": 1.57,
+      "sec": 0.48,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 507
+    },
+    "knight_lola_skill-03-t1": {
+      "raw_sec": 1.23,
+      "sec": 0.2,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 441
+    },
+    "knight_lola_skill-03-t2": {
+      "raw_sec": 1.57,
+      "sec": 0.18,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 474
+    },
+    "knight_lola_skill-04-t1": {
+      "raw_sec": 2.51,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 4,
+      "kept": 2,
+      "f0": null
+    },
+    "knight_lola_skill-04-t2": {
+      "raw_sec": 2.35,
+      "sec": 0.36,
+      "cut": false,
+      "segs": 5,
+      "kept": 2,
+      "f0": 507
+    },
+    "knight_lola_skill-05-t1": {
+      "raw_sec": 1.07,
+      "sec": 0.5,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 538
+    },
+    "knight_lola_skill-05-t2": {
+      "raw_sec": 1.07,
+      "sec": 0.56,
+      "cut": false,
+      "segs": 1,
+      "kept": 1,
+      "f0": 525
+    },
+    "mage_ayame_hurt-01-t1": {
+      "raw_sec": 2.59,
+      "sec": 0.56,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 274
+    },
+    "mage_ayame_hurt-01-t2": {
+      "raw_sec": 2.77,
+      "sec": 0.44,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 272
+    },
+    "mage_ayame_hurt-02-t1": {
+      "raw_sec": 1.8,
+      "sec": 0.26,
+      "cut": false,
+      "segs": 4,
+      "kept": 1,
+      "f0": 238
+    },
+    "mage_ayame_hurt-02-t2": {
+      "raw_sec": 1.65,
+      "sec": 0.52,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 263
+    },
+    "mage_ayame_hurt-03-t1": {
+      "raw_sec": 2.19,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 294
+    },
+    "mage_ayame_hurt-03-t2": {
+      "raw_sec": 1.88,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": null
+    },
+    "mage_ayame_hurt-04-t1": {
+      "raw_sec": 2.77,
+      "sec": 0.48,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 294
+    },
+    "mage_ayame_hurt-04-t2": {
+      "raw_sec": 3.4,
+      "sec": 0.56,
+      "cut": false,
+      "segs": 4,
+      "kept": 1,
+      "f0": 271
+    },
+    "mage_ayame_hurt-05-t1": {
+      "raw_sec": 2.19,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 208
+    },
+    "mage_ayame_hurt-05-t2": {
+      "raw_sec": 2.04,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 206
+    },
+    "mage_ayame_skill-01-t1": {
+      "raw_sec": 2.51,
+      "sec": 0.26,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 290
+    },
+    "mage_ayame_skill-01-t2": {
+      "raw_sec": 2.51,
+      "sec": 0.3,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 244
+    },
+    "mage_ayame_skill-02-t1": {
+      "raw_sec": 1.8,
+      "sec": 0.24,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 271
+    },
+    "mage_ayame_skill-02-t2": {
+      "raw_sec": 1.65,
+      "sec": 0.28,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 228
+    },
+    "mage_ayame_skill-03-t1": {
+      "raw_sec": 2.27,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 276
+    },
+    "mage_ayame_skill-03-t2": {
+      "raw_sec": 2.27,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 700
+    },
+    "mage_ayame_skill-04-t1": {
+      "raw_sec": 1.41,
+      "sec": 0.2,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 245
+    },
+    "mage_ayame_skill-04-t2": {
+      "raw_sec": 1.49,
+      "sec": 0.48,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 900
+    },
+    "mage_ayame_skill-05-t1": {
+      "raw_sec": 1.96,
+      "sec": 0.56,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 206
+    },
+    "mage_ayame_skill-05-t2": {
+      "raw_sec": 1.88,
+      "sec": 0.52,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 192
+    },
+    "mage_suzu_hurt-01-t1": {
+      "raw_sec": 2.69,
+      "sec": 0.2,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 300
+    },
+    "mage_suzu_hurt-01-t2": {
+      "raw_sec": 2.77,
+      "sec": 0.4,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 306
+    },
+    "mage_suzu_hurt-02-t1": {
+      "raw_sec": 1.88,
+      "sec": 0.58,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 334
+    },
+    "mage_suzu_hurt-02-t2": {
+      "raw_sec": 1.88,
+      "sec": 0.32,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 296
+    },
+    "mage_suzu_hurt-03-t1": {
+      "raw_sec": 2.35,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 723
+    },
+    "mage_suzu_hurt-03-t2": {
+      "raw_sec": 2.19,
+      "sec": 0.56,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 353
+    },
+    "mage_suzu_hurt-04-t1": {
+      "raw_sec": 2.93,
+      "sec": 0.28,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 320
+    },
+    "mage_suzu_hurt-04-t2": {
+      "raw_sec": 3.16,
+      "sec": 0.54,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 317
+    },
+    "mage_suzu_hurt-05-t1": {
+      "raw_sec": 2.27,
+      "sec": 0.56,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 231
+    },
+    "mage_suzu_hurt-05-t2": {
+      "raw_sec": 2.27,
+      "sec": 0.54,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 233
+    },
+    "mage_suzu_skill-01-t1": {
+      "raw_sec": 3.4,
+      "sec": 0.26,
+      "cut": false,
+      "segs": 4,
+      "kept": 1,
+      "f0": 342
+    },
+    "mage_suzu_skill-01-t2": {
+      "raw_sec": 1.8,
+      "sec": 0.28,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 269
+    },
+    "mage_suzu_skill-02-t1": {
+      "raw_sec": 2.77,
+      "sec": 0.2,
+      "cut": false,
+      "segs": 5,
+      "kept": 1,
+      "f0": 311
+    },
+    "mage_suzu_skill-02-t2": {
+      "raw_sec": 2.35,
+      "sec": 0.24,
+      "cut": false,
+      "segs": 4,
+      "kept": 1,
+      "f0": 286
+    },
+    "mage_suzu_skill-03-t1": {
+      "raw_sec": 2.59,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 2,
+      "kept": 1,
+      "f0": 332
+    },
+    "mage_suzu_skill-03-t2": {
+      "raw_sec": 3.79,
+      "sec": 0.6,
+      "cut": true,
+      "segs": 3,
+      "kept": 1,
+      "f0": 286
+    },
+    "mage_suzu_skill-04-t1": {
+      "raw_sec": 1.65,
+      "sec": 0.44,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 240
+    },
+    "mage_suzu_skill-04-t2": {
+      "raw_sec": 2.27,
+      "sec": 0.24,
+      "cut": false,
+      "segs": 4,
+      "kept": 1,
+      "f0": 274
+    },
+    "mage_suzu_skill-05-t1": {
+      "raw_sec": 2.12,
+      "sec": 0.42,
+      "cut": false,
+      "segs": 3,
+      "kept": 1,
+      "f0": 228
+    },
+    "mage_suzu_skill-05-t2": {
+      "raw_sec": 2.12,
+      "sec": 0.58,
+      "cut": false,
+      "segs": 2,
+      "kept": 1,
+      "f0": 231
+    }
+  }
+}

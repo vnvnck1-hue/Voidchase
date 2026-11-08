@@ -5,6 +5,8 @@
 ## 화면 대응: 기본은 stretch aspect "expand"(project.godot) 라서 울트라와이드·4:3 에서도 검은 띠 없이 화면을 채운다.
 ## 원화 폭이 정해져 있어 넓히면 가장자리가 드러나는 씬만 SCENES 의 "aspect": "keep" 으로 16:9 를 유지한다.
 ## UI 는 1920x1080 기준 좌표로 짠 뒤 pin() 으로 화면 가장자리·가운데에 붙인다.
+## 로비에서 모드로 들어갈 때는 페이크 로딩 화면(scripts/loading_screen.gd, 약 3초)을 거친다. 로비로 나갈 때는 바로 바뀐다.
+## SCENES 에 "loading": false 인 씬(연출 연구실 같은 도구)은 로딩 화면 없이 바로 들어간다.
 extends CanvasLayer
 
 const LOBBY := 0
@@ -14,13 +16,14 @@ const SCENES := [
 	{"name": "Touch_Game_demo_anim", "path": "res://scenes/Touch_Game_demo_anim.tscn", "title": "터치 게임 · 캐릭터 선택", "desc": "넓은 배경 + 캐릭터 선택창 + 스탠딩 원화 등장 연출.", "aspect": "keep"},
 	{"name": "VoidDefense_greybox", "path": "res://scenes/void_defense/VoidDefense.tscn", "title": "VOID DEFENSE (그레이박스)", "desc": "절차 생성 방을 전진하며 싸우는 자동전투 디펜스. 배치 → 전투 → 갈림길 선택. 유닛은 원화 조립 테스트의 캐릭터·몬스터."},
 	{"name": "VoidDefense_visual", "path": "res://scenes/void_defense/VoidDefenseVisualTest.tscn", "title": "VOID DEFENSE (원화 조립 테스트)", "desc": "컨셉 원화 분리본 64장을 assembly.json 좌표대로 조립하고 절차 아이들·위빙을 얹은 화면. R 보조 레이어 · H HUD · O 1:1 · G 리그 피벗 · A 애니메이션.", "aspect": "keep"},
-	{"name": "FxLab", "path": "res://scenes/void_defense/FxLab.tscn", "title": "연출 연구실", "desc": "몬스터 차원 소환 연출의 타이밍·스케일·타격감을 슬라이더로 바꾸며 실시간 반복 재생. 저장하면 VOID DEFENSE 전투에 반영."},
+	{"name": "FxLab", "path": "res://scenes/void_defense/FxLab.tscn", "title": "연출 연구실", "desc": "몬스터 등장 · 초궁극기 컷인 같은 연출을 목록에서 골라 타이밍·세기를 슬라이더로 바꾸며 실시간 반복 재생. 저장하면 VOID DEFENSE 전투에 반영.", "loading": false},
 ]
 const DESIGN := Vector2(1920, 1080)
 const GEAR_RECT := Rect2(1860, 16, 44, 44)       # 설정 버튼 (오른쪽 위 끝)
 const MENU_RECT := Rect2(1600, 68, 304, 0)       # 설정 메뉴 (버튼 바로 아래, 높이는 내용만큼)
 const MENU_BG := Color(0.07, 0.05, 0.13, 0.98)
 const MENU_BORDER := Color(0.62, 0.5, 0.95, 0.7)
+const LoadingScreen := preload("res://scripts/loading_screen.gd")
 ## 씬 파일을 매번 다시 파싱하지 않도록 PackedScene 을 미리 들고 있는다.
 var _packed: Array[PackedScene] = []
 var _root: Control
@@ -29,6 +32,8 @@ var _menu: PanelContainer
 var _menu_box: VBoxContainer
 ## 씬이 넣은 설정 항목: {who, text, action, state}
 var _items: Array[Dictionary] = []
+## 떠 있는 로딩 화면 (없으면 null). 이 동안은 다른 전환·Esc 를 받지 않는다.
+var _loading: LoadingScreen
 
 
 func _ready() -> void:
@@ -186,13 +191,35 @@ func _refresh() -> void:
 func switch_to(i: int) -> void:
 	if i < 0 or i >= SCENES.size() or i == current_index():
 		return
-	if get_tree().current_scene == null:
-		return  # 이미 이번 프레임에 전환이 예약됨
+	if get_tree().current_scene == null or is_loading():
+		return  # 이미 이번 프레임에 전환이 예약됨 / 로딩 화면이 도는 중
 	Engine.time_scale = 1.0
 	set_menu_open(false)
+	if current_index() == LOBBY and SCENES[i].get("loading", true):
+		_load_into(i)
+		return
+	_change(i)
+
+
+func _change(i: int) -> void:
 	print("[scene_switcher] -> ", SCENES[i]["path"])
 	get_tree().change_scene_to_packed(_packed[i])
 	call_deferred("_refresh")
+
+
+## 로딩 화면으로 덮고 → 다 덮이면 씬을 바꾸고 → 새 씬이 그려진 뒤 걷는다.
+func _load_into(i: int) -> void:
+	_loading = LoadingScreen.new()
+	add_child(_loading)
+	_loading.start()
+	await _loading.covered
+	_change(i)
+	_loading.finished.connect(func() -> void: _loading = null, CONNECT_ONE_SHOT)
+	_loading.reveal()
+
+
+func is_loading() -> bool:
+	return _loading != null
 
 
 func go_lobby() -> void:
@@ -200,6 +227,9 @@ func go_lobby() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if is_loading() and event is InputEventKey and event.keycode != KEY_F11:
+		get_viewport().set_input_as_handled()   # 로딩 중 키 입력은 삼킨다 (F11 만 통과)
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_ESCAPE:

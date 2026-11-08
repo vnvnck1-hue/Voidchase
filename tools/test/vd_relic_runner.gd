@@ -58,6 +58,7 @@ func _process(delta: float) -> void:
 			_fx_show()
 			return
 		_shot_later("01_placement", 0.3)
+		_tip_later(0.4)
 		_turn_later(0.5)
 		_start_later(1.6)
 	if _b.state == VDBattle.State.BATTLE:
@@ -75,16 +76,29 @@ func _setup_board() -> void:
 	for id in VDRelicData.RELIC_ORDER:
 		if not board.tray.has(id):
 			board.add_to_tray(id)
-	_check(board.tray.size() == 5, "tray has all 5 relics (got %d)" % board.tray.size())
+	_check(board.tray.size() == VDRelicData.RELIC_ORDER.size(), "tray has all %d relics (got %d)" % [VDRelicData.RELIC_ORDER.size(), board.tray.size()])
 	# 잠긴 칸에는 못 놓는다
 	_check(not board.place_from_tray(0, Vector2i(0, 2)), "cannot place on locked cell")
 	# 별 깃털은 최상단에, 서리 결정은 뇌운 조각 아래(위 칸 유물 → 둔화 2배), 잉걸불은 빈 이웃이 많은 자리
 	_place("star_feather", Vector2i(0, 0))
 	_place("thunder_shard", Vector2i(1, 0))
-	_place("frost_crystal", Vector2i(1, 1))
+	_place("resonance", Vector2i(1, 1))
 	_place("essence_vial", Vector2i(0, 1))
-	_check(board.tray.size() == 1 and board.tray[0] == "ember", "ember left in tray")
-	_check(board.relic_above(Vector2i(1, 1)), "frost has relic above")
+	_check(board.tray.size() == VDRelicData.RELIC_ORDER.size() - 4 and board.tray[0] == "ember", "ember first in tray")
+	_check(board.relic_above(Vector2i(1, 1)), "resonance has relic above")
+	# 소켓: 뇌운 조각의 소켓(위)은 보드 밖을 보고 있다 → 3번 돌리면 아래(공명 수정)를 본다
+	_check(board.ports_of(Vector2i(1, 0)) == [0] and not board.port_to(Vector2i(1, 0), Vector2i(1, 1)), "thunder port faces up (off board)")
+	_check(board.rotate(Vector2i(1, 0), 3) and board.rot_of(Vector2i(1, 0)) == 3 and board.ports_of(Vector2i(1, 0)) == [3], "rotate thunder 3 -> port down")
+	_check(board.port_to(Vector2i(1, 0), Vector2i(1, 1)) and board.linked(Vector2i(1, 0), Vector2i(1, 1)), "thunder socket touches resonance")
+	# 공명 수정의 소켓(위)은 뇌운 조각에 닿는다 → 뇌운 조각 위력 +10%, 공명 수정은 뇌운 조각의 가속 +15% 를 받는다
+	_check(is_equal_approx(float(board.socket_bonus(Vector2i(1, 0))["power"]), 0.1), "thunder gets power +10% from resonance (got %s)" % [str(board.socket_bonus(Vector2i(1, 0)))])
+	_check(is_equal_approx(float(board.socket_bonus(Vector2i(1, 1))["haste"]), 0.15), "resonance gets haste +15% from thunder")
+	_check(board.socket_links(Vector2i(1, 1)) == [Vector2i(1, 0)], "resonance links == [thunder] (got %s)" % str(board.socket_links(Vector2i(1, 1))))
+	_check(is_equal_approx(_b.relics.power_of(Vector2i(1, 0)), 1.1), "runtime power_of thunder == 1.1")
+	_check(_b.relics.count_needed(Vector2i(1, 0), "thunder_shard") == 3, "thunder needs 3 hits (no haste)")
+	# 회전은 유물을 따라 옮겨진다
+	_check(board.move(Vector2i(1, 0), Vector2i(1, 1)) and board.rot_of(Vector2i(1, 1)) == 3 and board.rot_of(Vector2i(1, 0)) == 0, "swap carries rotation")
+	_check(board.move(Vector2i(1, 1), Vector2i(1, 0)) and board.relic_at(Vector2i(1, 0)) == "thunder_shard" and board.rot_of(Vector2i(1, 0)) == 3, "swap back keeps rotation")
 	_check(board.adjacent_relics(Vector2i(1, 0)) == 3, "thunder adjacent == 3 (got %d)" % board.adjacent_relics(Vector2i(1, 0)))
 	_check(_b.relics._grammar_ok(Vector2i(0, 0), "star_feather"), "star feather ok on top row")
 	# 맞바꾸기: 별 깃털을 (0,1) 로 옮기면 정수병과 자리가 바뀌고 문법에 걸린다
@@ -102,6 +116,28 @@ func _setup_board() -> void:
 	_check(wp.is_finite(), "cell_world_pos finite: %s" % str(wp))
 
 
+## 툴팁: 마우스를 (1,1) 칸 위로 옮긴 것처럼 주입하고 찍은 뒤 치운다.
+func _tip_later(sec: float) -> void:
+	await get_tree().create_timer(sec).timeout
+	if not is_inside_tree():
+		return
+	var hud: VDRelicHud = _b.relic_hud
+	var ev := InputEventMouseMotion.new()
+	ev.position = hud.get_global_transform_with_canvas() * hud.cell_center(Vector2i(1, 1))
+	get_viewport().push_input(ev, true)
+	_shot_later("01c_tip", 0.1)
+	await get_tree().create_timer(0.25).timeout
+	# 두 번째: 뇌운 조각(1,0) — 인접 수 문법 + 소켓을 주는 쪽
+	ev = InputEventMouseMotion.new()
+	ev.position = hud.get_global_transform_with_canvas() * hud.cell_center(Vector2i(1, 0))
+	get_viewport().push_input(ev, true)
+	_shot_later("01c_tip2", 0.1)
+	await get_tree().create_timer(0.25).timeout
+	ev = InputEventMouseMotion.new()
+	ev.position = Vector2(400, 400)
+	get_viewport().push_input(ev, true)
+
+
 func _place(id: String, c: Vector2i) -> void:
 	var board: VDRelicBoard = _b.relic_board
 	var i := board.tray.find(id)
@@ -110,6 +146,10 @@ func _place(id: String, c: Vector2i) -> void:
 
 func _on_state(s: int) -> void:
 	print("[relic-test] state -> %s" % VDBattle.State.keys()[s])
+	if s == VDBattle.State.TRANSITION:
+		print("[relic-test] battle %d took %.1fs (sim)" % [_cleared + 1, _battle_t])
+	if s == VDBattle.State.TRANSITION and _cleared == 0:
+		_shot_later("02b_heal_success", 1.9 / maxf(Engine.time_scale, 0.001))
 	if s == VDBattle.State.CHOOSE_PATH and _b.exits.size() >= 2:
 		_choose_later(randi() % _b.exits.size())
 	elif s == VDBattle.State.PLACEMENT and _started:
@@ -135,14 +175,23 @@ func _after_clear() -> void:
 	var board: VDRelicBoard = _b.relic_board
 	var hud: VDRelicHud = _b.relic_hud
 	print("[relic-test] after clear %d: open=%d corrupt=%d tray=%s fired=%s essence=%d" % [_cleared, board.open_count(), board.corrupt_count(), str(board.tray), str(_b.relics.fire_count), _b.essence])
-	_check(board.open_count() >= _open_before + 1 or board.open_count() == VDRelicData.BOARD_CELLS.size(), "cell unlocked after clear")
+	# 유물 보상(칸 해금 + 3택1)은 RELIC_EVERY 구역마다. 방금 끝난 구역은 wave - 1 (다음 방으로 넘어와 PLACEMENT)
+	if (_b.wave - 1) % VDRelicData.RELIC_EVERY == 0:
+		_check(board.open_count() >= _open_before + 1 or board.open_count() == VDRelicData.BOARD_CELLS.size(), "cell unlocked on relic clear")
+		_check(hud.has_offer(), "reward offer shown")
+		var before := board.tray.size()
+		hud.pick("thunder_shard")
+		_check(board.tray.size() == before + 1, "pick adds to tray")
+	else:
+		_check(board.open_count() == _open_before, "no cell unlock between relic clears")
+		_check(not hud.has_offer(), "no reward offer between relic clears")
 	_open_before = board.open_count()
-	_check(hud.has_offer(), "reward offer shown")
-	var before := board.tray.size()
-	hud.pick("thunder_shard")
-	_check(board.tray.size() == before + 1, "pick adds to tray")
 	if _cleared == 1:
 		# 침식을 강제로 만들고 정화한다. 클리어 보상의 35% 침식이 유일한 빈 칸을 이미 먹었으면 그 칸을 쓴다
+		# (첫 클리어엔 칸 해금이 없어 빈 칸이 없을 수 있다 → 테스트용으로 한 칸 연다)
+		if board.open_count() < VDRelicData.BOARD_CELLS.size() and board.corrupt_count() == 0:
+			board.unlock(1)
+			_open_before = board.open_count()
 		var c := board.corrupt_random()
 		if c.x < 0:
 			for cc in VDRelicData.BOARD_CELLS:
@@ -221,7 +270,7 @@ func _turn_later(sec: float) -> void:
 	if not is_inside_tree():
 		return
 	var tt: VDTurntable = _b.turntable
-	_check(tt != null and tt.selected == 0, "turntable starts at 0")
+	_check(tt != null and tt.selected == 1, "turntable starts at 1 (시안: 캐릭터 2 앞)")
 	tt.select(3)
 	_check(tt.selected == 3, "turntable select(3)")
 	await get_tree().create_timer(0.6).timeout
@@ -229,11 +278,52 @@ func _turn_later(sec: float) -> void:
 		_shot("01b_turntable")
 		tt.select_next(-1)
 		_check(tt.selected == 2, "turntable select_next(-1) -> 2")
+		# Tab: 다음, Shift+Tab: 이전 (끝에서 처음으로 돈다)
+		_key_tab(false)
+		_check(tt.selected == 3, "Tab -> 3")
+		_key_tab(false)
+		_check(tt.selected == 0, "Tab wraps -> 0")
+		# 0번 = 올리비아 리그 (olivia_rig.tscn): idle 애니메이션 플레이어를 찾았는지, 앞에서 찍기
+		_check(tt._items[0]["kind"] == "rig" and tt._items[0].has("anim"), "olivia rig with idle player")
+		await get_tree().create_timer(0.6).timeout
+		if not is_inside_tree():
+			return
+		_shot("01e_olivia_front")
+		_key_tab(true)
+		_check(tt.selected == 3, "Shift+Tab -> 3")
+		_key_tab(true)
+		_check(tt.selected == 2, "Shift+Tab -> 2")
 
 
+func _key_tab(shift: bool) -> void:
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_TAB
+	ev.physical_keycode = KEY_TAB
+	ev.shift_pressed = shift
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	Input.flush_buffered_events()
+	ev = ev.duplicate()
+	ev.pressed = false
+	Input.parse_input_event(ev)
+	Input.flush_buffered_events()
+
+
+## 첫 방은 Space 키로 배치 완료 (키 처리 검사), 그 뒤는 직접 호출.
 func _start_later(sec: float) -> void:
 	await get_tree().create_timer(sec).timeout
-	if is_inside_tree():
+	if not is_inside_tree():
+		return
+	if _cleared == 0:
+		var ev := InputEventKey.new()
+		ev.keycode = KEY_SPACE
+		ev.physical_keycode = KEY_SPACE
+		ev.pressed = true
+		Input.parse_input_event(ev)
+		Input.flush_buffered_events()
+		_check(_b.state != VDBattle.State.PLACEMENT or _b._pending_start, "Space starts battle (placement done)")
+		_shot_later("01d_heal_start", 0.25)
+	else:
 		_b.start_battle()
 
 
@@ -269,8 +359,10 @@ func _check(ok: bool, what: String) -> void:
 
 func _finish() -> void:
 	var fc: Dictionary = _b.relics.fire_count
-	for id in ["thunder_shard", "frost_crystal", "essence_vial"]:
+	for id in ["thunder_shard", "essence_vial", "resonance"]:
 		_check(int(fc.get(id, 0)) > 0, "%s fired (%d)" % [id, int(fc.get(id, 0))])
+	# 공명 수정은 뇌운 조각(소켓 연결)과, 2방부터 (0,2)에 놓이는 잉걸불(공명 수정의 왼쪽 아래 소켓)에서 체인된다
+	_check(int(fc.get("resonance", 0)) <= int(fc.get("thunder_shard", 0)) + int(fc.get("ember", 0)), "chain fires at most once per linked fire")
 	print("[relic-test] ember fired %d (placed from room 2), star_feather fired %d (needs an ally under 50%%)" % [int(fc.get("ember", 0)), int(fc.get("star_feather", 0))])
 	print("[relic-test] DONE rooms=%d wave=%d essence=%d fired=%s fails=%d" % [_cleared, _b.wave, _b.essence, str(fc), _fails.size()])
 	for f in _fails:

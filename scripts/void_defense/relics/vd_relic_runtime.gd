@@ -1,5 +1,6 @@
 ## 유물 발동기: 전투 이벤트(평타·처치·틱)를 받아 성좌판 위 유물의 트리거를 검사하고 효과를 실행한다.
-## 배치 문법(인접 수·빈 이웃·바로 위·최상단·침식 인접)은 발동 순간에 보드를 읽어 계산한다.
+## 배치 문법(인접 수·빈 이웃·바로 위·최상단·침식 인접·소켓 보정)은 발동 순간에 보드를 읽어 계산한다.
+## 체인: 유물이 발동하면 소켓으로 이어진 chain 유물이 같이 발동한다 (깊이 CHAIN_DEPTH, 내부 쿨다운으로 되튕김 방지).
 ## 모든 효과는 VDBattle.relic_damage / 유닛 상태 필드로 들어가므로 영웅 피해와 같은 길을 쓴다.
 class_name VDRelicRuntime
 extends RefCounted
@@ -7,6 +8,7 @@ extends RefCounted
 signal fired(cell: Vector2i, id: String)
 
 const INTERNAL_CD := 0.25      # 같은 유물이 연달아 발동하지 못하는 최소 간격 (폭주 방지)
+const CHAIN_DEPTH := 3         # 체인이 이어지는 최대 깊이
 const BURN_TICK := 0.5         # 화상 피해를 적용하는 간격
 
 var b: VDBattle
@@ -67,7 +69,7 @@ func on_ally_attack(u: VDUnit, target: VDUnit) -> void:
 			"counter":
 				if tr["event"] == "ally_attack":
 					it["count"] = int(it["count"]) + 1
-					if it["count"] >= int(tr["count"]):
+					if it["count"] >= count_needed(c, it["id"]):
 						it["count"] = 0
 						_fire(c, {"attacker": u, "target": target})
 			"event":
@@ -110,8 +112,8 @@ func tick(dt: float) -> void:
 
 # ---------------------------------------------------------------- firing
 
-## 발동. 효과가 실제로 적용됐으면 true (대상이 없거나 제약에 걸리면 false).
-func _fire(c: Vector2i, ctx: Dictionary) -> bool:
+## 발동. 효과가 실제로 적용됐으면 true (대상이 없거나 제약에 걸리면 false). depth 는 체인 깊이.
+func _fire(c: Vector2i, ctx: Dictionary, depth := 0) -> bool:
 	var it: Dictionary = _inst[c]
 	var id: String = it["id"]
 	# 내부 쿨다운은 시간·카운터형에만 건다. 처치·공격 같은 이벤트형은 같은 프레임의 다중 처치도 전부 받아야 한다.
@@ -125,12 +127,30 @@ func _fire(c: Vector2i, ctx: Dictionary) -> bool:
 		it["icd"] = INTERNAL_CD
 		fire_count[id] = int(fire_count.get(id, 0)) + 1
 		fired.emit(c, id)
+		_chain_from(c, depth)
 	return ok
 
 
-## 침식 인접 패널티 (모든 유물 공통) — 효과 배율.
+## 소켓으로 이어진 chain 유물을 같이 발동시킨다. 되튕김(A→B→A)은 내부 쿨다운이 막는다.
+func _chain_from(c: Vector2i, depth: int) -> void:
+	if depth >= CHAIN_DEPTH:
+		return
+	for nb in board.socket_links(c):
+		if _inst.has(nb) and VDRelicData.def(_inst[nb]["id"])["trigger"]["type"] == "chain":
+			_fire(nb, {"source": c}, depth + 1)
+
+
+## 효과 배율: 침식 인접 패널티(모든 유물 공통) × 소켓 위력 보정.
 func power_of(c: Vector2i) -> float:
-	return maxf(0.0, 1.0 - VDRelicData.CORRUPT_PENALTY * board.corrupt_neighbors(c))
+	var base := maxf(0.0, 1.0 - VDRelicData.CORRUPT_PENALTY * board.corrupt_neighbors(c))
+	return base * (1.0 + float(board.socket_bonus(c)["power"]))
+
+
+## 카운터형의 필요 횟수: 소켓 가속 HASTE_PER_COUNT 마다 −1 (최소 2).
+func count_needed(c: Vector2i, id: String) -> int:
+	var tr: Dictionary = VDRelicData.def(id)["trigger"]
+	var haste := float(board.socket_bonus(c)["haste"])
+	return maxi(2, int(tr.get("count", 1)) - int(floor(haste / VDRelicData.HASTE_PER_COUNT + 1e-6)))
 
 
 ## 위치 조건: 별 깃털은 최상단 줄에서만.
@@ -145,7 +165,8 @@ func _cooldown_of(c: Vector2i, id: String) -> float:
 	var base := float(tr.get("sec", 1.0))
 	if id == "ember":
 		base *= 1.0 - minf(0.5, 0.1 * board.empty_neighbors(c))
-	return base
+	# 소켓 가속: 백팩 배틀즈 공식 cd = base / (1 + 가속)
+	return base / (1.0 + float(board.socket_bonus(c)["haste"]))
 
 
 func _apply(c: Vector2i, id: String, ctx: Dictionary) -> bool:
@@ -172,7 +193,9 @@ func _apply(c: Vector2i, id: String, ctx: Dictionary) -> bool:
 				b.camera.shake(0.45)
 				b.camera.hitstop(0.03))
 		"burn":
-			var t := _random_enemy()
+			var t: VDUnit = _burning_enemy() if ef.get("prefer_burning", false) else null
+			if t == null:
+				t = _random_enemy()
 			if t == null:
 				return false
 			var dps := float(ef["dps"]) * power
@@ -182,8 +205,8 @@ func _apply(c: Vector2i, id: String, ctx: Dictionary) -> bool:
 			fx.impact.connect(func() -> void:
 				if not _live(run) or not is_instance_valid(t) or not t.alive:
 					return
-				t.burn_timer = maxf(t.burn_timer, sec)
-				t.burn_dps = dps
+				t.burn_timer = (t.burn_timer + sec) if ef.get("prefer_burning", false) else maxf(t.burn_timer, sec)
+				t.burn_dps = maxf(t.burn_dps, dps)
 				if not _burn.has(t):
 					_burn[t] = {"acc": 0.0}
 				b.vfx.spawn("burst", b.fx_root, b._chest(t), 0.35, randf() * TAU, col)
@@ -218,6 +241,24 @@ func _apply(c: Vector2i, id: String, ctx: Dictionary) -> bool:
 				b.vfx.spawn("heal", b.fx_root, b._chest(a), 0.6, 0.0, col)
 				b.dmg_log.spawn_status(b._chest(a) + Vector2(0, -30), "보호막 %d" % int(a.shield), col, a)
 				b.audio.play("heal", 0.05, -2.0))
+		"frost_shatter":
+			var slowed: Array[VDUnit] = []
+			for e in b.enemies:
+				if e.alive and e.slow_timer > 0.0:
+					slowed.append(e)
+			if slowed.is_empty():
+				return false
+			var dmg := float(ef["damage"]) * power
+			for i in mini(slowed.size(), 4):
+				var t: VDUnit = slowed[i]
+				var fx := VDRelicFx.frost(b.fx_root, _origin(c, b._chest(t) + Vector2(0, -200)), b._chest(t), col, _track(t))
+				fx.impact.connect(func() -> void:
+					if not _live(run) or not is_instance_valid(t) or not t.alive:
+						return
+					b.relic_damage(t, dmg, id, col, true)
+					b.audio.play("mage_hit", 0.05, -4.0))
+		"none":
+			return false
 		"essence":
 			var amount := int(round((int(ef["amount"]) + board.adjacent_relics(c)) * power))
 			if amount <= 0:
@@ -279,10 +320,19 @@ func _nearest_enemy() -> VDUnit:
 		for a in b.allies:
 			if not a.alive:
 				continue
-			var d := VDData.manhattan(a.cell, e.cell)
+			var d := a.dist_to(e)
 			if d < best_d:
 				best_d = d
 				best = e
+	return best
+
+
+## 화상 중인 적 가운데 남은 화상 시간이 가장 긴 쪽 (없으면 null).
+func _burning_enemy() -> VDUnit:
+	var best: VDUnit = null
+	for e in b.enemies:
+		if e.alive and e.burn_timer > 0.0 and (best == null or e.burn_timer > best.burn_timer):
+			best = e
 	return best
 
 
@@ -304,7 +354,11 @@ func gauge(c: Vector2i) -> Dictionary:
 	var tr: Dictionary = VDRelicData.def(it["id"])["trigger"]
 	match tr["type"]:
 		"counter":
-			return {"text": "%d/%d" % [int(it["count"]), int(tr["count"])], "ratio": float(it["count"]) / float(tr["count"])}
+			var need := count_needed(c, it["id"])
+			return {"text": "%d/%d" % [int(it["count"]), need], "ratio": float(it["count"]) / float(need)}
+		"chain":
+			var n := board.socket_links(c).size()
+			return {"text": "연결 %d" % n if n > 0 else "연결 없음", "ratio": 0.0}
 		"cooldown":
 			var full := _cooldown_of(c, it["id"])
 			var left := clampf(float(it["cd"]), 0.0, full)
@@ -312,6 +366,14 @@ func gauge(c: Vector2i) -> Dictionary:
 		"threshold":
 			return {"text": "사용됨" if it["fired_once"] else "대기", "ratio": 0.0 if it["fired_once"] else 1.0}
 	return {"text": "", "ratio": 0.0}
+
+
+## 칸 오른쪽 위 "+N" 배지: 이웃 유물 수만큼 세지는 유물(뇌운 조각·공허 정수병)의 현재 보너스 단계. 없으면 0.
+func badge(c: Vector2i) -> int:
+	match board.relic_at(c):
+		"thunder_shard", "essence_vial":
+			return board.adjacent_relics(c)
+	return 0
 
 
 ## 툴팁용: 지금 자리에서의 배치 보정 설명.
@@ -331,6 +393,22 @@ func describe(c: Vector2i) -> String:
 			lines.append("최상단 줄 → 작동" if board.is_top_row(c) else "최상단 줄이 아님 → 비활성")
 		"essence_vial":
 			lines.append("인접 유물 %d → 처치당 정수 +%d" % [board.adjacent_relics(c), 2 + board.adjacent_relics(c)])
+	var sb := board.socket_bonus(c)
+	if float(sb["haste"]) > 0.0 or float(sb["power"]) > 0.0:
+		var parts: Array[String] = []
+		if float(sb["haste"]) > 0.0:
+			parts.append("가속 +%d%%" % int(round(float(sb["haste"]) * 100)))
+		if float(sb["power"]) > 0.0:
+			parts.append("위력 +%d%%" % int(round(float(sb["power"]) * 100)))
+		lines.append("소켓 보정: " + " · ".join(parts))
+	var links := board.socket_links(c)
+	if not links.is_empty():
+		var names: Array[String] = []
+		for l in links:
+			names.append(VDRelicData.def(board.relic_at(l))["name"])
+		lines.append("소켓 연결: " + ", ".join(names))
+	elif not board.ports_of(c).is_empty():
+		lines.append("소켓이 닿은 유물 없음 (우클릭으로 회전)")
 	var cn := board.corrupt_neighbors(c)
 	if cn > 0:
 		lines.append("침식 인접 %d → 효과 −%d%%" % [cn, int(VDRelicData.CORRUPT_PENALTY * 100 * cn)])

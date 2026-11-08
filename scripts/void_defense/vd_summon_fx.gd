@@ -44,6 +44,13 @@ const PARAMS := [
 	["portal",         "예고",   "균열(포털) 크기",         0.0, 1.0,   0.01,  0.34],
 	["portal_sec",     "예고",   "균열 유지(초)",           0.0, 2.0,   0.05,  0.45],
 	["interval",       "예고",   "적 사이 소환 간격(초)",   0.02, 1.0,  0.01,  0.17],
+	["champ_delay",    "강적",   "강적 앞 뜸(초)",          0.0, 2.0,   0.05,  0.75],
+	["champ_lead",     "강적",   "괴성→낙하(초)",           0.0, 2.0,   0.05,  0.6],
+	["champ_rumble",   "강적",   "괴성 중 흔들림",          0.0, 1.0,   0.01,  0.3],
+	["champ_portal",   "강적",   "강적 균열 배율",          0.5, 3.0,   0.05,  1.6],
+	["champ_impact",   "강적",   "강적 타격 배율",          0.5, 3.0,   0.05,  1.5],
+	["champ_shake",    "강적",   "강적 착지 흔들림",        0.0, 1.0,   0.01,  0.9],
+	["champ_hitstop",  "강적",   "강적 히트스탑(초)",       0.0, 0.25,  0.005, 0.09],
 ]
 
 static var values := {}
@@ -109,12 +116,42 @@ static func describe(all := false) -> String:
 	return "\n".join(lines) if not lines.is_empty() else "(모두 기본값)"
 
 
+## 연구실 머리줄: 전체 길이와 단계별 시간
+static func summary() -> String:
+	return "총 길이 %.2f초  (낙하 %.2f · 버팀 %.2f · 튕김 %.2f · 안착 %.2f)" % [VDUnit.appear_duration(),
+		g("drop_sec"), g("hold_sec"), g("stretch_sec"), g("settle_sec")]
+
+
 ## 낙하 지점을 예고하는 균열(포털). 소환이 시작될 때.
 static func play_portal(vfx: VDVfx, ground: Node, foot: Vector2, boss: bool) -> void:
 	if g("portal") <= 0.0:
 		return
 	vfx.loop("portal", ground, foot, maxf(g("portal_sec"), 0.01) * (1.6 if boss else 1.0), g("portal") * (1.5 if boss else 1.0), 0.0,
 		Color(1.0, 0.8, 1.0), Vector2(1.0, 0.5), 0.3, 2.5)
+
+
+## 강적 예고: 크고 오래 소용돌이치는 붉은 기 도는 균열 + 바닥 마법진. 괴성과 함께 화면이 낮게 웅웅 떨린다.
+static func play_champion_warn(vfx: VDVfx, ground: Node, camera: VDCamera, foot: Vector2) -> void:
+	var k := g("champ_portal")
+	var sec := maxf(g("portal_sec"), 0.01) * 1.6 + g("champ_lead")
+	vfx.loop("portal", ground, foot, sec, g("portal") * 1.5 * k, 0.0, Color(1.0, 0.55, 0.85), Vector2(1.0, 0.5), 0.3, 3.5)
+	vfx.loop("magic_circle", ground, foot, sec, 0.2 * k, 0.0, Color(0.9, 0.35, 0.8, 0.7), Vector2(1.0, 0.5), 0.35, -0.8)
+	if camera:
+		camera.shake(g("champ_rumble"))
+
+
+## 강적 착지: 보스 타격 + 두 겹 충격파·위로 솟는 번개·처치급 폭발광, 더 센 흔들림과 히트스탑.
+static func play_champion_impact(vfx: VDVfx, ground: Node, fx: Node, camera: VDCamera, foot: Vector2, top: float) -> void:
+	play_impact(vfx, ground, fx, null, foot, true)
+	var k := g("champ_impact")
+	vfx.spawn("shockwave", ground, foot, g("shockwave") * g("boss_impact") * k * 1.5, 0.0, Color(1.0, 0.45, 0.8, 0.85), Vector2(1.0, 0.42), false, 1.0)
+	vfx.spawn("kill_burst", fx, foot + Vector2(0, top * 0.5), 1.4 * k, randf() * TAU, Color(0.95, 0.6, 1.0))
+	vfx.spawn("lightning", fx, foot + Vector2(0, top * 0.9), 0.55 * k, 0.0, Color(1.0, 0.6, 0.95))
+	vfx.spawn("dust", ground, foot, g("dust") * g("boss_impact") * k, 0.0, Color(0.85, 0.75, 1.0, 0.9), Vector2.ONE, true)
+	if camera:
+		camera.shake(g("champ_shake"))
+		if g("champ_hitstop") > 0.0:
+			camera.hitstop(g("champ_hitstop"))
 
 
 ## 바닥에 꽂히는 순간의 타격감: 충격파·먼지·바닥 섬광 + 화면 흔들림·히트스탑.

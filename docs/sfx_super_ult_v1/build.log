@@ -1,0 +1,21 @@
+ult-a-1 { lead_cut: 0, sec: 1.48, rms_db: -21.7, peak_ms: 45 }
+ult-a-2 { lead_cut: 0, sec: 1.48, rms_db: -21.5, peak_ms: 83 }
+ult-a-3 { lead_cut: 0, sec: 1.48, rms_db: -25, peak_ms: 75 }
+ult-a-4 { lead_cut: 0, sec: 1.48, rms_db: -21.8, peak_ms: 119 }
+ult-b-1 { lead_cut: 0, sec: 1.48, rms_db: -22, peak_ms: 317 }
+ult-b-2 { lead_cut: 0, sec: 1.48, rms_db: -24.4, peak_ms: 29 }
+ult-b-3 { lead_cut: 0, sec: 1.48, rms_db: -22.4, peak_ms: 143 }
+ult-b-4 { lead_cut: 0, sec: 1.48, rms_db: -23.5, peak_ms: 7 }
+ult-c-1 { lead_cut: 0, sec: 1.48, rms_db: -20.3, peak_ms: 27 }
+ult-c-2 { lead_cut: 0, sec: 1.48, rms_db: -22.2, peak_ms: 141 }
+ult-c-3 { lead_cut: 0, sec: 1.48, rms_db: -23.7, peak_ms: 7 }
+ult-c-4 { lead_cut: 0, sec: 1.48, rms_db: -24.2, peak_ms: 20 }
+ult-d-1 { lead_cut: 0, sec: 1.48, rms_db: -23.2, peak_ms: 68 }
+ult-d-2 { lead_cut: 0, sec: 1.48, rms_db: -26.5, peak_ms: 10 }
+ult-d-3 { lead_cut: 0, sec: 1.48, rms_db: -22.6, peak_ms: 99 }
+ult-d-4 { lead_cut: 0, sec: 1.48, rms_db: -24.1, peak_ms: 119 }
+ult-e-1 { lead_cut: 0, sec: 1.48, rms_db: -23.8, peak_ms: 58 }
+ult-e-2 { lead_cut: 0.04, sec: 1.44, rms_db: -22.2, peak_ms: 69 }
+ult-e-3 { lead_cut: 0, sec: 1.48, rms_db: -24.4, peak_ms: 121 }
+ult-e-4 { lead_cut: 0, sec: 1.48, rms_db: -24.8, peak_ms: 12 }
+20 clips 3408 KB

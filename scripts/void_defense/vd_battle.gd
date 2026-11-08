@@ -1,5 +1,5 @@
 ## VOID DEFENSE 그레이박스 프로토타입 — 절차 생성 맵을 전진하며 싸우는 전투 루프.
-##   PLACEMENT(현재 방 입구 쪽 4열에서 드래그 배치) → [배치 완료] → SPAWNING → BATTLE(실시간 자동전투)
+##   PLACEMENT(현재 방 입구 쪽 4열에서 드래그 배치) → [배치 완료 / Space] → SPAWNING("치료 시작") → BATTLE(실시간 자동전투)
 ##   → 적 전멸: TRANSITION(그 자리에서 회복·정수 회수, 출구 생성 — 진형은 다음 방 도착 때 잡는다)
 ##   → CHOOSE_PATH(갈림길이면 플레이어가 길 선택, 외길이면 자동) → TRAVEL(복도를 따라 다음 방으로 이동)
 ##   → 다음 방에서 저장된 진형으로 자리 잡고 PLACEMENT (전투는 다시 플레이어가 시작)
@@ -10,15 +10,37 @@ extends Node2D
 signal wave_cleared(wave: int)
 signal game_over(wave: int)
 signal state_changed(state: int)
+signal champion_spawned(unit: VDUnit)   # 웨이브의 강적이 (맨 마지막에) 내려앉기 시작함
 
 enum State { PLACEMENT, SPAWNING, BATTLE, TRANSITION, CHOOSE_PATH, TRAVEL, GAMEOVER }
 
 const WAVE_HEAL := 50.0
 const SPORE_FLIGHT_SEC := 0.34
+const SHELL_FLIGHT_SEC := 0.42   # 공허 망루 포탄 비행 시간
 const TRAVEL_SEC_PER_TILE := 0.11
 const BATTLE_ZOOM := 1.18      # 전투(적 등장~전멸) 동안 카메라 줌인 배율
 const ZOOM_IN_SEC := 0.7
 const ZOOM_OUT_SEC := 0.45
+## 구역 클리어 연출 타임라인 (실제 시간, 초). 한꺼번에 몰리지 않게 한 박자씩 띄운다:
+##   마지막 처치(2초 슬로모션 + 처치 지점 줌인) → 배너 → 회복(아군별로 차례) → 배너가 빠진 뒤 유물 보상 → 새 길이 솟아오름
+const FINALE_SLOWMO := [2.0, 0.15]   # 구역의 마지막 적: 가장 긴 슬로모션 [초, 배율]
+const FINALE_ZOOM := 1.32            # 마지막 처치 지점으로 줌인
+const CLEAR_BANNER_AT := 1.4         # 마지막 처치 → "치료 성공" 배너 (슬로모션이 풀리기 시작할 무렵)
+const CLEAR_BANNER_HOLD := 1.8
+const CLEAR_COLLECT_AT := 0.5       # 배너 → 바닥의 정수가 HUD 로 빨려 들어가기 시작
+const CLEAR_HEAL_AT := 1.1           # 배너 → 회복 시작
+const CLEAR_HEAL_GAP := 0.22         # 아군 한 명씩 회복되는 간격
+const CLEAR_REWARD_GAP := 0.35       # 배너가 빠진 뒤 → 유물 보상
+const CLEAR_EXITS_AT := 1.0          # 유물 보상 → 새 길이 솟아오름
+const ARRIVE_BREATH := 0.6           # 새 구역 도착 → 적 소환 시작
+const BATTLE_START_SEC := 0.9        # "치료 시작" 배너 → 실제 전투
+## 궁극기 뒤 어두운 무대를 유지하는 시간(초): 스킬 이펙트가 끝날 무렵까지 (TrioChess: 기본 1.1)
+const ULT_HOLD := {"knight": 0.9, "gunner": 0.9, "mage": 1.1, "healer": 1.0}
+## 치명타 (아군 평타): 확률·배율. 치명타는 큰 숫자 + 짧은 히트스탑 + 줌 펀치 + CRITICAL! 글자.
+const CRIT_CHANCE := 0.15
+const CRIT_MULT := 1.6
+## 적 공격 예비 동작(게임 시간, 초): 움츠리며 달아오른 뒤 때린다. 보스·망루는 대상 발밑에 경고도 띄운다.
+const WINDUP := {"normal": 0.16, "fast": 0.1, "skirmisher": 0.2, "tank": 0.24, "longneck": 0.4, "boss": 0.36}
 
 var state: State = State.PLACEMENT
 var wave := 1
@@ -41,11 +63,34 @@ var audio: VDAudio
 var vfx: VDVfx
 var ground_fx: Node2D          # 바닥 이펙트(포털·마법진·먼지): 보드 위, 유닛 아래
 var dmg_log: VDDamageLog       # 피해 숫자: 헥스 블레이드 DamageLog 이식(ARCO 글꼴·팝·포물선·연타 열기)
-var skills: VDSkills          # 액티브 스킬 시전 (마나가 차면 자동)
+var skills: VDSkills          # 고유 스킬 시전 (마나가 차면 자동, 전투는 멈추지 않는다)
+var ults: VDUlts              # 궁극기 시전 (게이지가 차면 플레이어가 카드를 탭)
+var ult_aim                   # 궁극기 조준 화면 (VDUltAim: 카드 → 필드 화살표)
+var fallen: Array[VDUnit] = []   # 쓰러진 순서 (힐러 궁극기 부활 대상)
+var auto_ult := false         # 테스트: 궁극기가 차면 자동 조준으로 바로 쓴다
+var enemy_skills: VDEnemySkills   # 적 특수 스킬 (재사용 대기가 차면 자동: 망루 레이저 · 군주 순간이동 강하)
+var tactics: VDTactics            # 역할별 전투 AI: 누구를 노리고 어디로 걸을지 (가로막기·거리 유지·측면 침투·돌격)
+var impact: VDImpact              # 칸 물리·위치 보너스: 넉백·벽꿍·충돌, 측면·후방 일격
+var flow: VDFlow                  # 전투 흐름의 굴곡: 증원·공허 오염 바닥·공허 파편 도약
 var relic_board: VDRelicBoard  # 유물 성좌판 상태 (칸·유물·보관함)
 var relics: VDRelicRuntime     # 유물 발동기 (전투 이벤트 → 효과)
 var relic_hud: VDRelicHud      # 성좌판 HUD (드래그 배치·보상 선택)
+var banner: VDBanner            # 화면 가운데 띠 배너 ("치료 성공" · "치료 시작")
+var essence_drops: VDEssenceDrops   # 공허 정수: 전투 중 바닥에 흩뿌려졌다가 클리어 때 HUD 로 빨려 들어간다 (TrioChess 동전)
+var goo: VDGoo                     # 몬스터 체액: 처치 자리 바닥에 둥근 체액 덩어리가 남는다
+var ult: VDUltCinematic          # 궁극기 시전 연출 (TrioChess Cinematic)
+var bg_rect: ColorRect          # 공허 하늘 배경 (궁극기 연출이 어둡게 한다)
+var hud_root: Control           # HUD 최상위 (날아가는 정수 아이콘이 붙는다)
+var _essence_icon: TextureRect  # 정수 표시 옆 아이콘 = 흡수 목표
 var turntable: VDTurntable     # 좌측 하단 캐릭터 턴테이블
+var juice: VDJuice              # 손맛 연출 모음 (경고·꼬리·그을음·콤보·팝 글자)
+var shockwave                  # 화면 쇼크웨이브 (VDShockwave): 맞은 자리에서 화면이 둥글게 일렁인다
+var _boss_ghost: ProgressBar    # 보스 HP 잔상 바 (보스 바 뒤에서 늦게 따라 내려온다)
+var _boss_ghost_hold := 0.0
+var _gray: ColorRect            # 게임 오버: 전장이 흑백으로 바랜다
+var _over_title: Label
+var _over_stats: Label
+var _btn_retry: Button
 
 var _dragging: VDUnit = null
 var _spawning := false          # 적 등장 연출 진행 중 (배치 완료 버튼 잠금)
@@ -53,9 +98,18 @@ var _pending_start := false     # 등장 중에 배치 완료를 눌렀으면 �
 var _run_id := 0               # 재시작 시 진행 중이던 코루틴을 무효화
 var _cam_target := Vector2.ZERO   # 방 중심 (이동 중에는 분대 중심). 전투 중 포커스는 focus 가 정한다
 const VDCombatFocus := preload("res://scripts/void_defense/vd_combat_focus.gd")
+const VDBattleFrame := preload("res://scripts/void_defense/vd_battle_frame.gd")
+const VDUltAim := preload("res://scripts/void_defense/vd_ult_aim.gd")
+const VDMainButton := preload("res://scripts/void_defense/vd_main_button.gd")
+const VDHurtGlitch := preload("res://scripts/void_defense/vd_hurt_glitch.gd")
+const VDGlitchTuner := preload("res://scripts/void_defense/vd_glitch_tuner.gd")
+const VDShockwave := preload("res://scripts/void_defense/vd_shockwave.gd")
+var hurt_glitch: VDHurtGlitch   # 아군 피격 때 HUD 그림 테두리가 가로로 뾰족하게 튀는 카툰 글리치
+var glitch_tuner: VDGlitchTuner
 var focus := VDCombatFocus.new()   # 전투 카메라: 치열한 곳을 부드럽게 따라가며 살짝 줌인/아웃
 var _cam_clock_us := 0
 var _zoom_tween: Tween
+var _essence_at_start := 0      # 이번 구역 전투 시작 때 정수 (클리어 배너 부제에 획득량 표시)
 
 # HUD
 var _lbl_wave: Label
@@ -63,10 +117,10 @@ var _lbl_msg: Label
 var _lbl_essence: Label
 var _lbl_boss: Label
 var _boss_bar: ProgressBar
-var _btn_main: Button
+var _btn_main: VDMainButton    # 배치 완료(Space) / 진행 상태 표시
 var _btn_speed: Button
 var _path_box: HBoxContainer
-var _cards := {}
+var frame: VDBattleFrame        # 시안 HUD 틀: 상단 바·하단 패널(라바램프)·분대 카드·아이템 슬롯 (VDBattleFrame)
 var _over_panel: Control
 var _lbl_over: Label
 var _msg_tween: Tween
@@ -78,6 +132,15 @@ func _ready() -> void:
 	audio = VDAudio.new()
 	add_child(audio)
 	skills = VDSkills.new(self)
+	ults = VDUlts.new(self)
+	enemy_skills = VDEnemySkills.new(self)
+	tactics = VDTactics.new(self)
+	impact = VDImpact.new(self)
+	flow = VDFlow.new(self)
+	essence_drops = VDEssenceDrops.new(self)
+	goo = VDGoo.new(self)
+	juice = VDJuice.new(self)
+	add_child(juice)
 	relic_board = VDRelicBoard.new()
 	relics = VDRelicRuntime.new(self, relic_board)
 	_build_world()
@@ -93,6 +156,7 @@ func _build_world() -> void:
 	add_child(bg_layer)
 	# 공허 하늘: 남색 밤하늘 아래로 푸른 기체가 흐르고 섞이는 셰이더 (shaders/void_nebula.gdshader)
 	var bg := ColorRect.new()
+	bg_rect = bg
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var bg_mat := ShaderMaterial.new()
@@ -123,6 +187,13 @@ func _build_world() -> void:
 	camera.bg_material = bg_mat
 	add_child(camera)
 	camera.make_current()
+	ult = VDUltCinematic.new(self)
+	VDUltCinematic.SuperCutin.prewarm()   # 컷인 첫 프레임이 끊기지 않게 텍스처를 미리 읽는다
+
+	# 화면 쇼크웨이브: 월드를 다 그린 화면을 읽어 비튼다 (앞 안개·HUD 는 비틀지 않는다)
+	shockwave = VDShockwave.new()
+	add_child(shockwave)
+	SceneSwitcher.add_setting(self, "쇼크웨이브", shockwave.toggle, shockwave.is_on)
 
 	# 앞 안개: 월드 위, HUD 아래. 가장자리를 흐르는 기체가 덮어 맵 끝이 공허 속으로 잠기는 공간감.
 	var fog_layer := CanvasLayer.new()
@@ -156,51 +227,118 @@ func _build_hud() -> void:
 	var hud := CanvasLayer.new()
 	hud.layer = 10
 	add_child(hud)
+	# HUD 전체를 CanvasGroup 하나로 그린다: 피격 글리치 셰이더가 알파가 있는 HUD 버퍼를 받아 그림의 테두리를 휜다.
+	# Control 의 부모가 Node2D 면 앵커가 화면을 따라가지 않으므로 루트 크기를 보이는 화면 크기에 직접 맞춘다.
+	var hud_group := CanvasGroup.new()
+	hud_group.name = "HudGroup"
+	hud.add_child(hud_group)
 	var root := Control.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var theme := Theme.new()
 	theme.default_font = VDData.font()
 	theme.default_font_size = 20
 	root.theme = theme
-	hud.add_child(root)
+	hud_group.add_child(root)
+	hud_root = root
+	var fit_root := func() -> void: root.size = get_viewport().get_visible_rect().size
+	get_viewport().size_changed.connect(fit_root)
+	fit_root.call()
+	frame = VDBattleFrame.new()
+	root.add_child(frame)
+	frame.setup(VDData.HERO_ORDER)
+	frame.card_pressed.connect(try_ult)
+	ult_aim = VDUltAim.new()
+	add_child(ult_aim)
+	ult_aim.setup(self, _cast_ult)
+	# 피해 숫자·상태 글자는 전장(월드)에: 캐릭터에게서 직접 튀어나와 카메라와 함께 움직인다 (이펙트 fx_root 50 위)
 	dmg_log = VDDamageLog.new()
-	root.add_child(dmg_log)
+	dmg_log.z_index = 60
+	add_child(dmg_log)
+	banner = VDBanner.new()
+	root.add_child(banner)
 	relic_hud = VDRelicHud.new()
 	root.add_child(relic_hud)
 	relic_hud.setup(self, relic_board, relics)
+	hurt_glitch = VDHurtGlitch.new()
+	add_child(hurt_glitch)
+	hurt_glitch.setup(hud_group, frame.glitch_targets, frame.hit_card)   # 맞은 영웅 카드에만 가시 + 그 카드 흔들림·피격 색
+	hurt_glitch.prewarm.call_deferred()
+	# 글리치 조정 패널 (설정 메뉴 · F9): 배경 조정 패널 오른쪽에 뜬다
+	glitch_tuner = VDGlitchTuner.new()
+	glitch_tuner.setup(hurt_glitch)
+	var glitch_layer := CanvasLayer.new()
+	glitch_layer.layer = 20
+	add_child(glitch_layer)
+	glitch_layer.add_child(glitch_tuner)
+	SceneSwitcher.add_setting(self, "글리치 조정  (F9)", glitch_tuner.toggle, glitch_tuner.is_open)
+	SceneSwitcher.add_setting(self, "초궁극기 컷인 미리보기  (F8)", preview_super_cutin)
 	SceneSwitcher.add_setting(self, "유물 전부 지급 (테스트)", func() -> void:
 		for id in VDRelicData.RELIC_ORDER:
 			relic_board.add_to_tray(id))
 
-	_label(root, "VOID DEFENSE", Vector2(40, 26), 38, Color(0.95, 0.9, 1.0))
-	_label(root, "greybox prototype · procedural rooms", Vector2(44, 70), 14, Color(0.8, 0.75, 0.95))
-	_lbl_wave = _label(root, "", Vector2(40, 96), 24, Color(1, 1, 1))
+	# 상단 바(시안) 왼쪽 보라 띠 위: 진행 표시와 배속 버튼. 스테이지 명판(W-S)은 VDBattleFrame 이 오른쪽에 그린다
+	_lbl_wave = _label(root, "", Vector2(40, 20), 24, Color(1, 1, 1))
 
 	# 1920x1080 기준 좌표를 SceneSwitcher.pin 으로 화면 가운데·오른쪽에 붙인다(울트라와이드 대응)
 	_lbl_msg = _label(root, "", Vector2(460, 112), 26, Color(1.0, 0.85, 0.42))
 	SceneSwitcher.pin(_lbl_msg, Vector2(0.5, 0), Rect2(460, 112, 1000, 40))
 	_lbl_msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_lbl_msg.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_lbl_msg.z_index = VDRelicHud.Z_DIM + 20   # 유물 칸 호버 딤 위에서도 안내가 읽히게
+	# 안내 띠: 가운데가 진하고 양끝이 흐려지는 남보라 띠 + 외곽선 글자
+	var msg_band := StyleBoxTexture.new()
+	var band_g := GradientTexture2D.new()
+	var band_gr := Gradient.new()
+	band_gr.offsets = PackedFloat32Array([0.0, 0.2, 0.8, 1.0])
+	band_gr.colors = PackedColorArray([Color(0.08, 0.03, 0.16, 0.0), Color(0.08, 0.03, 0.16, 0.82), Color(0.08, 0.03, 0.16, 0.82), Color(0.08, 0.03, 0.16, 0.0)])
+	band_g.gradient = band_gr
+	band_g.width = 64
+	band_g.height = 4
+	msg_band.texture = band_g
+	_lbl_msg.add_theme_stylebox_override("normal", msg_band)
+	_lbl_msg.add_theme_color_override("font_outline_color", Color(0.1, 0.03, 0.2))
+	_lbl_msg.add_theme_constant_override("outline_size", 8)
+	_lbl_msg.modulate.a = 0.0
 
 	_lbl_boss = _label(root, "", Vector2(660, 24), 24, Color(1, 0.9, 0.95))
 	SceneSwitcher.pin(_lbl_boss, Vector2(0.5, 0), Rect2(660, 24, 600, 32))
 	_lbl_boss.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# 보스 바: 뒤에 잔상 바(흰→주황)를 깔고, 앞 바는 배경을 비워 잔상이 비쳐 보이게 한다
+	_boss_ghost = ProgressBar.new()
+	SceneSwitcher.pin(_boss_ghost, Vector2(0.5, 0), Rect2(660, 62, 600, 20))
+	_boss_ghost.show_percentage = false
+	_boss_ghost.add_theme_stylebox_override("fill", _flat(Color(1.0, 0.85, 0.6)))
+	_boss_ghost.add_theme_stylebox_override("background", _flat(Color(0.1, 0.05, 0.15)))
+	root.add_child(_boss_ghost)
 	_boss_bar = ProgressBar.new()
 	SceneSwitcher.pin(_boss_bar, Vector2(0.5, 0), Rect2(660, 62, 600, 20))
 	_boss_bar.show_percentage = false
 	_boss_bar.add_theme_stylebox_override("fill", _flat(Color(0.9, 0.2, 0.3)))
-	_boss_bar.add_theme_stylebox_override("background", _flat(Color(0.1, 0.05, 0.15)))
+	_boss_bar.add_theme_stylebox_override("background", StyleBoxEmpty.new())
 	root.add_child(_boss_bar)
+	_boss_bar.visibility_changed.connect(func() -> void:
+		_boss_ghost.visible = _boss_bar.visible
+		_boss_ghost.value = _boss_bar.value)
 	_lbl_boss.visible = false
 	_boss_bar.visible = false
 
 	_lbl_essence = _label(root, "", Vector2(1540, 28), 28, Color(0.85, 0.7, 1.0))
-	SceneSwitcher.pin(_lbl_essence, Vector2(1, 0), Rect2(1480, 18, 360, 44))   # 오른쪽 끝은 설정 버튼 자리
+	SceneSwitcher.pin(_lbl_essence, Vector2(1, 0), Rect2(1250, 16, 240, 44))   # 스테이지 명판 왼쪽 (오른쪽 끝은 설정 버튼)
 	_lbl_essence.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_essence_icon = TextureRect.new()
+	_essence_icon.texture = VDEssenceGem3D.texture_for(self)   # 3D 결정 렌더 (바닥 결정과 같은 텍스처)
+	_essence_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_essence_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_essence_icon.size = Vector2(40, 40)
+	_essence_icon.pivot_offset = Vector2(20, 20)
+	_essence_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_lbl_essence.add_child(_essence_icon)
+	_lbl_essence.resized.connect(_place_essence_icon)
 
 	_btn_speed = Button.new()
-	SceneSwitcher.pin(_btn_speed, Vector2(1, 0), Rect2(1350, 22, 110, 36))   # 정수 표시 왼쪽
+	SceneSwitcher.pin(_btn_speed, Vector2(0, 0), Rect2(40, 58, 110, 36))   # 진행 표시 아래
 	_btn_speed.focus_mode = Control.FOCUS_NONE
+	_btn_speed.mouse_entered.connect(func() -> void: VDJuice.bump(_btn_speed, 0.35))
 	_btn_speed.pressed.connect(_toggle_speed)
 	root.add_child(_btn_speed)
 	_refresh_speed_label()
@@ -213,77 +351,8 @@ func _build_hud() -> void:
 	_path_box.visible = false
 	root.add_child(_path_box)
 
-	# 하단 분대 바
-	var panel := Panel.new()
-	panel.anchor_left = 0.0
-	panel.anchor_right = 1.0
-	panel.anchor_top = 1.0
-	panel.anchor_bottom = 1.0
-	panel.offset_top = -150
-	panel.offset_bottom = 0
-	panel.add_theme_stylebox_override("panel", _flat(Color(0.12, 0.08, 0.2, 0.92)))
-	root.add_child(panel)
-	var x := 1040.0   # 왼쪽은 캐릭터 턴테이블 자리 (목업: 초상 카드는 오른쪽)
-	for hid in VDData.HERO_ORDER:
-		var def: Dictionary = VDData.HEROES[hid]
-		var card := PanelContainer.new()
-		card.position = Vector2(x, 20)
-		card.custom_minimum_size = Vector2(150, 110)
-		var sb := _flat(Color(0.2, 0.15, 0.3))
-		sb.border_color = def["color"]
-		sb.set_border_width_all(3)
-		card.add_theme_stylebox_override("panel", sb)
-		var vb := VBoxContainer.new()
-		card.add_child(vb)
-		var nm := Label.new()
-		nm.text = def["name"]
-		nm.add_theme_color_override("font_color", def["color"])
-		nm.add_theme_font_size_override("font_size", 22)
-		vb.add_child(nm)
-		var hpb := ProgressBar.new()
-		hpb.custom_minimum_size = Vector2(0, 14)
-		hpb.show_percentage = false
-		hpb.add_theme_stylebox_override("fill", _flat(Color(0.3, 0.85, 0.4)))
-		hpb.add_theme_stylebox_override("background", _flat(Color(0.05, 0.05, 0.1)))
-		vb.add_child(hpb)
-		var mpb := ProgressBar.new()
-		mpb.custom_minimum_size = Vector2(0, 8)
-		mpb.show_percentage = false
-		mpb.add_theme_stylebox_override("fill", _flat(Color(0.3, 0.55, 1.0)))
-		mpb.add_theme_stylebox_override("background", _flat(Color(0.05, 0.05, 0.1)))
-		vb.add_child(mpb)
-		var sk := Label.new()
-		sk.text = "★ " + VDData.SKILLS[hid]["name"]
-		sk.tooltip_text = VDData.SKILLS[hid]["desc"]
-		sk.mouse_filter = Control.MOUSE_FILTER_STOP
-		sk.add_theme_font_size_override("font_size", 13)
-		sk.add_theme_color_override("font_color", Color(0.65, 0.8, 1.0))
-		vb.add_child(sk)
-		var st := Label.new()
-		st.add_theme_font_size_override("font_size", 14)
-		st.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
-		vb.add_child(st)
-		panel.add_child(card)
-		_cards[hid] = {"panel": card, "hp": hpb, "mana": mpb, "skill": sk, "name": nm, "stat": st}
-		x += 170.0
-	for i in 2:
-		var lock := PanelContainer.new()
-		lock.position = Vector2(x, 20)
-		lock.custom_minimum_size = Vector2(70, 110)
-		lock.add_theme_stylebox_override("panel", _flat(Color(0.16, 0.13, 0.22)))
-		var l := Label.new()
-		l.text = "잠금"
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		l.add_theme_color_override("font_color", Color(0.5, 0.45, 0.6))
-		lock.add_child(l)
-		panel.add_child(lock)
-		x += 80.0
-
-	_btn_main = Button.new()
-	SceneSwitcher.pin(_btn_main, Vector2(1, 1), Rect2(1620, 866, 280, 60))   # 분대 바 위, 보관함 아래
-	_btn_main.focus_mode = Control.FOCUS_NONE
-	_btn_main.add_theme_font_size_override("font_size", 30)
+	_btn_main = VDMainButton.new()
+	SceneSwitcher.pin(_btn_main, Vector2(0.5, 1), Rect2(672, 968, 350, 82))   # 좌측 캐릭터 패널과 분대 카드 사이
 	_btn_main.pressed.connect(start_battle)
 	root.add_child(_btn_main)
 
@@ -295,6 +364,7 @@ func _build_hud() -> void:
 	_over_panel = Control.new()
 	_over_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_over_panel.visible = false
+	_over_panel.z_index = 500   # 턴테이블 캐릭터(z 최대 ~200)보다 위
 	root.add_child(_over_panel)
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.7)
@@ -304,18 +374,37 @@ func _build_hud() -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_over_panel.add_child(center)
 	var vb2 := VBoxContainer.new()
-	vb2.add_theme_constant_override("separation", 24)
+	vb2.add_theme_constant_override("separation", 18)
+	vb2.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(vb2)
+	_over_title = Label.new()
+	_over_title.text = "거점 함락"
+	_over_title.add_theme_font_size_override("font_size", 96)
+	_over_title.add_theme_color_override("font_color", Color(1.0, 0.42, 0.5))
+	_over_title.add_theme_color_override("font_outline_color", Color(0.12, 0.02, 0.1))
+	_over_title.add_theme_constant_override("outline_size", 22)
+	_over_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vb2.add_child(_over_title)
 	_lbl_over = Label.new()
-	_lbl_over.add_theme_font_size_override("font_size", 40)
+	_lbl_over.add_theme_font_size_override("font_size", 30)
+	_lbl_over.add_theme_color_override("font_color", Color(0.85, 0.78, 1.0))
 	_lbl_over.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb2.add_child(_lbl_over)
-	var retry := Button.new()
-	retry.text = "다시 도전"
-	retry.custom_minimum_size = Vector2(260, 70)
-	retry.add_theme_font_size_override("font_size", 28)
-	retry.pressed.connect(restart)
-	vb2.add_child(retry)
+	_over_stats = Label.new()
+	_over_stats.add_theme_font_size_override("font_size", 40)
+	_over_stats.add_theme_color_override("font_color", Color(1.0, 0.9, 0.55))
+	_over_stats.add_theme_color_override("font_outline_color", Color(0.12, 0.04, 0.22))
+	_over_stats.add_theme_constant_override("outline_size", 10)
+	_over_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vb2.add_child(_over_stats)
+	var retry_wrap := CenterContainer.new()
+	vb2.add_child(retry_wrap)
+	_btn_retry = VDMainButton.new()
+	_btn_retry.text = "다시 도전"
+	_btn_retry.show_key = false
+	_btn_retry.custom_minimum_size = Vector2(320, 82)
+	_btn_retry.pressed.connect(restart)
+	retry_wrap.add_child(_btn_retry)
 
 
 func _label(parent: Node, text: String, pos: Vector2, size: int, col: Color) -> Label:
@@ -370,6 +459,12 @@ func _new_run() -> void:
 	wave = 1
 	essence = 0
 	exits = []
+	essence_drops.clear()
+	goo.clear()
+	if ult_aim.active:
+		ult_aim._end()
+	ult.reset()
+	fallen.clear()
 	relic_board.reset()
 	relics.reset()
 	_refresh_essence()
@@ -391,21 +486,53 @@ func _make_unit(def: Dictionary, id: String, team: int, cell: Vector2i, hp_mult 
 	units_root.add_child(u)
 	u.snap_to_cell()
 	u.died.connect(_on_unit_died)
+	# 고유 스킬은 마나가 차면 바로 나가므로 READY 연출은 궁극기 게이지에만 (카드를 탭하라는 신호)
+	u.ult_ready.connect(func(x: VDUnit) -> void:
+		if state == State.BATTLE:
+			juice.ready_burst(x)
+			frame.pop_card(x.id, 0.8))
+	if team == 0:
+		u.stepped.connect(func(_x: VDUnit) -> void:
+			if state == State.TRAVEL:   # 스테이지(방) 사이 이동 때만 발소리
+				audio.play("step", 0.08))
 	return u
 
 
 func _unit_at(cell: Vector2i, list: Array[VDUnit]) -> VDUnit:
 	for u in list:
-		if u.alive and u.cell == cell:
+		if u.alive and u.occupies(cell):
 			return u
 	return null
 
 
-func _occupied(cell: Vector2i) -> bool:
-	return _unit_at(cell, allies) != null or _unit_at(cell, enemies) != null
+## except 는 무시한다 (대형 유닛이 자기 칸을 밟고 이동할 때).
+func _occupied(cell: Vector2i, except: VDUnit = null) -> bool:
+	for list in [allies, enemies]:
+		var u := _unit_at(cell, list)
+		if u != null and u != except:
+			return true
+	return false
+
+
+## u 의 footprint 를 최소 꼭짓점 at 에 놓을 수 있는가 (방 안 + 다른 유닛과 겹치지 않음).
+func _fits(u: VDUnit, at: Vector2i) -> bool:
+	for c in u.footprint(at):
+		if not VDMap.in_room(room, c) or _occupied(c, u):
+			return false
+	return true
 
 
 # ---------------------------------------------------------------- input
+
+## Space: 배치 완료 (적이 아직 등장 중이면 끝난 뒤 시작). 입력칸 등 GUI 가 먼저 쓰면 여기까지 오지 않는다.
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F8:
+		preview_super_cutin()
+		return
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE and state == State.PLACEMENT:
+		start_battle()
+		get_viewport().set_input_as_handled()
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -431,17 +558,24 @@ func _placement_valid(cell: Vector2i, u: VDUnit) -> bool:
 	return other == null or other == u
 
 
+## 드래그: 집으면 쑥 들어 올려 커지고, 움직이는 방향으로 살짝 기운다. 놓으면 찌그러지며 착지,
+## 놓을 수 없는 칸이면 원래 자리로 고무줄처럼 튕겨 돌아간다.
 func _begin_drag() -> void:
 	var u := _unit_at(_mouse_cell(), allies)
 	if u == null:
 		return
 	_dragging = u
 	u.z_index = 100
+	var tw := u.create_tween().set_ignore_time_scale(true)
+	tw.tween_property(u, "scale", Vector2(1.18, 1.18), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	audio.play("tick", 0.05, -6.0, 1.4)
 	_update_drag()
 
 
 func _update_drag() -> void:
-	_dragging.position = board.get_local_mouse_position() + Vector2(0, -8)
+	var target := board.get_local_mouse_position() + Vector2(0, -26)
+	_dragging.rotation = lerpf(_dragging.rotation, clampf((target.x - _dragging.position.x) * 0.01, -0.3, 0.3), 0.35)
+	_dragging.position = target
 	var c := _mouse_cell()
 	board.set_hover(c, _placement_valid(c, _dragging))
 
@@ -450,13 +584,30 @@ func _end_drag() -> void:
 	if _dragging == null:
 		return
 	var c := _mouse_cell()
-	if _placement_valid(c, _dragging):
-		if c != _dragging.cell:
+	var u := _dragging
+	var tw := u.create_tween().set_ignore_time_scale(true)
+	if _placement_valid(c, u):
+		if c != u.cell:
 			audio.play("place")
 			vfx.spawn("dust", ground_fx, VDData.to_screen(Vector2(c)), 0.9)
-		_dragging.cell = c
-	_dragging.snap_to_cell()
-	_dragging.z_index = 0
+		u.cell = c
+		var land := u.foot_at(c)
+		# 착지: 떨어지며 찌그러졌다 쫀득하게 제자리
+		tw.tween_property(u, "position", land, 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(u, "rotation", 0.0, 0.08)
+		tw.tween_property(u, "scale", Vector2(1.25, 0.78), 0.05)
+		tw.tween_property(u, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	else:
+		# 놓을 수 없는 칸: 붉게 번쩍이고 원래 자리로 튕겨 돌아간다
+		audio.play("tick", 0.0, -4.0, 0.6)
+		u._flash = 0.6
+		tw.tween_property(u, "position", u.foot_at(u.cell), 0.32).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(u, "rotation", 0.0, 0.2)
+		tw.parallel().tween_property(u, "scale", Vector2.ONE, 0.32).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(u) and _dragging != u:
+			u.snap_to_cell())
+	u.z_index = 0
 	_dragging = null
 	board.set_hover(Vector2i(-1, -1), false, false)
 
@@ -482,7 +633,7 @@ func place_hero(id: String, local: Vector2i) -> bool:
 
 # ---------------------------------------------------------------- flow
 
-## 배치 완료: 적은 이미 등장해 있으므로 짧은 "전투 개시" 연출 뒤 바로 전투. 적이 아직 등장 중이면 끝난 뒤 시작한다.
+## 배치 완료: 적은 이미 등장해 있으므로 짧은 "치료 시작" 연출 뒤 바로 전투. 적이 아직 등장 중이면 끝난 뒤 시작한다.
 func start_battle() -> void:
 	if state != State.PLACEMENT:
 		return
@@ -498,18 +649,26 @@ func start_battle() -> void:
 
 func _begin_battle(run: int) -> void:
 	_set_state(State.SPAWNING)
-	_show_msg("전투 개시!", 1.0)
+	_essence_at_start = essence
 	audio.play("wave_start", 0.0)
-	# 잠들어 있던 적이 깨어난다: 작게 움찔
+	banner.play("치료 시작", "", Color(1.0, 0.55, 0.75), 0.35, false)
+	# 배너가 박힌 뒤 한 박자 늦게 잠들어 있던 적이 깨어난다: 작게 움찔 (한 마리씩 살짝 시간차)
+	await _wait_real(0.35)
+	if run != _run_id or state != State.SPAWNING:
+		return
+	var i := 0
 	for e in enemies:
 		if e.alive:
 			var tw := e.create_tween()
+			tw.tween_interval(0.05 * i)
 			tw.tween_property(e, "scale", Vector2(1.18, 0.86), 0.08)
 			tw.tween_property(e, "scale", Vector2.ONE, 0.16)
-	await get_tree().create_timer(0.5).timeout
+			i += 1
+	await _wait_real(BATTLE_START_SEC - 0.35)
 	if run != _run_id or state != State.SPAWNING:
 		return
 	_set_state(State.BATTLE)
+	flow.begin()
 	relics.on_battle_start()
 
 
@@ -524,23 +683,64 @@ func _spawn_wave(run: int) -> void:
 	var spots: Array = VDMap.local_cells(room, "E")
 	spots.shuffle()
 	var used := {}
-	for t in types:
-		if run != _run_id:
-			return
-		var cell := _random_spawn_cell(spots, used)
+	# 강적(중급·보스 중 가장 센 적)은 맨 마지막에, 한 박자 뜸을 들이고 괴성과 함께 내려앉는다.
+	var champ := _champion_index(types)
+	var rest: Array[int] = []
+	for i in types.size():
+		if i != champ:
+			rest.append(i)
+	# 자리는 강적·대형 적(4칸)부터 잡는다 (넓은 자리가 쪼개지기 전에). 등장도 대형 적이 먼저.
+	rest.sort_custom(func(a: int, b: int) -> bool: return _enemy_size(types[a]) > _enemy_size(types[b]))
+	var cells := {}
+	for i in ([champ] if champ >= 0 else []) + rest:
+		var sz := _enemy_size(types[i])
+		var cell := _random_spawn_cell(spots, used, sz)
 		if cell.x == -999:
 			continue
-		used[cell] = true
+		for x in sz:
+			for y in sz:
+				used[cell + Vector2i(x, y)] = true
+		cells[i] = cell
+	for i in rest + ([champ] if champ >= 0 else []):
+		if run != _run_id:
+			return
+		if not cells.has(i):
+			continue
+		var t := types[i]
 		var def: Dictionary = VDData.ENEMIES[t]
-		var e := _make_unit(def, t, 1, cell, mult * 0.7, mult)
-		var foot := VDData.to_screen(Vector2(cell))
-		# 차원 소환: 새하얀 빛줄기로 떨어져 바닥에 꽂힌다. 꽂히는 순간 충격파·먼지·섬광 + 화면 흔들림.
-		# 값은 VDSummonFx (로비 → 연출 연구실에서 조절)
-		e.appear(VDSummonFx.play_impact.bind(vfx, ground_fx, fx_root, camera, foot, e.is_boss))
-		enemies.append(e)
-		audio.play("boss_spawn" if e.is_boss else "enemy_spawn", 0.12)
-		# 균열(포털)이 바닥에서 소용돌이치며 낙하 지점을 예고한다
-		VDSummonFx.play_portal(vfx, ground_fx, foot, e.is_boss)
+		var e := _make_unit(def, t, 1, cells[i], mult * 0.7, mult)
+		var foot := e.position
+		var heavy := e.is_boss or e.size > 1
+		if i == champ:
+			# 강적: 잠깐 정적 → 큰 균열·괴성·낮은 흔들림 → 낙하. 그동안 몸은 숨겨 둔다.
+			e.visible = false
+			await get_tree().create_timer(VDSummonFx.g("champ_delay")).timeout
+			if run != _run_id:
+				e.queue_free()
+				return
+			print("[VD] champion: %s" % t)
+			audio.play("boss_roar", 0.0, 0.0, 1.0 if e.is_boss else 1.15)
+			VDSummonFx.play_champion_warn(vfx, ground_fx, camera, foot)
+			if not e.is_boss:
+				_show_msg("강적 출현: " + e.display_name, 1.6)
+			await get_tree().create_timer(VDSummonFx.g("champ_lead")).timeout
+			if run != _run_id:
+				e.queue_free()
+				return
+			e.visible = true
+			e.appear(func() -> void:
+				VDSummonFx.play_champion_impact(vfx, ground_fx, fx_root, camera, foot, e._top)
+				audio.play("boss_spawn", 0.05))
+			enemies.append(e)
+			champion_spawned.emit(e)
+		else:
+			# 차원 소환: 새하얀 빛줄기로 떨어져 바닥에 꽂힌다. 꽂히는 순간 충격파·먼지·섬광 + 화면 흔들림.
+			# 값은 VDSummonFx (로비 → 연출 연구실에서 조절)
+			e.appear(VDSummonFx.play_impact.bind(vfx, ground_fx, fx_root, camera, foot, heavy))
+			enemies.append(e)
+			audio.play("boss_spawn" if heavy else "enemy_spawn", 0.12)
+			# 균열(포털)이 바닥에서 소용돌이치며 낙하 지점을 예고한다
+			VDSummonFx.play_portal(vfx, ground_fx, foot, heavy)
 		if e.is_boss:
 			_lbl_boss.text = e.display_name
 			_lbl_boss.visible = true
@@ -558,43 +758,94 @@ func _spawn_wave(run: int) -> void:
 		start_battle()
 
 
-func _random_spawn_cell(spots: Array, used: Dictionary) -> Vector2i:
-	for l in spots:
-		var c := VDMap.to_world(room, l.x, l.y)
-		if not used.has(c) and not _occupied(c):
-			return c
+## 웨이브의 강적: 중급(tier 1) 이상 중 등급 → 체력이 가장 높은 적의 인덱스. 일반 적뿐이면 -1.
+static func _champion_index(types: Array[String]) -> int:
+	var best := -1
+	for i in types.size():
+		var d: Dictionary = VDData.ENEMIES[types[i]]
+		if int(d.get("tier", 0)) < 1:
+			continue
+		if best < 0:
+			best = i
+			continue
+		var b: Dictionary = VDData.ENEMIES[types[best]]
+		if int(d["tier"]) > int(b["tier"]) or (int(d["tier"]) == int(b["tier"]) and float(d["hp"]) > float(b["hp"])):
+			best = i
+	return best
+
+
+static func _enemy_size(t: String) -> int:
+	return int(VDData.ENEMIES[t].get("size", 1))
+
+
+## sz > 1 이면 footprint 전체가 비어 있어야 한다. E 구역 안에 들어가는 자리를 먼저, 없으면 아군 구역만 피해 방 안 아무 데나.
+func _random_spawn_cell(spots: Array, used: Dictionary, sz := 1) -> Vector2i:
+	for strict in [true, false]:
+		for l in spots:
+			var c := VDMap.to_world(room, l.x, l.y)
+			var ok := true
+			for x in sz:
+				for y in sz:
+					var f := c + Vector2i(x, y)
+					var z := VDMap.zone(room, f)
+					if used.has(f) or _occupied(f) or z == "" or z == "A" or (strict and z != "E"):
+						ok = false
+			if ok:
+				return c
+		if sz == 1:
+			break
 	return Vector2i(-999, -999)
 
 
 func _on_unit_died(u: VDUnit) -> void:
 	if u.team == 1:
-		essence += u.essence
-		_refresh_essence()
-		dmg_log.spawn_status(_chest(u) + Vector2(0, -24), "+%d" % u.essence, Color(0.85, 0.65, 1.0), u)
-		audio.play("enemy_die", 0.1)
-		audio.play("essence", 0.1)
+		juice.on_kill(_chest(u))
+		# 정수는 바로 들어오지 않고 바닥에 흩뿌려진다 (클리어 때 HUD 로 흡수)
+		essence_drops.spawn(u.position, u._top, u.essence, 3 if u.is_boss else 1)
+		goo.splat(u)
+		audio.play("boss_die" if u.is_boss else "enemy_die", 0.05)
 		# 처치: 보라빛 폭발. 보스는 크게 + 바닥 충격파
 		var at := _chest(u)
 		vfx.spawn("kill_burst", fx_root, at, 2.6 if u.is_boss else 1.5, randf() * TAU, Color(0.85, 0.65, 1.0))
+		shockwave.add(at, "boss" if u.is_boss else "kill")
 		# 처치 타격감: 일반은 살짝, 보스는 크게
 		camera.shake(1.0 if u.is_boss else 0.55)
 		camera.hitstop(0.16 if u.is_boss else 0.06)
+		_death_slowmo(int(VDData.ENEMIES.get(u.id, {}).get("tier", 0)))
 		if u.is_boss:
 			vfx.spawn("shockwave", ground_fx, u.position, 1.3, 0.0, Color(0.9, 0.7, 1.0), Vector2(1.0, 0.5))
 			vfx.spawn("burst", fx_root, at, 0.6, 0.0, Color(0.9, 0.6, 1.0))
 			nebula_tuner.set_boss(false)
 		print("[VD] enemy down: %s  (+%d essence)" % [u.display_name, u.essence])
 		relics.on_enemy_killed(u)
-		if state == State.BATTLE and _alive_count(enemies) == 0:
-			_finish_wave(_run_id)
+		if state == State.BATTLE and _alive_count(enemies) == 0 and not flow.pending():
+			_finish_wave(_run_id, u.position)
 	else:
 		print("[VD] hero down: %s" % u.display_name)
 		audio.play("hero_down", 0.0)
 		nebula_tuner.danger_flash()   # 배경·앞 안개가 잠시 붉고 빠르게: 위험 알림
+		_death_slowmo(VDData.ALLY_DEATH_TIER)
 		vfx.spawn("lightning", fx_root, u.position + Vector2(0, u._top * 0.9), 0.6, 0.0, Color(1.0, 0.45, 0.55))
 		vfx.spawn("burst", fx_root, _chest(u), 0.45, 0.0, Color(1.0, 0.4, 0.5))
+		# 쓰러지는 자리: 먼지 + 붉은 충격파, 분대 카드는 금이 가며 '전투 불능' 도장
+		var uref: WeakRef = weakref(u)
+		get_tree().create_timer(0.3).timeout.connect(func() -> void:
+			var u2 := uref.get_ref() as VDUnit
+			if u2 != null:
+				vfx.spawn("dust", ground_fx, u2.position + Vector2(-u2._facing * 50.0, 0), 1.6, 0.0, Color(1, 1, 1, 0.8))
+				vfx.spawn("shockwave", ground_fx, u2.position, 0.6, 0.0, Color(1.0, 0.4, 0.5), Vector2(1.0, 0.5))
+				camera.shake(0.3))
+		frame.card_down(u.id)
+		fallen.erase(u)
+		fallen.append(u)
 		if state == State.BATTLE and _alive_count(allies) == 0:
 			_do_game_over()
+
+
+## 사망 연출: 등급별로 잠깐 슬로모션 (기본 적 < 중간급 적·아군 < 보스).
+func _death_slowmo(tier: int) -> void:
+	var s: Array = VDData.DEATH_SLOWMO[clampi(tier, 0, VDData.DEATH_SLOWMO.size() - 1)]
+	camera.slowmo(float(s[0]), float(s[1]))
 
 
 func _alive_count(list: Array[VDUnit]) -> int:
@@ -605,32 +856,64 @@ func _alive_count(list: Array[VDUnit]) -> int:
 	return n
 
 
-func _finish_wave(run: int) -> void:
+## 구역 클리어 연출. 타임라인은 CLEAR_* 상수 (실제 시간이라 슬로모션·배속에 늘어지지 않는다).
+func _finish_wave(run: int, last_at: Vector2) -> void:
 	_set_state(State.TRANSITION)
 	print("[VD] room %d cleared (wave %d)  essence=%d" % [room["id"], wave, essence])
 	wave_cleared.emit(wave)
 	_lbl_boss.visible = false
 	_boss_bar.visible = false
-	_show_msg("구역 클리어!  회복 · 정수 회수", 1.8)
 	for a in allies:
 		a.reset_combat()   # 기절·가드 해제 (마나는 이어진다)
 	relics.on_battle_end()
-	audio.play("wave_clear", 0.0)
-	vfx.spawn("shockwave", ground_fx, VDData.to_screen(VDMap.center_f(room)), 1.6, 0.0, Color(1.0, 0.9, 0.5), Vector2(1.0, 0.5))
-	await get_tree().create_timer(0.6).timeout
+	var boss_room := wave % VDData.WAVES_PER_STAGE == 0
+	# 1) 마지막 처치: 가장 긴 슬로모션 + 처치 지점으로 줌인. 화면이 숨을 고른다
+	camera.slowmo(float(FINALE_SLOWMO[0]), float(FINALE_SLOWMO[1]))
+	camera.shake(0.6)
+	_cam_target = last_at.lerp(VDData.to_screen(VDMap.center_f(room)), 0.35)
+	_zoom_to(FINALE_ZOOM, 0.7)
+	vfx.spawn("shockwave", ground_fx, last_at, 1.1, 0.0, Color(0.9, 0.7, 1.0), Vector2(1.0, 0.5))
+	await _wait_real(CLEAR_BANNER_AT)
 	if run != _run_id:
 		return
+	# 2) "치료 성공" 배너 + 카메라가 방 전체로 물러난다
+	_cam_target = VDData.to_screen(VDMap.center_f(room))
+	_zoom_to(1.0, 0.9)
+	audio.play("wave_clear", 0.0)
+	vfx.spawn("shockwave", ground_fx, VDData.to_screen(VDMap.center_f(room)), 1.6, 0.0, Color(1.0, 0.9, 0.5), Vector2(1.0, 0.5))
+	var sub := "구역 %d 정화 완료  ·  공허 정수 +%d" % [room.get("id", 0) + 1, essence - _essence_at_start + essence_drops.pending()]
+	var banner_sec := banner.play("치료 성공", sub, Color(1.0, 0.45, 0.35) if boss_room else Color(1.0, 0.78, 0.3), CLEAR_BANNER_HOLD)
+	await _wait_real(CLEAR_COLLECT_AT)
+	if run != _run_id:
+		return
+	# 3) 바닥에 흩뿌려진 정수가 하나씩 HUD 로 빨려 들어간다 (TrioChess 동전 회수)
+	var collect_sec := essence_drops.collect(_essence_icon, _on_essence_arrive)
+	var wait_heal := maxf(CLEAR_HEAL_AT - CLEAR_COLLECT_AT, collect_sec + 0.15)
+	await _wait_real(wait_heal)
+	if run != _run_id:
+		return
+	# 4) 회복: 아군 한 명씩 차례로
+	var healed := CLEAR_COLLECT_AT + wait_heal - CLEAR_HEAL_AT   # 배너 기준 경과 시간 보정 (아래 유물 대기 계산용)
 	for a in allies:
-		if a.alive:
-			var before := a.hp
-			a.heal(WAVE_HEAL)
-			var gain := int(a.hp - before)
-			if gain > 0:
-				audio.play("heal", 0.05, -4.0)
-				vfx.spawn("heal", fx_root, _chest(a), 0.5, 0.0, Color(0.8, 1.0, 0.8))
-				dmg_log.spawn_status(_chest(a), "+%d" % gain, Color(0.55, 1.0, 0.6), a)
+		if not a.alive:
+			continue
+		var before := a.hp
+		a.heal(WAVE_HEAL)
+		var gain := int(a.hp - before)
+		if gain > 0:
+			audio.play("heal", 0.05, -4.0)
+			vfx.spawn("heal", fx_root, _chest(a), 0.5, 0.0, Color(0.8, 1.0, 0.8))
+			dmg_log.spawn_status(_chest(a), "+%d" % gain, Color(0.55, 1.0, 0.6), a)
+			await _wait_real(CLEAR_HEAL_GAP)
+			healed += CLEAR_HEAL_GAP
+			if run != _run_id:
+				return
+	# 5) 배너가 다 빠진 뒤 유물 보상 (화면에 하나씩만)
+	await _wait_real(maxf(banner_sec - CLEAR_HEAL_AT - healed, 0.0) + CLEAR_REWARD_GAP)
+	if run != _run_id:
+		return
 	_relic_rewards()
-	await get_tree().create_timer(0.9).timeout
+	await _wait_real(CLEAR_EXITS_AT)
 	if run != _run_id:
 		return
 	for e in enemies:
@@ -645,6 +928,8 @@ func _finish_wave(run: int) -> void:
 	if not new_cells.is_empty():
 		props.remove_near(new_cells)
 		var rise := board.raise_tiles(new_cells, VDMap.to_world(room, int(room["len"]) - 1, 2))
+		# 석판 솟아오르는 소리: 다음 웨이브가 보스·대형 적이면 공허 에너지가 섞인 소리
+		audio.play("slab_rise_boss" if VDData.is_hard_wave(wave + 1) else "slab_rise", 0.03)
 		for ex in exits:
 			props.scatter_room(map, map.rooms[ex["room_id"]], rise * 0.5)
 		await get_tree().create_timer(rise * 0.85).timeout
@@ -726,21 +1011,105 @@ func _travel(run: int, ex: Dictionary, next_room: Dictionary) -> void:
 		a.snap_to_cell()
 	wave += 1
 	_cam_target = VDData.to_screen(VDMap.center_f(room))
+	_spawning = true   # 도착 직후 한 박자: 숨을 고른 뒤 적이 나타난다 (그 사이 전투 시작 잠금)
 	_set_state(State.PLACEMENT)
-	_show_msg("새 구역(%s) 도착 — 적의 위치를 보고 진형을 잡은 뒤 전투를 시작하세요" % VDMap.SHAPE_NAMES[room["shape"]], 2.4)
+	_show_msg("새 구역(%s) 도착 — 적의 위치를 보고 진형을 잡은 뒤 치료를 시작하세요 (Space)" % VDMap.SHAPE_NAMES[room["shape"]], 2.4)
+	await _wait_real(ARRIVE_BREATH)
+	if run != _run_id:
+		return
 	_spawn_wave(_run_id)
 
 
+## 게임 오버: 마지막 아군이 쓰러지는 2초 슬로모션 → 전장이 흑백으로 바램 → "거점 함락" 배너 →
+## 패널(제목 팡 → 기록 숫자가 굴러 올라감 → 다시 도전 버튼이 늦게 튀어나옴). 모두 실제 시간.
 func _do_game_over() -> void:
 	_set_state(State.GAMEOVER)
 	print("[VD] GAME OVER at wave %d" % wave)
-	_lbl_over.text = "거점 함락 — 구역 %d · WAVE %d 도달 · 정수 %d" % [room["id"] + 1, wave, essence]
-	_over_panel.visible = true
-	audio.play("defeat", 0.0)
+	ult.reset()
 	game_over.emit(wave)
+	var run := _run_id
+	camera.slowmo(FINALE_SLOWMO[0], FINALE_SLOWMO[1])
+	audio.play("defeat", 0.0)
+	_set_gray(true)
+	await _wait_real(1.1)
+	if run != _run_id:
+		return
+	var hold := banner.play("거점 함락", "분대가 모두 쓰러졌습니다", Color(1.0, 0.35, 0.45), 1.0)
+	await _wait_real(hold * 0.75)
+	if run != _run_id:
+		return
+	_show_over_panel()
+
+
+func _show_over_panel() -> void:
+	var final_wave := wave
+	var final_ess := essence
+	_lbl_over.text = "구역 %d 에서 함락" % [room["id"] + 1]
+	_over_panel.visible = true
+	_over_panel.modulate.a = 0.0
+	_btn_retry.modulate.a = 0.0
+	_btn_retry.disabled = true
+	_over_title.pivot_offset = _over_title.size * 0.5
+	_over_title.scale = Vector2(2.2, 0.4)
+	var tw := _over_panel.create_tween().set_ignore_time_scale(true)
+	tw.tween_property(_over_panel, "modulate:a", 1.0, 0.25)
+	tw.parallel().tween_property(_over_title, "scale", Vector2(0.9, 1.15), 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_over_title, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func() -> void: camera.shake(0.4))
+	# 기록: 0 부터 굴러 올라가며 틱
+	tw.tween_method(func(k: float) -> void:
+		var w := int(round(final_wave * k))
+		var e := int(round(final_ess * k))
+		var txt := "도달 WAVE  %d      공허 정수  %d" % [w, e]
+		if txt != _over_stats.text:
+			_over_stats.text = txt
+			audio.play("tick", 0.02, -8.0, 1.2 + 0.6 * k), 0.0, 1.0, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func() -> void:
+		VDJuice.bump(_over_stats, 0.6)
+		audio.play("chime", 0.0, -4.0))
+	tw.tween_interval(0.35)
+	tw.tween_callback(func() -> void:
+		_btn_retry.disabled = false
+		VDJuice.bump(_btn_retry, 1.0))
+	tw.tween_property(_btn_retry, "modulate:a", 1.0, 0.2)
+
+
+## 전장 흑백: 화면 텍스처를 회색으로 섞는 오버레이를 HUD 아래 층에 깐다.
+func _set_gray(on: bool) -> void:
+	if _gray == null:
+		var layer := CanvasLayer.new()
+		layer.layer = 5
+		add_child(layer)
+		_gray = ColorRect.new()
+		_gray.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_gray.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var sh := Shader.new()
+		sh.code = """shader_type canvas_item;
+uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
+uniform float amount : hint_range(0.0, 1.0) = 0.0;
+void fragment() {
+	vec3 c = texture(screen_tex, SCREEN_UV).rgb;
+	float g = dot(c, vec3(0.3, 0.55, 0.15));
+	vec3 grey = vec3(g) * vec3(0.92, 0.88, 1.0) * 0.75;
+	COLOR = vec4(mix(c, grey, amount), 1.0);
+}"""
+		var m := ShaderMaterial.new()
+		m.shader = sh
+		_gray.material = m
+		layer.add_child(_gray)
+	var mat := _gray.material as ShaderMaterial
+	_gray.visible = true
+	if on:
+		var tw := _gray.create_tween().set_ignore_time_scale(true)
+		tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("amount", v), 0.0, 1.0, 1.2)
+	else:
+		mat.set_shader_parameter("amount", 0.0)
+		_gray.visible = false
 
 
 func restart() -> void:
+	_set_gray(false)
+	frame.reset_cards()
 	_new_run()
 	audio.play("click")
 
@@ -756,14 +1125,15 @@ func _set_state(s: State) -> void:
 		State.PLACEMENT, State.TRANSITION, State.GAMEOVER:
 			_zoom_to(1.0, ZOOM_OUT_SEC)
 			nebula_tuner.set_boss(false)   # 전투가 끝나면 보스 연출도 풀린다
+	var old_text := _btn_main.text
 	match s:
 		State.PLACEMENT:
 			_refresh_main_button()
 		State.SPAWNING:
-			_btn_main.text = "전투 개시!"
+			_btn_main.text = "치료 시작!"
 			_btn_main.disabled = true
 		State.BATTLE:
-			_btn_main.text = "전투 중"
+			_btn_main.text = "치료 중"
 			_btn_main.disabled = true
 		State.TRANSITION:
 			_btn_main.text = "회복 중..."
@@ -778,6 +1148,8 @@ func _set_state(s: State) -> void:
 		State.GAMEOVER:
 			_btn_main.text = "게임 오버"
 			_btn_main.disabled = true
+	if _btn_main.text != old_text:
+		_btn_main.bump()
 	_refresh_wave_label()
 	state_changed.emit(s)
 
@@ -788,7 +1160,7 @@ func _zoom_to(z: float, dur: float) -> void:
 	if camera.base_zoom.is_equal_approx(Vector2(z, z)):
 		return
 	# base_zoom 위에 카메라 위빙의 줌 호흡이 곱해진다
-	_zoom_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_zoom_tween = create_tween().set_ignore_time_scale(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_zoom_tween.tween_property(camera, "base_zoom", Vector2(z, z), dur)
 
 
@@ -796,8 +1168,12 @@ func _zoom_to(z: float, dur: float) -> void:
 func _refresh_main_button() -> void:
 	if state != State.PLACEMENT:
 		return
-	_btn_main.text = "적 등장 중..." if _spawning else "배치 완료 ▶"
+	var was_locked := _btn_main.disabled
+	_btn_main.text = "적 등장 중..." if _spawning else "배치 완료"
 	_btn_main.disabled = _spawning
+	if was_locked and not _spawning:
+		_btn_main.bump(1.3)   # 배치 완료가 열리는 순간: 크게 튀며 반짝
+		audio.play("chime", 0.0, -8.0, 1.5)
 
 
 func _rebuild_path_buttons() -> void:
@@ -807,13 +1183,25 @@ func _rebuild_path_buttons() -> void:
 		_path_box.visible = false
 		return
 	for i in exits.size():
-		var b := Button.new()
+		var b := VDMainButton.new()
 		b.text = "길 %d  %s" % [i + 1, exits[i]["label"]]
-		b.custom_minimum_size = Vector2(240, 64)
-		b.focus_mode = Control.FOCUS_NONE
-		b.add_theme_font_size_override("font_size", 26)
+		b.custom_minimum_size = Vector2(260, 72)
+		b.show_key = false
 		b.pressed.connect(choose_path.bind(i))
+		b.mouse_entered.connect(func() -> void:
+			board.exit_hover = i
+			audio.play("tick", 0.03, -8.0, 1.3))
+		b.mouse_exited.connect(func() -> void:
+			if board.exit_hover == i:
+				board.exit_hover = -1)
 		_path_box.add_child(b)
+		# 차례로 아래에서 튀어 오른다
+		b.modulate.a = 0.0
+		var tw := b.create_tween().set_ignore_time_scale(true)
+		tw.tween_interval(0.12 * i)
+		tw.tween_property(b, "modulate:a", 1.0, 0.12)
+		tw.parallel().tween_callback(b.bump.bind(1.2))
+	board.exit_hover = -1
 	_path_box.visible = true
 
 
@@ -824,6 +1212,8 @@ func _physics_process(delta: float) -> void:
 		return
 	_tick_team(allies, enemies, delta)
 	_tick_team(enemies, allies, delta)
+	tactics.tick(delta)
+	flow.tick(delta)
 	relics.tick(delta)
 
 
@@ -833,21 +1223,53 @@ func _tick_team(team_units: Array[VDUnit], foes: Array[VDUnit], dt: float) -> vo
 			continue
 		u.tick_status(dt)
 		# 기절·빙결 중이거나 스킬 연출 중이면 쉰다 (타이머도 멈춘다)
-		if u.stun_timer > 0.0 or u.casting:
+		if u.stun_timer > 0.0 or u.casting or u.winding:
 			continue
-		# 롤토체스식 자동 시전: 기본 공격으로 마나가 가득 차면 다음 행동 대신 액티브 스킬
-		if u.mana_full() and not u.moving and skills.cast(u):
+		# 테스트: 궁극기가 차면 자동 조준으로 바로 쓴다 (플레이에선 카드 탭)
+		if auto_ult and u.team == 0 and u.ult_full() and not u.moving and not ult.active and _alive_count(foes) > 0:
+			_cast_ult(u, _auto_aim(u))
+			continue
+		# 롤토체스식 자동 시전: 기본 공격으로 마나가 가득 차면 다음 행동 대신 고유 스킬.
+		# 전투는 멈추지 않는다 (멈춤 연출은 궁극기에만): 짧은 히트스톱 + 줌 펀치 + 시전자만 남기고 무대를 잠깐 살짝 어둡게.
+		if u.mana_full() and not u.moving and _alive_count(foes) > 0:
 			u.mana = 0.0
 			u.atk_timer = 0.0
+			if skills.cast(u):
+				frame.pop_card(u.id, 0.6)
+				camera.hitstop(0.13)
+				camera.punch(0.04)
+				camera.shake(0.12)
+				ult.spotlight([u], 0.18, 0.5)
+			continue
+		# 적 특수 스킬: 재사용 대기가 차면 이동·공격 대신 시전 (궁극기 연출 중엔 기다린다)
+		if u.team == 1 and not u.moving and not ult.active and enemy_skills.tick(u, dt):
 			continue
 		u.atk_timer += dt
 		u.move_timer += dt
+		var target := tactics.pick_target(u, foes, team_units)
+		if target == null:
+			continue
+		var move_ready := u.move_timer >= u.move_cd * u.cd_mult() and not u.moving
+		# 공허 파편 도약: 멀리 있는 후열 영웅의 등 뒤로 뛰어든다
+		if u.team == 1 and move_ready and flow.try_leap(u, foes):
+			u.move_timer = 0.0
+			continue
+		# 거리 유지·오염 회피: 근접 적이 붙거나 발밑이 공허로 물들면 쏘기 전에 한 칸 물러난다 (재사용 대기 동안은 그 자리에서 쏜다)
+		if move_ready:
+			var back := tactics.retreat_cell(u, foes, target)
+			if back != u.cell:
+				u.move_timer = 0.0
+				_step_unit(u, back, u.move_sec * 0.8)
+				if u.id == "gunner":
+					u.atk_timer = u.atk_cd * u.cd_mult()   # 백스텝 사격: 내려서자마자 쏜다
+				continue
 		if u.is_healer:
 			var patient := _most_wounded(u, team_units)
-			if patient != null and u.atk_timer >= u.atk_cd * u.cd_mult() and VDData.manhattan(u.cell, patient.cell) <= u.attack_range:
+			if patient != null and u.atk_timer >= u.atk_cd * u.cd_mult() and u.dist_to(patient) <= u.attack_range:
 				u.atk_timer = 0.0
 				var amount := u.atk * 1.5
 				patient.heal(amount)
+				u.gain_ult(u.ult_gain)
 				u.gain_mana(u.mana_gain)
 				u.attack_anim(patient.position)
 				audio.play("heal")
@@ -856,37 +1278,75 @@ func _tick_team(team_units: Array[VDUnit], foes: Array[VDUnit], dt: float) -> vo
 				vfx.spawn("heal", fx_root, _chest(patient), 0.5, 0.0, Color(0.8, 1.0, 0.8))
 				dmg_log.spawn_status(_chest(patient), "+%d" % int(amount), Color(0.55, 1.0, 0.6), patient)
 				continue
-		var target := _nearest(u, foes)
-		if target == null:
-			continue
-		var d := VDData.manhattan(u.cell, target.cell)
+			if patient != null and u.dist_to(patient) > u.attack_range:
+				target = patient   # 다친 아군 곁으로 간다 (사거리에 들 때까지)
+		var d := u.dist_to(target)
 		if d <= u.attack_range:
+			if target.team == u.team:
+				continue
 			if u.atk_timer >= u.atk_cd * u.cd_mult() and not u.moving:
 				u.atk_timer = 0.0
-				u.gain_mana(u.mana_gain)
-				u.attack_anim(target.position)
-				_play_attack_sfx(u)
-				_attack_vfx(u, target)
-				if u.team == 0:
-					relics.on_ally_attack(u, target)   # 유물 트리거: 평타 횟수·특정 영웅 공격
-				if u.id == "mage":
-					_delayed_hit(u, target, 0.22)   # 오브가 날아간 뒤 명중
-				elif u.id == "skirmisher":
-					_delayed_hit(u, target, SPORE_FLIGHT_SEC)
+				if u.team == 1 or VDHeroPose.WINDUP.has(u.id):
+					_windup_attack(u, target)   # 움츠렸다가(영웅은 무기를 당겼다가) 때린다 (보스·망루는 발밑 경고)
 				else:
-					if u.id == "fast":
-						u.move_timer = 0.0
-					_apply_hit(u, target)
-		elif u.move_timer >= u.move_cd * u.cd_mult() and not u.moving:
-			var next := _step_toward(u, target.cell)
+					_do_attack(u, target)
+		elif move_ready:
+			var next := tactics.approach_cell(u, target, foes)
 			if next != u.cell:
 				u.move_timer = 0.0
-				if u.id == "fast":
-					var left := VDData.to_screen(Vector2(next)).x < u.position.x
-					vfx.spawn("dash", ground_fx, u.position, 0.85, 0.0, Color(0.85, 0.55, 1.0), Vector2.ONE, left, 1.8)
-				else:
-					vfx.spawn("dust", ground_fx, u.position, 1.0, 0.0, Color(1, 1, 1, 0.7))
-				u.move_to_cell(next, u.move_sec)
+				_step_unit(u, next, u.move_sec)
+
+
+## 한 칸 이동 + 발밑 먼지(공허 파편은 대시 자국) + 대형 유닛 쿵.
+func _step_unit(u: VDUnit, next: Vector2i, sec: float) -> void:
+	if u.id == "fast":
+		var left := VDData.to_screen(Vector2(next)).x < u.position.x
+		vfx.spawn("dash", ground_fx, u.position, 0.85, 0.0, Color(0.85, 0.55, 1.0), Vector2.ONE, left, 1.8)
+	else:
+		vfx.spawn("dust", ground_fx, u.position, 1.0, 0.0, Color(1, 1, 1, 0.7))
+	u.move_to_cell(next, sec)
+	if u.is_boss or u.size > 1:
+		juice.heavy_step(u, sec)
+
+
+## 공격 한 번: 마나·모션·소리·이펙트·유물 트리거, 그리고 즉시 또는 투사체 비행 뒤 판정.
+func _do_attack(u: VDUnit, target: VDUnit) -> void:
+	u.gain_mana(u.mana_gain)
+	u.attack_anim(target.position)
+	_play_attack_sfx(u)
+	_attack_vfx(u, target)
+	if u.team == 0:
+		relics.on_ally_attack(u, target)   # 유물 트리거: 평타 횟수·특정 영웅 공격
+	if u.id == "mage":
+		_delayed_hit(u, target, 0.22)   # 오브가 날아간 뒤 명중
+	elif u.id == "skirmisher":
+		_delayed_hit(u, target, SPORE_FLIGHT_SEC)
+	elif u.id == "longneck":
+		_delayed_hit(u, target, SHELL_FLIGHT_SEC)
+	else:
+		if u.id == "fast":
+			u.move_timer = 0.0
+		_apply_hit(u, target)
+
+
+## 적 공격: WINDUP 초(게임 시간, 일시정지 중엔 멈춤) 동안 예비 동작 → 그때도 사정거리 안이면 공격.
+func _windup_attack(u: VDUnit, target: VDUnit) -> void:
+	var sec: float = WINDUP.get(u.id, VDHeroPose.WINDUP.get(u.id, 0.16))
+	u.windup(target.position, sec)
+	if u.is_boss or u.id == "longneck":
+		juice.telegraph(target, sec)
+	var run := _run_id
+	await get_tree().create_timer(sec, false).timeout
+	if not is_instance_valid(u):
+		return
+	u.release_windup()
+	if run != _run_id or state != State.BATTLE or not u.alive or u.stun_timer > 0.0:
+		return
+	if not is_instance_valid(target) or not target.alive or u.dist_to(target) > u.attack_range:
+		target = tactics.pick_target(u, allies if u.team == 1 else enemies, enemies if u.team == 1 else allies)
+		if target == null or u.dist_to(target) > u.attack_range:
+			return
+	_do_attack(u, target)
 
 
 ## 피해 적용 + 명중 연출 + 숫자.
@@ -894,13 +1354,150 @@ func _apply_hit(u: VDUnit, target: VDUnit) -> void:
 	if not is_instance_valid(target) or not target.alive:
 		return
 	target.last_hit_by = u
-	var dealt := target.take_damage(u.atk)
-	if u.id == "skirmisher":
+	var crit := u.team == 0 and randf() < CRIT_CHANCE
+	var pos_mult := impact.flank(u, target)   # 등 뒤 x1.5 · 옆 x1.2
+	var dealt := target.take_damage(u.atk * (CRIT_MULT if crit else 1.0) * pos_mult)
+	if u.team == 0:
+		u.gain_ult(u.ult_gain)
+	if u.id == "skirmisher" or u.id == "longneck":
 		audio.play("ally_hurt", 0.1)
+	if target.team == 0 and dealt > 0.0:
+		# 피해 비율이 클수록·보스일수록 조금 더 세게 (기본은 아주 미세하게)
+		hurt_glitch.kick(minf(1.0, 0.4 + dealt / maxf(target.max_hp, 1.0) * 1.5 + (0.3 if u.is_boss else 0.0)), target.id)
+		audio.voice(target.id, "hurt")   # 캐릭터 피격 추임새 (영웅별 쿨다운은 VDAudio)
 	_hit_vfx(u, target)
 	_hit_feel(u)
+	impact.after_hit(u, target)   # 넉백 → 벽꿍·충돌
+	if u.team == 0:
+		shockwave.add(_chest(target), "heavy" if crit or u.id == "knight" else "light")
+	elif u.is_boss:
+		shockwave.add(_chest(target), "heavy")
 	focus.add_heat(target.position, 1.6 if (u.is_boss or target.is_boss) else 1.0)   # 명중한 곳으로 시선이 조금 끌린다
-	dmg_log.spawn(_chest(target) + Vector2(0, -16), int(dealt), u.atk >= 50.0 or u.is_boss, target)
+	dmg_log.spawn(_chest(target) + Vector2(0, -16), int(dealt), crit or u.atk >= 50.0 or u.is_boss, target)
+	if crit:
+		# 치명타: 묵직한 스파크 + 짧은 멈춤 + 줌 펀치 + CRITICAL! 글자
+		vfx.spawn("hit_heavy", fx_root, _chest(target), 2.2, randf() * TAU, Color(1.0, 0.8, 0.5))
+		camera.hitstop(0.07)
+		camera.punch(0.035)
+		camera.shake(0.2)
+		juice.pop_world(_chest(target) + Vector2(randf_range(-24, 24), -96), "CRITICAL!", Color(1.0, 0.55, 0.3), 24.0, 0.2)
+		audio.play("knight_hit", 0.05, -3.0, 1.4)
+
+
+## 분대 카드 탭: 궁극기 게이지가 찼으면 시전 (조준이 필요하면 조준 화면부터). 아니면 거절 소리 + 남은 충전량.
+func try_ult(hid: String) -> void:
+	if state != State.BATTLE or ult.active or ult_aim.active:
+		return
+	var u: VDUnit = null
+	for a in allies:
+		if a.id == hid:
+			u = a
+	if u == null or not u.alive:
+		return
+	# 고유 스킬 시전 중이어도 받는다: 궁극기는 그 스킬이 끝난 뒤 이어서 나간다 (_cast_ult)
+	if not u.ult_full() or u.stun_timer > 0.0 or _alive_count(enemies) == 0:
+		audio.play("denied", 0.0, -2.0)
+		var why := "기절 중" if u.stun_timer > 0.0 else "충전 %d%%" % int(u.ult / VDData.MAX_ULT * 100.0)
+		dmg_log.spawn_status(_chest(u) + Vector2(0, -30), why, Color(0.8, 0.78, 0.9), u)
+		return
+	var kind: String = VDData.ULTS[u.id]["aim"]
+	if kind == "":
+		_cast_ult(u, null)
+	else:
+		ult_aim.begin(u, kind)
+
+
+## 테스트용 자동 조준: 건너는 가장 가까운 적 쪽, 마법사는 가장 가까운 적.
+func _auto_aim(u: VDUnit) -> Variant:
+	var e := _nearest(u, enemies)
+	match VDData.ULTS[u.id]["aim"]:
+		"cone":
+			return e.position if e else u.position + Vector2(100, 0)
+		"enemy":
+			return e
+	return null
+
+
+## 궁극기: TrioChess 처럼 intro(전투 정지·레터박스·포즈, 마법사는 전면 컷인) → 궁극기 → 어두운 무대를 hold 초 유지.
+## aim: 건너 = 조준한 월드 좌표, 마법사 = 첫 대상, 그 외 null.
+func _cast_ult(u: VDUnit, aim: Variant) -> void:
+	var run := _run_id
+	var ud: Dictionary = VDData.ULTS[u.id]
+	u.ult = 0.0
+	frame.pop_card(u.id, 1.0)   # 분대 카드가 앞으로 튀어나온다
+	var handle: Dictionary = await ult.intro(u, ud["name"], u.color)
+	# 고유 스킬이 아직 돌고 있으면(도약·연사) 끝날 때까지 어두운 무대에서 잠깐 기다린다
+	var waited := 0.0
+	while is_instance_valid(u) and u.casting and waited < 1.5:
+		await get_tree().physics_frame
+		waited += get_physics_process_delta_time()
+	if not is_instance_valid(u):
+		return
+	if run != _run_id or not u.alive or state != State.BATTLE or not ults.cast(u, aim):
+		u.ult = VDData.MAX_ULT   # 못 썼으면 게이지를 돌려준다
+		ult.release(handle, 0.0)
+		return
+	ult.release(handle, float(ULT_HOLD.get(u.id, 1.1)))
+
+
+## 가장 먼저 쓰러져 아직 누워 있는 아군 (없으면 null).
+func first_fallen() -> VDUnit:
+	for a in fallen:
+		if is_instance_valid(a) and not a.alive:
+			return a
+	return null
+
+
+## pref 가 비어 있으면 pref, 아니면 near 주변에서 pref 에 가장 가까운 빈 칸 (방 안).
+func free_cell_near(pref: Vector2i, near: Vector2i) -> Vector2i:
+	if VDMap.in_room(room, pref) and not _occupied(pref):
+		return pref
+	var best := near
+	var best_d := 1 << 30
+	for r in range(1, 6):
+		for a in range(-r, r + 1):
+			for c in range(-r, r + 1):
+				var cell := near + Vector2i(a, c)
+				if not VDMap.in_room(room, cell) or _occupied(cell):
+					continue
+				var d := VDData.manhattan(cell, pref) * 10 + VDData.manhattan(cell, near)
+				if d < best_d:
+					best_d = d
+					best = cell
+		if best_d < (1 << 30):
+			break
+	return best
+
+
+## 힐러 궁극기로 일어난 아군: 카드의 '전투 불능' 도장을 걷고 쓰러진 목록에서 뺀다.
+func on_hero_revived(u: VDUnit) -> void:
+	fallen.erase(u)
+	frame.card_up(u.id)
+	audio.play("chime", 0.0, 2.0, 1.2)
+	print("[VD] hero revived: %s" % u.display_name)
+
+
+## 설정 메뉴 · F8: 마법사 초궁극기 컷인만 재생한다 (스킬은 쓰지 않음). 실제 시전처럼 그동안 전투를 멈춘다.
+var _preview_cutin := 0
+
+
+func preview_super_cutin() -> void:
+	if ult.active:
+		return
+	ult.active = true
+	var tree := get_tree()
+	var was := tree.paused
+	tree.paused = true
+	# 누를 때마다 다음 영웅 (건너 → 마법사 → 기사 → 힐러)
+	var ids: Array = VDUltCinematic.SUPER_CUTIN.keys()
+	var id: String = ids[_preview_cutin % ids.size()]
+	_preview_cutin += 1
+	var h: Dictionary = VDData.HEROES[id]
+	await ult.super_cutin(VDData.ULTS[id]["name"], h["name"], h["color"], VDUltCinematic.SUPER_CUTIN[id], id)
+	if not is_inside_tree():
+		return
+	tree.paused = was
+	ult.active = false
 
 
 ## 유물 피해: 영웅 피해와 같은 길(take_damage·숫자·명중 연출)을 쓴다. 처치도 같은 died 시그널로 돈다.
@@ -917,22 +1514,40 @@ func relic_damage(target: VDUnit, amount: float, relic_id: String, col: Color, b
 	return dealt
 
 
-## 구역 클리어 보상: 성좌판 칸 해금 → (확률) 침식 → 유물 3택1 제시.
+## 구역 클리어 보상: (확률) 침식 → RELIC_EVERY 구역마다 성좌판 칸 해금 + 유물 3택1 제시.
 func _relic_rewards() -> void:
-	var opened := relic_board.unlock(VDRelicData.UNLOCK_PER_CLEAR)
-	if opened > 0:
-		_show_msg("성좌판 칸이 열렸습니다  (%d/%d)" % [relic_board.open_count(), VDRelicData.BOARD_CELLS.size()], 1.6)
 	var boss_room := wave % VDData.WAVES_PER_STAGE == 0
+	var corrupted := false
 	if boss_room or randf() < VDRelicData.CORRUPT_CHANCE:
 		var c := relic_board.corrupt_random()
 		if c.x >= 0:
+			corrupted = true
 			_show_msg("공허가 성좌판을 침식했습니다!  (우클릭으로 정화)", 2.0)
 			print("[VD] relic board corrupted at %s" % str(c))
+	if not relic_reward_due():
+		var left := VDRelicData.RELIC_EVERY - wave % VDRelicData.RELIC_EVERY
+		if not corrupted:
+			_show_msg("다음 유물까지 %d구역" % left, 1.6)
+		print("[VD] no relic this room (next in %d)" % left)
+		return
+	var opened := relic_board.unlock(VDRelicData.UNLOCK_PER_CLEAR)
+	if opened > 0:
+		_show_msg("성좌판 칸이 열렸습니다  (%d/%d)" % [relic_board.open_count(), VDRelicData.BOARD_CELLS.size()], 1.6)
 	var ids := []
 	for i in VDRelicData.PICK_COUNT:
 		ids.append(VDRelicData.RELIC_ORDER[randi() % VDRelicData.RELIC_ORDER.size()])
 	relic_hud.offer(ids)
 	print("[VD] relic offer: %s  open=%d  fired=%s" % [str(ids), relic_board.open_count(), str(relics.fire_count)])
+
+
+## 연출 박자용 대기: 실제 시간 (슬로모션·히트스탑·배속과 무관).
+func _wait_real(sec: float) -> void:
+	await get_tree().create_timer(maxf(sec, 0.0), true, false, true).timeout
+
+
+## 이번 구역 클리어에 유물 보상이 있는가 (RELIC_EVERY 번째 구역마다).
+func relic_reward_due() -> bool:
+	return wave % VDRelicData.RELIC_EVERY == 0
 
 
 ## 타격감: 약한 카메라 셰이크 + 짧은 히트스탑. 아군의 묵직한 공격(기사)·보스 공격은 조금 더 세게.
@@ -969,21 +1584,33 @@ func _attack_vfx(u: VDUnit, target: VDUnit) -> void:
 	var dir := (to - from).normalized()
 	match u.id:
 		"knight":
-			var mid := from.lerp(to, 0.6)
-			vfx.spawn("slash", fx_root, mid, 2.8, dir.angle(), Color(0.75, 0.9, 1.0), Vector2.ONE, dir.x < 0.0)
+			# 검기: 기사 가슴 앞에서 대상 쪽으로 위→아래 초승달. 바깥 날이 대상에 닿도록 크기를 거리에 맞춘다
+			# (근접 한 칸 기준. 멀리 있는 대상이라도 너무 커지지 않게 묶는다)
+			var reach := clampf(from.distance_to(to), 60.0, 120.0)
+			var center := from + dir * reach * 0.25
+			VDSwordSlash.spawn(fx_root, center, reach * 0.75 / 0.42, dir.angle(), dir.x < 0.0)
 		"gunner":
 			var muzzle := from + dir * 40.0
 			vfx.spawn("hit_light", fx_root, muzzle, 1.2, dir.angle(), Color(1.0, 0.95, 0.7))
 			VDFx.tracer(fx_root, muzzle, to, Color(1.0, 0.95, 0.75))
 		"mage":
-			vfx.projectile("orb", fx_root, from + Vector2(0, -10), to, 0.22, 0.2, Color(0.85, 0.6, 1.0), 8.0)
+			juice.trail(vfx.projectile("orb", fx_root, from + Vector2(0, -10), to, 0.22, 0.2, Color(0.85, 0.6, 1.0), 8.0), Color(0.75, 0.5, 1.0), 10.0)
 		"skirmisher":
 			var muzzle := from + Vector2(u._facing * 21.0, 0.0)
 			var tint := Color(1.0, 0.35, 0.8)
 			vfx.spawn("hit_light", fx_root, muzzle, 1.0, dir.angle(), tint)
-			vfx.projectile("orb", fx_root, muzzle, to, SPORE_FLIGHT_SEC, 0.14, tint, 8.0,
+			juice.trail(vfx.projectile("orb", fx_root, muzzle, to, SPORE_FLIGHT_SEC, 0.14, tint, 8.0,
 				func() -> Vector2:
-					return _chest(target) if is_instance_valid(target) and target.alive else to)
+					return _chest(target) if is_instance_valid(target) and target.alive else to), tint, 7.0)
+		"longneck":
+			# 머리 위 쌍포에서 붉은 포탄 두 발 (원화 머리 끝 근처에서 바라보는 쪽으로 살짝 벌려서)
+			var tint := Color(1.0, 0.3, 0.38)
+			for side in [-1.0, 1.0]:
+				var muzzle := u.position + Vector2(u._facing * 18.0 + side * 22.0, u._top * 0.9)
+				vfx.spawn("hit_light", fx_root, muzzle, 1.2, (to - muzzle).angle(), tint)
+				juice.trail(vfx.projectile("orb", fx_root, muzzle, to, SHELL_FLIGHT_SEC, 0.18, tint, 10.0,
+					func() -> Vector2:
+						return _chest(target) if is_instance_valid(target) and target.alive else to), tint, 9.0)
 		_:
 			pass
 
@@ -993,6 +1620,12 @@ func _hit_vfx(u: VDUnit, target: VDUnit) -> void:
 	var at := _chest(target)
 	if u.id == "skirmisher":
 		vfx.spawn("burst", fx_root, at, 0.35, 0.0, Color(1.0, 0.35, 0.8))
+		juice.scorch(target.position + Vector2(randf_range(-10, 10), 4), Color(1.0, 0.35, 0.8), 18.0)
+		return
+	if u.id == "longneck":
+		vfx.spawn("burst", fx_root, at, 0.5, 0.0, Color(1.0, 0.35, 0.4))
+		vfx.spawn("dust", ground_fx, target.position, 1.2, 0.0, Color(1, 0.8, 0.8, 0.8))
+		juice.scorch(target.position + Vector2(randf_range(-10, 10), 4), Color(1.0, 0.35, 0.4), 26.0)
 		return
 	if u.team == 1:
 		vfx.spawn("hit_light", fx_root, at, 1.8, randf() * TAU, Color(1.0, 0.55, 0.75))
@@ -1012,12 +1645,12 @@ func _hit_vfx(u: VDUnit, target: VDUnit) -> void:
 func _play_attack_sfx(u: VDUnit) -> void:
 	if u.team == 1:
 		audio.play("enemy_attack", 0.12)
-		if u.id != "skirmisher":
+		if u.id != "skirmisher" and u.id != "longneck":
 			audio.play("ally_hurt", 0.1)
 		return
 	match u.id:
 		"knight":
-			audio.play("knight_attack", 0.08)
+			audio.play("knight_attack", 0.08, 0.0, 1.3)
 			audio.play("knight_hit", 0.1)
 		"gunner":
 			audio.play("gun", 0.08)
@@ -1035,7 +1668,7 @@ func _nearest(u: VDUnit, foes: Array[VDUnit]) -> VDUnit:
 	for f in foes:
 		if not f.alive:
 			continue
-		var d := VDData.manhattan(u.cell, f.cell)
+		var d := u.dist_to(f)
 		if d < best_d:
 			best_d = d
 			best = f
@@ -1056,14 +1689,15 @@ func _most_wounded(healer: VDUnit, team_units: Array[VDUnit]) -> VDUnit:
 
 
 ## 현재 방 안에서만 한 칸 전진 (전투는 방 안에 갇힌다).
-func _step_toward(u: VDUnit, goal: Vector2i) -> Vector2i:
+## 대형 유닛은 footprint 전체가 들어갈 자리로만 움직인다.
+func _step_toward(u: VDUnit, target: VDUnit) -> Vector2i:
 	var best := u.cell
-	var best_d := VDData.manhattan(u.cell, goal)
+	var best_d := u.dist_to(target)
 	for dir in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 		var nc: Vector2i = u.cell + dir
-		if not VDMap.in_room(room, nc) or _occupied(nc):
+		if not _fits(u, nc):
 			continue
-		var nd := VDData.manhattan(nc, goal)
+		var nd := VDData.rect_dist(nc, u.size, target.cell, target.size)
 		if nd < best_d:
 			best_d = nd
 			best = nc
@@ -1074,21 +1708,21 @@ func _step_toward(u: VDUnit, goal: Vector2i) -> Vector2i:
 
 func _process(_delta: float) -> void:
 	for a in allies:
-		var c: Dictionary = _cards[a.id]
-		c["hp"].value = 100.0 * a.hp / a.max_hp
-		c["mana"].value = 100.0 * a.mana / VDData.MAX_MANA
-		c["skill"].modulate = Color(1.6, 1.6, 1.2) if a.mana_full() else Color.WHITE
-		c["stat"].text = "HP %d/%d  ATK %d" % [int(a.hp), int(a.max_hp), int(a.atk)]
-		if a.alive:
-			c["panel"].modulate = Color(1, 1, 1, 1)
-		else:
-			c["panel"].modulate = Color(1, 1, 1, 0.4)
-			c["stat"].text = "전투 불능"
+		var stat := "HP %d/%d  ATK %d" % [int(a.hp), int(a.max_hp), int(a.atk)] if a.alive else "전투 불능"
+		frame.set_hero(a.id, a.hp / a.max_hp, a.mana / VDData.MAX_MANA, a.mana_full(), a.alive, stat, a.ult / VDData.MAX_ULT, a.ult_full() and state == State.BATTLE)
 	if _boss_bar.visible:
 		for e in enemies:
 			if e.is_boss:
-				_boss_bar.value = 100.0 * e.hp / e.max_hp
+				var v := 100.0 * e.hp / e.max_hp
+				if v < _boss_bar.value - 0.01:
+					_boss_ghost_hold = 0.35
+					VDJuice.bump(_boss_bar, 0.12)
+				_boss_bar.value = v
 				break
+		# 잔상: 잠깐 버텼다가 따라 내려온다 (실제 시간)
+		_boss_ghost_hold -= get_process_delta_time() / maxf(Engine.time_scale, 0.05)
+		if _boss_ghost.value < _boss_bar.value or _boss_ghost_hold <= 0.0:
+			_boss_ghost.value = maxf(_boss_bar.value, move_toward(_boss_ghost.value, _boss_bar.value, 0.5 + (_boss_ghost.value - _boss_bar.value) * 0.08))
 	# 카메라: 전투 중엔 가장 치열한 곳(+ 전장 폭에 맞춘 줌), 이동 중엔 분대 중심, 그 외엔 현재 방 중심.
 	# 실제 시간으로 움직인다(히트스탑·배속과 무관). 상태 전환 줌 트윈이 도는 동안은 트윈이 줌을 맡는다.
 	# delta / time_scale 는 히트스탑이 시작·끝나는 프레임에 최대 25배로 튀므로 시계로 잰다
@@ -1122,24 +1756,69 @@ func _refresh_wave_label() -> void:
 	var stage := (wave - 1) / VDData.WAVES_PER_STAGE + 1
 	var in_stage := (wave - 1) % VDData.WAVES_PER_STAGE + 1
 	_lbl_wave.text = "구역 %d  ·  스테이지 %d  ·  WAVE %d/%d" % [room.get("id", 0) + 1, stage, in_stage, VDData.WAVES_PER_STAGE]
+	frame.set_stage(room.get("id", 0) + 1, stage)
 
 
 func _refresh_essence() -> void:
 	_lbl_essence.text = "공허 정수  %d" % essence
+	_place_essence_icon()
 
 
+## 정수 아이콘을 글자 바로 왼쪽에 둔다 (라벨은 오른쪽 정렬).
+func _place_essence_icon() -> void:
+	if _essence_icon == null:
+		return
+	var font := _lbl_essence.get_theme_font("font")
+	var fs := _lbl_essence.get_theme_font_size("font_size")
+	var w := font.get_string_size(_lbl_essence.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x if font else 0.0
+	_essence_icon.position = Vector2(_lbl_essence.size.x - w - 46.0, (_lbl_essence.size.y - 40.0) * 0.5)
+
+
+## 날아온 정수가 도착: 숫자가 오르고 아이콘·숫자가 톡 튄다 (TrioChess set_gold + bump).
+func _on_essence_arrive(amount: int) -> void:
+	essence += amount
+	_refresh_essence()
+	for c: Control in [_lbl_essence, _essence_icon]:
+		c.pivot_offset = c.size * Vector2(1.0 if c == _lbl_essence else 0.5, 0.5)
+		var tw := c.create_tween().set_ignore_time_scale(true)
+		tw.tween_property(c, "scale", Vector2.ONE * 1.3, 0.06)
+		tw.tween_property(c, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## 안내 띠: 세로로 납작하게 펼쳐지며 나타나 톡 튀고, 머문 뒤 위로 접히며 사라진다. 실제 시간.
 func _show_msg(text: String, dur := 1.6) -> void:
 	_lbl_msg.text = text
-	_lbl_msg.modulate.a = 1.0
+	_lbl_msg.pivot_offset = _lbl_msg.size * 0.5
 	if _msg_tween:
 		_msg_tween.kill()
-	_msg_tween = create_tween()
+	_lbl_msg.modulate.a = 0.0
+	_lbl_msg.scale = Vector2(1.15, 0.2)
+	_msg_tween = create_tween().set_ignore_time_scale(true)
+	_msg_tween.tween_property(_lbl_msg, "modulate:a", 1.0, 0.08)
+	_msg_tween.parallel().tween_property(_lbl_msg, "scale", Vector2(0.97, 1.12), 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_msg_tween.tween_property(_lbl_msg, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_msg_tween.tween_interval(dur)
-	_msg_tween.tween_property(_lbl_msg, "modulate:a", 0.0, 0.4)
+	_msg_tween.tween_property(_lbl_msg, "scale", Vector2(1.05, 0.0), 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_msg_tween.parallel().tween_property(_lbl_msg, "modulate:a", 0.0, 0.22)
+
+
+## 정수 소모: 숫자가 붉게 번쩍이며 움찔하고, -N 이 아이콘에서 떨어져 나간다.
+func spend_essence(amount: int) -> void:
+	essence -= amount
+	_refresh_essence()
+	VDJuice.bump(_lbl_essence, -0.5)
+	var tw := _lbl_essence.create_tween().set_ignore_time_scale(true)
+	_lbl_essence.modulate = Color(1.6, 0.5, 0.6)
+	tw.tween_property(_lbl_essence, "modulate", Color.WHITE, 0.4)
+	var at := _essence_icon.get_global_rect().get_center()
+	var l := juice.pop_text(at + Vector2(0, 30), "-%d" % amount, Color(1.0, 0.45, 0.55), 30.0, 0.15)
+	var drop := l.create_tween().set_ignore_time_scale(true)
+	drop.tween_property(l, "position:y", l.position.y + 40.0, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 
 func _toggle_speed() -> void:
 	audio.play("click")
+	VDJuice.bump(_btn_speed, 1.0)
 	# x1 → x1.5 → x2 → x1. 히트스탑 중이어도 배속이 꼬이지 않게 camera 를 거친다
 	var cur := camera.game_speed()
 	var next: float = GAME_SPEEDS[0]
@@ -1152,4 +1831,9 @@ func _toggle_speed() -> void:
 
 
 func _refresh_speed_label() -> void:
-	_btn_speed.text = "속도 x%s" % ("%.1f" % camera.game_speed()).trim_suffix(".0")
+	var sp := camera.game_speed()
+	_btn_speed.text = "속도 x%s" % ("%.1f" % sp).trim_suffix(".0")
+	# 배속이 높을수록 글자가 뜨거운 색
+	var hot := clampf((sp - 1.0) / 1.0, 0.0, 1.0)
+	_btn_speed.add_theme_color_override("font_color", Color.WHITE.lerp(Color(1.0, 0.55, 0.3), hot))
+	_btn_speed.add_theme_color_override("font_hover_color", Color.WHITE.lerp(Color(1.0, 0.65, 0.4), hot))

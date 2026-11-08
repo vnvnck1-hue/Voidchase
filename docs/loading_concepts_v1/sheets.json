@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "columns": 4,
+  "rows": 2,
+  "frameCount": 8,
+  "fps": 8,
+  "loop": true,
+  "background": "#000000",
+  "transparent": false,
+  "concepts": [
+    {
+      "id": "a_card_maid",
+      "file": "a_card_maid_sheet.png"
+    },
+    {
+      "id": "b_void_jelly",
+      "file": "b_void_jelly_sheet.png"
+    }
+  ],
+  "width": 1774,
+  "height": 887,
+  "frames": [
+    {
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "width": 444,
+      "height": 444
+    },
+    {
+      "index": 1,
+      "x": 444,
+      "y": 0,
+      "width": 443,
+      "height": 444
+    },
+    {
+      "index": 2,
+      "x": 887,
+      "y": 0,
+      "width": 444,
+      "height": 444
+    },
+    {
+      "index": 3,
+      "x": 1331,
+      "y": 0,
+      "width": 443,
+      "height": 444
+    },
+    {
+      "index": 4,
+      "x": 0,
+      "y": 444,
+      "width": 444,
+      "height": 443
+    },
+    {
+      "index": 5,
+      "x": 444,
+      "y": 444,
+      "width": 443,
+      "height": 443
+    },
+    {
+      "index": 6,
+      "x": 887,
+      "y": 444,
+      "width": 444,
+      "height": 443
+    },
+    {
+      "index": 7,
+      "x": 1331,
+      "y": 444,
+      "width": 443,
+      "height": 443
+    }
+  ]
+}

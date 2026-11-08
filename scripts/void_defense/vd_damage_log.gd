@@ -8,14 +8,16 @@
 ##   불투명 짙은 남보라 두꺼운 외곽선 + 아래 그림자. 강타는 첫 0.1초 흰빛으로 번쩍였다가 노랑.
 ##   연속 타격 열기: 같은 대상을 끊김 없이(0.75초 안에 다음 타격) 때릴수록 크림 → 노랑 → 주황 → 붉은 분홍.
 ##   BOUNCE — 위로 튀어 올랐다가 중력으로 떨어지며 사라짐 (기본) / STACK — 머리 위에 쌓이는 기둥.
-##   숫자는 생긴 월드 점에 남고 그 점의 화면 투영 + 오프셋에 그린다. 실제 시간(히트스탑·슬로모션에 멈추지 않게).
+##   숫자는 전장(월드)에 캐릭터와 같은 층으로 그린다: 생긴 월드 점 + 월드 오프셋. 카메라가 움직이면 함께 움직인다.
+##   크기·이동량은 월드 px (전투 줌 1.18 기준 화면에서 원본보다 살짝 작게). 글자는 화면 배율만큼 큰 크기로 래스터해서
+##   줌인돼도 흐려지지 않게 그린다. 실제 시간(히트스탑·슬로모션에 멈추지 않게).
 class_name VDDamageLog
-extends Control
+extends Node2D
 
-# ── 크기 · 색 ──
-const SIZE := 40.0
-const SIZE_BIG := 60.0
-const SIZE_STATUS := 34.0
+# ── 크기 · 색 (월드 px) ──
+const SIZE := 32.0
+const SIZE_BIG := 48.0
+const SIZE_STATUS := 27.0
 const FLASH := Color("ffffff")
 const INK := Color("1b0b38")          # 외곽선
 const OUTLINE := 0.26                 # 외곽선 두께 = 글자 크기 × 이 값
@@ -35,13 +37,13 @@ const SQUASH_T := 0.08
 const FLASH_T := 0.1
 
 # ── 움직임 (화면 px) ──
-const RISE := 360.0
+const RISE := 290.0
 const RISE_RAND := 0.3
 const ARC_SPREAD := 36.0
-const GRAVITY := 1500.0
+const GRAVITY := 1200.0
 const DRAG := 0.90
-const SINK := 22.0
-const JITTER := Vector2(18, 6)
+const SINK := 18.0
+const JITTER := Vector2(14, 5)
 const TILT := 0.10
 const TILT_BIG := 11.0
 const SPIN := 0.6
@@ -52,9 +54,9 @@ const STACK_RATE := 22.0
 const EDGE := 12.0
 
 # ── BOUNCE 프리셋 ──
-const B_RISE := 470.0
+const B_RISE := 380.0
 const B_SPREAD := 70.0
-const B_GRAVITY := 1550.0
+const B_GRAVITY := 1250.0
 const B_DRAG := 0.985
 const B_LIFE := 0.85
 const B_LIFE_BIG := 1.0
@@ -118,8 +120,6 @@ static func font() -> Font:
 
 func _ready() -> void:
 	_read_arg()
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func _heat(target: Object) -> float:
@@ -215,7 +215,7 @@ func spawn_status(anchor: Vector2, text: String, col: Color, target: Object = nu
 		if not o.status and target != null and o.target != null and o.target.get_ref() == target:
 			top = maxf(top, float(o.lift_to) + (SIZE_BIG if o.big else SIZE) * 0.5)
 	_push({
-		"anchor": anchor, "off": Vector2(0, -44.0 - top), "vx": 0.0, "vy": -90.0,
+		"anchor": anchor, "off": Vector2(0, -36.0 - top), "vx": 0.0, "vy": -72.0,
 		"rot": 0.0, "vr": 0.0, "t": 0.0, "life": LIFE_STATUS, "big": false, "value": 0, "text": text, "col": col,
 		"target": weakref(target) if target else null, "born": Time.get_ticks_msec() * 0.001, "status": true, "pop": POP,
 		"lift": 0.0, "lift_to": 0.0, "heat": 0.0, "mode": "status",
@@ -264,10 +264,9 @@ func _process(_dt: float) -> void:
 func _draw() -> void:
 	if entries.is_empty():
 		return
-	# 2D: Camera2D 가 만든 캔버스 변환으로 월드 점을 화면 점으로
-	var ct := get_viewport().get_canvas_transform()
+	# 월드에 그린다. 글자는 화면 배율(z)만큼 큰 크기로 래스터한 뒤 1/z 로 줄여 줌인돼도 선명하게
+	var z := maxf(get_canvas_transform().get_scale().x, 0.1)
 	var f := font()
-	var vp := get_viewport_rect().size
 	for e: Dictionary in entries:
 		var t := float(e.t)
 		var k := t / float(e.life)
@@ -279,21 +278,15 @@ func _draw() -> void:
 		var sq_x := 1.0 / maxf(0.55, sq_y)
 		var base := SIZE_STATUS if e.status else (SIZE_BIG if e.big else SIZE)
 		var want := maxf(8.0, base * (1.0 + HEAT_SIZE * h) * pop * shrink)
-		var sz: int = roundi(base) if want < base * 1.3 else roundi(base * 1.6)
+		var sz: int = (roundi(base * z * 0.5) * 2) if want < base * 1.3 else (roundi(base * z * 0.8) * 2)
 		var sc := want / float(sz)
 		var a := 1.0 - smoothstep(fade_from, 1.0, k)
 		var text: String = e.text
 		var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x
 		var at := Vector2(-tw * 0.5, (f.get_ascent(sz) - f.get_descent(sz)) * 0.5)
-		var p: Vector2 = ct * (e.anchor as Vector2) + (e.off as Vector2) - Vector2(0, float(e.lift))
+		var p: Vector2 = (e.anchor as Vector2) + (e.off as Vector2) - Vector2(0, float(e.lift))
 		if h > 0.0 and t < 0.2:
 			p += Vector2(randf_range(-1, 1), randf_range(-1, 1)) * HEAT_SHAKE * h * (1.0 - t / 0.2)
-		var hw := tw * sc * 0.5 + EDGE
-		var hh := want * 0.5 + EDGE
-		if p.x < -200 or p.y < -200 or p.x > vp.x + 200 or p.y > vp.y + 200:
-			continue
-		p.x = clampf(p.x, hw, maxf(hw, vp.x - hw))
-		p.y = clampf(p.y, hh, maxf(hh, vp.y - hh))
 		var ol := maxi(4, roundi(sz * OUTLINE))
 		draw_set_transform(p, float(e.rot), Vector2(sq_x, sq_y) * sc)
 		draw_string_outline(f, at + Vector2(0, sz * SHADOW_OFF), text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, ol, Color(SHADOW, SHADOW.a * a))

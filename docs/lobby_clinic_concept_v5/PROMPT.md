@@ -1,0 +1,24 @@
+# 로비 컨셉 v5 — 여백 중심의 새 외관
+
+- 사용자 요청: 이전 시안의 높은 밀도 해소. 메뉴 UI를 넣을 여백 확보. 첨부한 야간 다이너의 색감·구도를 바탕으로 완전히 새로운 디자인과 구도 제작, 미국 코믹북 스타일 적용.
+- 생성 방식: 내장 image_gen. 이전 시안은 이미지 입력에 포함하지 않고 이번 첨부 레퍼런스만 사용.
+- 방향: 오른쪽의 작은 현대식 단층 비밀 클리닉, 왼쪽 절반과 하단의 낮은 디테일 밀도, 청색 밤·청록 창·작은 붉은 간판.
+- 기존 설정 반영: HEAD CASE 영어 이름, 야간 비밀 정신 시술, 현대식 모니터와 전선은 최소한의 실루엣으로 암시.
+- 게임 적용 없이 독립 컨셉 원화로 저장.
+
+## 최종 프롬프트
+
+Use case: stylized-concept.
+Create ONE completely NEW 16:9 widescreen game-lobby environment illustration (target 2560x1440). Use the attached nighttime diner image as the BASE for color relationships, quiet staging, spaciousness and simple graphic silhouettes; reinterpret it as an original covert near-future mental treatment clinic in AMERICAN COMIC BOOK STYLE. This is a fresh design, not a revision of the earlier detailed clinics.
+
+MOST IMPORTANT ART DIRECTION: spacious, low visual density, beautiful negative space. The previous designs were much too busy. Design an actual usable menu background. At least the LEFT 50% of the image must be a calm, continuous dark-blue low-detail area, with almost no internal edges, small objects, writing or high-contrast lights. Let this area be a broad shaded courtyard fading into one flat shadowed wall silhouette and quiet blue night sky. The LOWER 20–25% must also be mostly uninterrupted blue pavement with only two or three long simple perspective lines. These quiet shapes must feel intentionally composed, not unfinished. No UI or sample text over them.
+
+COMPOSITION: stable street-height three-quarter establishing shot, essentially level horizon, mild natural cartoon perspective. A new compact SINGLE-STORY, low rectangular clinic pavilion occupies the RIGHT 40–45%, with breathing room above its roof. A wide dark forecourt stretches across left and foreground. One slim dark tree silhouette near the rightmost edge can frame the clinic; very distant neighborhood shapes remain simple muted silhouettes. Follow the reference's restrained asymmetry and horizontal rhythm. No giant foreground signage, enormous railings, fisheye, dramatic Dutch angle, towering two-story building, looming objects or extreme converging verticals.
+
+NEW ARCHITECTURE: a quiet contemporary charcoal-and-indigo pavilion tucked behind a closed commercial block, with a slim flat metal roof, one shallow cantilevered entrance canopy, a clean broad cyan-lit horizontal window band and a narrow recessed glass entry on the far right. Simple big planes, thin dark mullions and a few long seams, not a facade covered in panels. Modest soft-red physical neon sign attached to the upper-right facade reads exactly "HEAD CASE", English only, in witty compact comic lettering; not giant roof advertising. A tiny "OPEN" light in the door. No additional readable copy.
+The place runs clandestine illegal neural/memory treatment after midnight. Suggest contemporary cyberpunk tech economically: through the window, just TWO simplified dark flat-panel monitor silhouettes with small cyan displays and a reclining chair shape, partly obscured by a few wide blinds. ONE loose looping cable beside the workstation and ONE short exterior cable run into a small junction box near the entrance, mostly within shadow. That's enough to imply makeshift technology. No exposed server racks, no piles of clutter, no walls of computers, no decorative circuit patterns. Keep treatment apparatus vague and discreet rather than a fully illustrated lab.
+
+COLOR: closely follow the attached reference's deep ultramarine/cobalt night, navy silhouettes, inviting luminous turquoise window and a SMALL restrained red/coral sign accent. Moderately rich blue and teal, not gray/desaturated; not purple-magenta neon overload and no acid green. Light spill from the window creates one modest broad soft cyan shape on pavement immediately beside the building, leaving the left menu region quiet and dark. A sparse few tiny stars high up. Simple light grouping, no multiple conflicting beams, no elaborate wet reflections.
+
+STYLE: American comic book environment interpreted with elegant economy: confident selective ink contours, angular but appealing architectural shapes, big clean cel-shaded shadow blocks, minimal flat colors, very sparse subtle print grain. READABLE THUMBNAIL, broad graphic masses, restrained edge density. Do not render individual scratches, rivets, brick patterns, gritty stippling everywhere, fine pavement texture or intricate hatching. Preserve the reference's calm welcoming midnight mystery with a little kitschy personality. No anime, no photorealism, no 3D.
+CONSTRAINTS: one full-frame environment, no people, no character silhouettes, no vehicles, no UI/buttons/icons, no game logo, no watermark, no panel borders, no collage, no extra business names, no diner/cafe elements. A finished spacious comic-book lobby backdrop, not a maximalist cyberpunk poster.

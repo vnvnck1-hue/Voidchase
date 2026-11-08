@@ -1,0 +1,22 @@
+# 로비 컨셉 v6 — Thick-line & Flat Shading
+
+- 사용자 요청: 아메리칸 코믹북의 거친 고밀도 표현 대신, 파워퍼프걸·팬티앤스타킹을 예로 든 Cartoon Network 계열의 굵은 외곽선과 플랫한 TV 카툰 스타일로 재해석.
+- 생성 방식: 내장 image_gen으로 v5 이미지 편집/재해석.
+- 유지: 오른쪽 시설과 왼쪽·하단 메뉴 여백, HEAD CASE 영어 이름, 청색 밤·청록 창문·붉은 간판, 현대식 비밀 정신 시술소 설정.
+- 변경: 굵고 매끈한 외곽선, 제한된 단색 팔레트, 단순한 기하 형태와 하드 에지 명암. 질감·망점·해칭·복잡한 명암·글로우 제거. 기존 작품의 캐릭터·로고는 포함하지 않음.
+- 독립 컨셉 원화 저장. 게임 화면 적용은 하지 않음.
+
+## 최종 프롬프트
+
+Use case: style-transfer.
+EDIT THE ATTACHED IMAGE into a freshly redrawn thick-line, flat-shaded 1990s American TV cartoon background. The user explicitly wants the visual language of Cartoon Network era cartoons such as The Powerpuff Girls, with the bold graphic simplification also associated with Panty & Stocking. This is an original clinic environment, not a scene or characters copied from those shows.
+
+CORE STYLE CHANGE: clean BOLD, THICK, SMOOTH dark-navy/near-black contour lines; playful simplified geometric silhouettes; solid flat color fills; one hard-edged shadow shape per surface at most; appealing angular-to-rounded shapes and graphic cartoon timing. Clearly visible thick outer silhouette lines and slightly thinner sparse internal lines. Think economical TV animation background design with confident heavy outlines. Redraw shapes purposefully, not merely run an outline filter over a painted image. Absolutely NO comic-book hatching, halftone dots, scratchy ink, gritty print grain, realistic texture, airbrushed rendering, painterly brushwork, volumetric effects, realistic reflected light, or intricate small line detail. No semi-realistic comic illustration. CLEAN FLAT CARTOON.
+
+INVARIANTS: retain the image's very spacious, calm, asymmetrical composition with the compact modern secret clinic on the RIGHT, a broad empty midnight-blue wall/courtyard on the LEFT, large open sky, and broad simple pavement along the bottom. Preserve the original 16:9 aspect ratio, essentially level horizon and mild three-quarter perspective. Preserve HEAD CASE as the name, the small OPEN hanging door sign, nighttime, discreet modern mental/neural treatment facility and the window's simple hint of two computers and one reclining treatment chair. Do not add people, vehicles, props, menu graphics or decorative clutter. Left 45–50% and lower 20–25% remain low-detail uninterrupted quiet areas for future game menu UI.
+
+DESIGN REINTERPRETATION: give the low single-story building gently playful cartoon proportions: slightly jaunty roof edge, thick squared-off window frames, simple two-plane cantilevered entrance canopy, oversimplified broad window panels, an appealing compact door and one large simple step. Keep modern smooth concrete/metal architectural character, not a gothic building or old diner. Simplify blind slats to just a few evenly spaced thick horizontal lines with wide gaps; don't render dozens of stripes. Inside, computers become two legible blocky flat-panel monitor silhouettes with a single zigzag waveform on one screen, one loose cable loop and a smooth reclining chair silhouette. A tiny exterior junction box is enough; do not add complex machines. Far background houses and the single right-edge tree become deliberately stylized big geometric silhouettes, not detailed foliage.
+
+COLOR: preserve the pleasing original midnight cobalt and deep navy / turquoise window / small coral-red sign relationship. Use a tight palette of roughly 8–12 main solid colors, vivid enough to feel animated but not neon overload. SKY: one solid deep cobalt color, or at most two broad flat blue bands, with only a few tiny stylized star dots. WALL: one big flat navy shape. PAVEMENT: a big flat blue plane with only two long graphic perspective seams. WINDOW: one luminous solid turquoise fill with a slightly darker flat interior silhouette. NEON SIGN: readable exact text "HEAD CASE" in chunky witty uppercase cartoon English lettering, coral-red fill, clean thick dark outline; suggest its glow with one restrained flat muted red backing shape, not a blurred luminous halo. OPEN uses simple crisp English lettering. Light on ground becomes ONE hard-edged broad restrained teal patch close to the building; no gradients or soft bloom. Most of the left and lower area stays dark-blue and quiet.
+
+OUTPUT: one polished original clean 2D cartoon background, full-frame, no caption, no series logos, no watermark, no texture overlay, no UI. It should look substantially more bold-lined and flat than the supplied image while preserving its good spacious staging.

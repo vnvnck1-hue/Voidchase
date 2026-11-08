@@ -15,7 +15,18 @@ func _run() -> void:
 	_expect(0, "lobby")
 	await _shot("lobby")
 	for i in range(1, SceneSwitcher.SCENES.size()):
+		var t0 := Time.get_ticks_msec()
 		SceneSwitcher.switch_to(i)
+		# 로비 → 모드는 페이크 로딩 화면(1~3초 랜덤 + 걷히는 시간)을 거친다
+		if not SceneSwitcher.is_loading():
+			_fail += 1
+			print("[lobby_probe] FAIL no loading screen for mode %d" % i)
+		while SceneSwitcher.is_loading():
+			await get_tree().process_frame
+		var dt := (Time.get_ticks_msec() - t0) / 1000.0
+		if dt < 0.9 or dt > 4.5:
+			_fail += 1
+		print("[lobby_probe] %s loading %.2fs" % ["ok  " if dt >= 0.9 and dt <= 4.5 else "FAIL", dt])
 		await get_tree().create_timer(1.2).timeout
 		_expect(i, SceneSwitcher.SCENES[i]["name"])
 		await _shot("mode_%d" % i)
