@@ -117,7 +117,7 @@ func _run() -> void:
 	var lobby: Control = load("res://scenes/Lobby.tscn").instantiate()
 	add_child(lobby)
 	var card: Control = lobby._cards[0]   # 탭 패널 (오른쪽에 붙는다: offset_left = 1010 - 1920)
-	var home := lobby.PANEL_RECT.position.x - 1920.0
+	var home: float = lobby.PANEL_RECT.position.x - 1920.0
 	var card_before := _offsets(card)
 	_check(card.modulate.a < 0.01 and card_before[0] > home + 50.0, "hub panel starts offset right and transparent (x=%.0f)" % card_before[0])
 	_check(lobby._chief.modulate.a < 0.01, "hub chief starts transparent")
@@ -140,8 +140,10 @@ func _run() -> void:
 	var watched := {"main": b._btn_main, "turntable": b.turntable, "relic": b.relic_hud, "backdrop": b.relic_hud.backdrop,
 		"essence": b._lbl_essence, "wave_lbl": b._lbl_wave, "top_bar": b.frame._top_bar, "panel": b.frame._panel, "shade": b.frame._shade}
 	var before := {}
+	var alpha_before := {}   # 뒷패널·하단 그늘은 원래 반투명이다: 1 이 아니라 원래 알파로 돌아왔는지 본다
 	for k in watched:
 		before[k] = _offsets(watched[k])
+		alpha_before[k] = watched[k].modulate.a
 	await _wait(0.4)
 	b.play_intro()
 	_check(is_instance_valid(b.fog_reveal) and b.fog_reveal.get_parent() == b._reveal_layer, "fog reveal overlay added to reveal layer (7)")
@@ -160,7 +162,7 @@ func _run() -> void:
 	_check(_mid > 0.3 and _mid < 0.7, "fog reveal is opening mid-way (reveal=%.2f)" % _mid)
 	_check(took < SETTLE_TIMEOUT, "battle intro runners finish (+%.2fs)" % took)
 	for k in watched:
-		_check(_same(_offsets(watched[k]), before[k]) and watched[k].modulate.a > 0.99, "%s returns to its place" % k)
+		_check(_same(_offsets(watched[k]), before[k]) and absf(watched[k].modulate.a - float(alpha_before[k])) < 0.01, "%s returns to its place" % k)
 	_check(not is_instance_valid(b.fog_reveal), "fog reveal overlay removed itself")
 	_check(not b.frame._fx[b.frame._heroes[0]].has("in_t"), "squad card intro finished")
 	print("[ui-intro] DONE failures=%d" % failures.size())
