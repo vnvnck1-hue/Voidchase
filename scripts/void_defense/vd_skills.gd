@@ -23,7 +23,7 @@ func _init(battle: VDBattle) -> void:
 func cast(u: VDUnit) -> bool:
 	if not VDData.SKILLS.has(u.id) or _alive(b.enemies).is_empty():
 		return false
-	var sk: Dictionary = VDData.SKILLS[u.id]
+	var sk: Dictionary = b.growth.skill_def(u.id)   # 숙련 스킬 보정이 든 복사본
 	var ok := false
 	match u.id:
 		"knight":
@@ -63,7 +63,9 @@ func _valiant_assault(u: VDUnit, sk: Dictionary) -> bool:
 
 
 func _knight_land(u: VDUnit, sk: Dictionary, target: VDUnit, land: Vector2i, run: int) -> void:
-	await b.get_tree().create_timer(LEAP_SEC).timeout
+	await b.get_tree().create_timer(LEAP_SEC, false).timeout
+	if not is_instance_valid(u):
+		return
 	u.casting = false
 	if not _still_on(run) or not u.alive:
 		return
@@ -90,7 +92,7 @@ func _knight_land(u: VDUnit, sk: Dictionary, target: VDUnit, land: Vector2i, run
 		if near:
 			dmg += base
 		e.stun(float(sk["stun"]))
-		_hit(e, dmg, "hit_heavy", Color(0.85, 0.92, 1.0), 2.0)
+		_hit(e, dmg, "hit_light", Color(0.85, 0.92, 1.0), 3.0)
 
 
 ## 대상 바로 옆(방 안, 빈 칸) 중 지금 자리에서 가까운 칸. 없으면 대상에 가장 가까운 빈 칸. 대형 대상은 footprint 둘레를 본다.
@@ -134,7 +136,9 @@ func _multi_shot_run(u: VDUnit, sk: Dictionary, run: int) -> void:
 	if retreat != u.cell:
 		b.vfx.spawn("dash", b.ground_fx, u.position, 1.0, 0.0, Color.WHITE, Vector2.ONE, VDData.to_screen(Vector2(retreat)).x > u.position.x)
 		u.move_to_cell(retreat, 0.16)
-		await b.get_tree().create_timer(0.18).timeout
+		await b.get_tree().create_timer(0.18, false).timeout
+		if not is_instance_valid(u):
+			return
 		if not _still_on(run) or not u.alive:
 			u.casting = false
 			return
@@ -148,15 +152,19 @@ func _multi_shot_run(u: VDUnit, sk: Dictionary, run: int) -> void:
 		var to := b._chest(t)
 		var dir := (to - from).normalized()
 		u.face(to.x - from.x)
-		b.vfx.spawn("hit_light", b.fx_root, from + dir * 40.0, 1.8, dir.angle(), Color(1.0, 0.85, 0.4))
-		VDFx.tracer(b.fx_root, from + dir * 40.0, to, Color(1.0, 0.8, 0.35))
+		b.vfx.spawn("gun_flash", b.fx_root, from + dir * 40.0, 1.8, dir.angle())
+		VDGunBolt.fire(b.fx_root, from + dir * 40.0, to, 0.09, 1.35)   # 강탄: 평타보다 큰 볼트
 		b.audio.play("gun", 0.05, 4.0)
 		b.camera.shake(0.4)
-		_hit(t, dmg, "gun_hit", Color(1.0, 0.9, 0.5), 0.8)
-		await b.get_tree().create_timer(0.11).timeout
-		if not _still_on(run) or not u.alive:
+		await b.get_tree().create_timer(0.09, false).timeout          # 볼트가 날아간 뒤 명중
+		if not is_instance_valid(u) or not _still_on(run) or not u.alive:
 			break
-	u.casting = false
+		_hit(t, dmg, "gun_hit", Color.WHITE, 0.8)
+		await b.get_tree().create_timer(0.02, false).timeout
+		if not is_instance_valid(u) or not _still_on(run) or not u.alive:
+			break
+	if is_instance_valid(u):   # 연사 도중 새 판(restart)이 시작되면 유닛이 이미 해제되어 있다
+		u.casting = false
 
 
 # ---------------------------------------------------------------- mage
@@ -172,7 +180,9 @@ func _absolute_zero(u: VDUnit, sk: Dictionary) -> bool:
 
 
 func _absolute_zero_hit(u: VDUnit, sk: Dictionary, run: int) -> void:
-	await b.get_tree().create_timer(0.3).timeout
+	await b.get_tree().create_timer(0.3, false).timeout
+	if not is_instance_valid(u):
+		return
 	u.casting = false
 	if not _still_on(run):
 		return
@@ -184,7 +194,7 @@ func _absolute_zero_hit(u: VDUnit, sk: Dictionary, run: int) -> void:
 	for e in _alive(b.enemies):
 		e.stun(float(sk["freeze"]), true)
 		b.vfx.spawn("lightning", b.fx_root, e.position + Vector2(0, e._top * 0.6), 0.35, 0.0, Color(0.6, 0.85, 1.0))
-		_hit(e, dmg, "burst", Color(0.6, 0.85, 1.0), 0.45)
+		_hit(e, dmg, "burst", Color(0.6, 0.85, 1.0), 0.45, "서리")
 
 
 # ---------------------------------------------------------------- healer
@@ -194,7 +204,7 @@ func _blessing(u: VDUnit, sk: Dictionary) -> bool:
 	b.audio.play("chime", 0.03, -6.0, 1.1)
 	b.vfx.loop("magic_circle", b.ground_fx, u.position, 0.8, 0.32, 0.0, Color(0.6, 1.0, 0.7), Vector2(1.0, 0.5), 0.35, 1.5)
 	for a in _alive(b.allies):
-		var amount := floorf(a.max_hp * float(sk["heal_hp"]) + u.atk * float(sk["heal_atk"]))
+		var amount := floorf((a.max_hp * float(sk["heal_hp"]) + u.atk * float(sk["heal_atk"])) * (1.0 + u.heal_bonus))
 		var before := a.hp
 		a.heal(amount)
 		b.vfx.spawn("heal", b.fx_root, b._chest(a), 0.65, 0.0, Color(0.8, 1.0, 0.8))
@@ -208,11 +218,14 @@ func _blessing(u: VDUnit, sk: Dictionary) -> bool:
 # ---------------------------------------------------------------- helpers
 
 ## 피해 + 명중 연출 + 숫자 (스킬 피해는 언제나 큰 숫자).
-func _hit(e: VDUnit, dmg: float, fx: String, tint: Color, fx_scale: float) -> void:
+## element: 피격 색 속성 ("" 물리 · "번개" · "화염" · "서리" · "정수")
+func _hit(e: VDUnit, dmg: float, fx: String, tint: Color, fx_scale: float, element := "") -> void:
 	if not is_instance_valid(e) or not e.alive or dmg <= 0.0:
 		return
+	if b.enemy_skills.try_dodge(e, dmg, false):
+		return
 	var at := b._chest(e)
-	var dealt := e.take_damage(dmg)
+	var dealt := e.take_damage(dmg, element)
 	b.vfx.spawn(fx, b.fx_root, at, fx_scale, randf() * TAU, tint)
 	b.dmg_log.spawn(at + Vector2(0, -16), int(dealt), true, e)
 

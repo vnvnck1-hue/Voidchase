@@ -9,6 +9,12 @@ const CARD_COLORS := [Color(0.95, 0.47, 0.66), Color(0.62, 0.42, 0.92), Color(0.
 const STANDING_ART := "res://assets/textures/standing/char_01.png"
 
 var _cards: Array[PanelContainer] = []
+## 등장 애니메이션(UIIntro)이 미는 조각들
+var _moon_slot: Control
+var _art: TextureRect
+var _header: Array[Control] = []
+var _hint: Label
+var _quit: Button
 
 
 func _ready() -> void:
@@ -23,6 +29,21 @@ func _ready() -> void:
 	_build_header()
 	_build_cards()
 	_build_footer()
+	_play_intro()
+
+
+## 로비 등장 애니메이션 (2026-11-09, 모션 그래픽식 순차 등장): 달이 톡 커지고 → 스탠딩 원화가 오른쪽에서 →
+## 머리글 세 줄이 왼쪽에서 차례로 → 모드 카드가 위에서부터 한 장씩 왼쪽에서 → 마지막에 안내 문구·종료 버튼이 아래에서.
+## 코믹 파편 전환으로 돌아왔으면 가운데 구멍이 다 열릴 때(SceneSwitcher.intro_lead())까지 전부 숨긴 채 기다렸다가 시작한다.
+func _play_intro() -> void:
+	var lead := SceneSwitcher.intro_lead()
+	UIIntro.pop(_moon_slot, lead + 0.05, 0.6, 0.4)
+	if _art:
+		UIIntro.slide(_art, UIIntro.FROM_RIGHT, lead + 0.15, 0.8, 260.0, true, UIIntro.Ease.QUINT)
+	var t := UIIntro.stagger(_header, UIIntro.FROM_LEFT, lead + 0.1, 0.09, 0.5, 140.0)
+	t = UIIntro.stagger(_cards, UIIntro.FROM_LEFT, t + 0.12, 0.1, 0.55, 200.0)
+	UIIntro.slide(_hint, UIIntro.FROM_BOTTOM, t + 0.2, 0.45, 40.0)
+	UIIntro.slide(_quit, UIIntro.FROM_BOTTOM, t + 0.25, 0.45, 80.0)
 
 
 func _build_background() -> void:
@@ -48,6 +69,7 @@ func _build_background() -> void:
 	moon_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	SceneSwitcher.pin(moon_slot, Vector2(1, 0), Rect2(1470, 80, 300, 300))
 	add_child(moon_slot)
+	_moon_slot = moon_slot
 	var moon := Polygon2D.new()
 	var pts := PackedVector2Array()
 	for i in 48:
@@ -65,12 +87,13 @@ func _build_background() -> void:
 		art.modulate = Color(1, 1, 1, 0.92)
 		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(art)
+		_art = art
 
 
 func _build_header() -> void:
-	_label("미소녀 카드게임", Vector2(100, 90), 24, ACCENT)
-	_label("PROTOTYPE LOBBY", Vector2(100, 124), 64, Color(0.98, 0.95, 1.0))
-	_label("모드를 선택하세요", Vector2(104, 206), 22, Color(0.85, 0.8, 0.95))
+	_header.append(_label("미소녀 카드게임", Vector2(100, 90), 24, ACCENT))
+	_header.append(_label("PROTOTYPE LOBBY", Vector2(100, 124), 64, Color(0.98, 0.95, 1.0)))
+	_header.append(_label("모드를 선택하세요", Vector2(104, 206), 22, Color(0.85, 0.8, 0.95)))
 
 
 func _build_cards() -> void:
@@ -78,12 +101,13 @@ func _build_cards() -> void:
 	var y := 290.0
 	# 카드가 늘어도 안내 문구(1000) 위까지만 쓰도록 간격을 줄인다 (4장일 때 176)
 	var step := minf(176.0, 690.0 / (modes.size() - 1))
+	var tight := step < 130.0   # 카드가 6장 이상: 두 줄 설명이 다음 카드와 겹치지 않게 글자·여백을 줄인다
 	for i in range(1, modes.size()):
 		var m: Dictionary = modes[i]
 		var col: Color = CARD_COLORS[(i - 1) % CARD_COLORS.size()]
 		var card := PanelContainer.new()
 		card.position = Vector2(100, y)
-		card.custom_minimum_size = Vector2(1000, step - 26.0)
+		card.custom_minimum_size = Vector2(1000, step - (12.0 if tight else 26.0))
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = Color(0.1, 0.06, 0.18, 0.78)
 		sb.border_color = Color(col, 0.7)
@@ -91,8 +115,8 @@ func _build_cards() -> void:
 		sb.set_corner_radius_all(14)
 		sb.content_margin_left = 28
 		sb.content_margin_right = 24
-		sb.content_margin_top = 12
-		sb.content_margin_bottom = 12
+		sb.content_margin_top = 5 if tight else 12
+		sb.content_margin_bottom = 5 if tight else 12
 		card.add_theme_stylebox_override("panel", sb)
 		card.mouse_entered.connect(_on_card_hover.bind(card, col, true))
 		card.mouse_exited.connect(_on_card_hover.bind(card, col, false))
@@ -105,7 +129,7 @@ func _build_cards() -> void:
 		card.add_child(hb)
 		var num := Label.new()
 		num.text = str(i)
-		num.add_theme_font_size_override("font_size", 54)
+		num.add_theme_font_size_override("font_size", 44 if tight else 54)
 		num.add_theme_color_override("font_color", col)
 		num.custom_minimum_size = Vector2(60, 0)
 		num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -116,18 +140,18 @@ func _build_cards() -> void:
 		hb.add_child(vb)
 		var title := Label.new()
 		title.text = m["title"]
-		title.add_theme_font_size_override("font_size", 32)
+		title.add_theme_font_size_override("font_size", 26 if tight else 32)
 		title.add_theme_color_override("font_color", Color(0.98, 0.96, 1.0))
 		vb.add_child(title)
 		var desc := Label.new()
 		desc.text = m["desc"]
-		desc.add_theme_font_size_override("font_size", 18)
+		desc.add_theme_font_size_override("font_size", 15 if tight else 18)
 		desc.add_theme_color_override("font_color", Color(0.8, 0.76, 0.9))
 		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vb.add_child(desc)
 		var btn := Button.new()
 		btn.text = "입장  ▶"
-		btn.custom_minimum_size = Vector2(170, 64)
+		btn.custom_minimum_size = Vector2(170, 52 if tight else 64)
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.add_theme_font_size_override("font_size", 26)
 		btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -137,8 +161,9 @@ func _build_cards() -> void:
 
 
 func _build_footer() -> void:
-	var hint := _label("숫자키 1~5 로 바로 입장 · 모드 안에서 Esc 로 로비 복귀 · F11 전체화면", Vector2(104, 1000), 16, Color(0.7, 0.65, 0.85))
+	var hint := _label("숫자키 1~%d 로 바로 입장 · 모드 안에서 Esc 로 로비 복귀 · F11 전체화면" % (SceneSwitcher.SCENES.size() - 1), Vector2(104, 1000), 16, Color(0.7, 0.65, 0.85))
 	SceneSwitcher.pin(hint, Vector2(0, 1), Rect2(104, 1000, 900, 24))
+	_hint = hint
 	var quit := Button.new()
 	quit.text = "게임 종료"
 	# 카드(x 100~1100)와 겹치지 않도록 카드 오른쪽 옆에 둔다
@@ -148,6 +173,7 @@ func _build_footer() -> void:
 	quit.add_theme_font_size_override("font_size", 22)
 	quit.pressed.connect(func() -> void: get_tree().quit())
 	add_child(quit)
+	_quit = quit
 
 
 func _label(text: String, pos: Vector2, size: int, col: Color) -> Label:
@@ -180,14 +206,10 @@ func _enter(index: int) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# 로비에서는 숫자키가 모드 번호 (모드 전환은 로비에서만 한다)
 	if event is InputEventKey and event.pressed and not event.echo:
-		match event.keycode:
-			KEY_1, KEY_KP_1:
-				_enter(1)
-			KEY_2, KEY_KP_2:
-				_enter(2)
-			KEY_3, KEY_KP_3:
-				_enter(3)
-			KEY_4, KEY_KP_4:
-				_enter(4)
-			KEY_5, KEY_KP_5:
-				_enter(5)
+		var n := -1
+		if event.keycode >= KEY_1 and event.keycode <= KEY_9:
+			n = event.keycode - KEY_0
+		elif event.keycode >= KEY_KP_1 and event.keycode <= KEY_KP_9:
+			n = event.keycode - KEY_KP_0
+		if n >= 1 and n < SceneSwitcher.SCENES.size():
+			_enter(n)

@@ -7,14 +7,16 @@ extends CanvasLayer
 
 const MAX_WAVES := 6
 ## amp: 세기 · speed: 퍼지는 속도(월드 px/초) · thick: 띠 두께(월드 px) · life: 수명(초)
+## 2026-11-08 전반적으로 약하게: 세기 약 -45%, 두께 -20%, 수명 -15%, 띠 밝기 1.0 → BAND_GLOW
 const KINDS := {
-	"light": {"amp": 0.5, "speed": 620.0, "thick": 20.0, "life": 0.38},
-	"heavy": {"amp": 0.9, "speed": 780.0, "thick": 32.0, "life": 0.55},
-	"kill": {"amp": 1.2, "speed": 900.0, "thick": 48.0, "life": 0.8},
-	"boss": {"amp": 1.6, "speed": 1050.0, "thick": 70.0, "life": 1.1},
-	"slam": {"amp": 1.3, "speed": 950.0, "thick": 56.0, "life": 0.85},
+	"light": {"amp": 0.28, "speed": 620.0, "thick": 16.0, "life": 0.32},
+	"heavy": {"amp": 0.5, "speed": 780.0, "thick": 26.0, "life": 0.46},
+	"kill": {"amp": 0.65, "speed": 900.0, "thick": 38.0, "life": 0.68},
+	"boss": {"amp": 0.9, "speed": 1050.0, "thick": 56.0, "life": 0.94},
+	"slam": {"amp": 0.72, "speed": 950.0, "thick": 45.0, "life": 0.72},
 }
 const FLAT := 0.62   # 띠 세로 납작함 (바닥 원근)
+const BAND_GLOW := 0.6   # 띠 가운데 밝기 배율 (셰이더 bands.z)
 
 static var enabled := true
 
@@ -39,8 +41,13 @@ func _init() -> void:
 	_bands.resize(MAX_WAVES)
 
 
+## 충격이 터질 때마다 (화면 효과를 꺼 둬도) 알린다: 바닥 정수가 튕겨 나가는 등 물리 반응용
+signal struck(world_at: Vector2, kind: String, k: float)
+
+
 ## world_at 에서 kind 웨이브를 하나 띄운다. k 로 세기만 더 키우거나 줄인다.
 func add(world_at: Vector2, kind := "light", k := 1.0) -> void:
+	struck.emit(world_at, kind, k)
 	if not enabled:
 		return
 	var d: Dictionary = KINDS.get(kind, KINDS["light"])
@@ -66,6 +73,8 @@ func is_on() -> bool:
 
 
 func _process(delta: float) -> void:
+	if _list.is_empty() and not _rect.visible:
+		return   # 퍼지는 고리가 없으면 아무것도 하지 않는다
 	for w in _list:
 		w["t"] += delta
 		var p: float = w["t"] / w["life"]
@@ -84,7 +93,7 @@ func _process(delta: float) -> void:
 			var w := _list[i]
 			var c: Vector2 = xf * w["at"]
 			_waves[i] = Vector4(c.x, c.y, w["r"] * z, w["amp"])
-			_bands[i] = Vector4(w["thick"] * z, FLAT, 1.0, 0.0)
+			_bands[i] = Vector4(w["thick"] * z, FLAT, BAND_GLOW, 0.0)
 		else:
 			_waves[i] = Vector4.ZERO
 			_bands[i] = Vector4.ZERO

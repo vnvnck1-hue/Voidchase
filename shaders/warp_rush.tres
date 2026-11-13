@@ -1,0 +1,568 @@
+[gd_resource type="VisualShader" format=3]
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_oi4qb"]
+parameter_name = "toon_amt"
+hint = 1
+default_value_enabled = true
+default_value = 1.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_uh4bd"]
+parameter_name = "flash_amt"
+hint = 1
+max = 2.0
+default_value_enabled = true
+default_value = 1.0
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_5abfp"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_l7mau"]
+parameter_name = "col_bg"
+default_value_enabled = true
+default_value = Color(0.07, 0.06, 0.25, 1)
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_8hqii"]
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_wqxes"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_kn66j"]
+parameter_name = "col_a"
+default_value_enabled = true
+default_value = Color(0.25, 0.5, 1, 1)
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_rj7my"]
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_nada4"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_3qs6u"]
+parameter_name = "col_b"
+default_value_enabled = true
+default_value = Color(1, 0.3, 0.65, 1)
+
+[sub_resource type="VisualShaderNodeGlobalExpression" id="VisualShaderNodeGlobalExpression_7wovl"]
+size = Vector2(900, 900)
+expression = "
+// ---- 카툰 워프 함수. 이름은 모두 wr_ 접두사.
+uniform sampler2D wr_screen : hint_screen_texture, repeat_disable, filter_linear;
+float wr_hash(float n) { return fract(sin(n * 127.1 + 311.7) * 43758.5453); }
+float wr_band(float x, float lo, float hi, float aa) { return smoothstep(lo - aa, lo + aa, x) * (1.0 - smoothstep(hi - aa, hi + aa, x)); }
+
+// 장면: 가운데로 scale 배 당겨 읽고 blur 만큼 안쪽으로 8번 훑는다 (짧고 거친 방사 블러)
+vec3 wr_scene(vec2 suv, float scale, float blur, float jit) {
+	vec3 acc = vec3(0.0);
+	for (int i = 0; i < 8; i++) {
+		float t = (float(i) + jit) / 8.0;
+		acc += texture(wr_screen, vec2(0.5) + (suv - 0.5) * scale * (1.0 - blur * t)).rgb;
+	}
+	return acc / 8.0;
+}
+
+// 톱니: 각도를 n 칸으로 나눠 칸마다 직선 변 가시 하나 (높이는 칸 해시로 변주). 0..1
+float wr_spike(float a, float n, float sd) {
+	float ac = a / 6.2831853 * n;
+	float cell = mod(floor(ac), n);
+	float f = abs(fract(ac) - 0.5) * 2.0;
+	return (1.0 - f) * mix(0.3, 1.0, wr_hash(cell * 3.7 + sd));
+}
+
+// 집중선 한 벌: 각도 n 칸 중 켜진 칸(on)마다 쐐기 하나. 끝(tip)은 반지름 rin 근처(칸마다 다름)이고 바깥으로 갈수록 굵어진다. 가장자리는 1px AA 의 딱딱한 선.
+float wr_focus(float r, float a, float n, float rin, float on, float wid, float sd, float vy) {
+	float ac = a / 6.2831853 * n;
+	float cell = mod(floor(ac), n);
+	float f = abs(fract(ac) - 0.5);
+	if (wr_hash(cell * 1.31 + sd) > on) return 0.0;
+	float tip = rin * mix(0.55, 1.6, wr_hash(cell * 2.3 + sd + 3.0));
+	float span = r - tip;
+	if (span <= 0.0) return 0.0;
+	float w = wid * mix(0.35, 1.0, wr_hash(cell * 3.1 + sd + 5.0)) * clamp(span / 0.45, 0.0, 1.0);
+	float aaf = n / (6.2831853 * max(r, 0.003) * vy);
+	return 1.0 - smoothstep(w - aaf, w + aaf, f);
+}
+"
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_7vkvx"]
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_7lbfy"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_ac6kx"]
+parameter_name = "col_core"
+default_value_enabled = true
+default_value = Color(1, 0.98, 1, 1)
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_yppsq"]
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_lnl3b"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_k2kbj"]
+parameter_name = "col_ink"
+default_value_enabled = true
+default_value = Color(0.03, 0.02, 0.09, 1)
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_3ow3n"]
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_e8ceg"]
+input_name = "screen_uv"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_djjsm"]
+size = Vector2(620, 468)
+expression = "
+float x = clamp(p_prog * 2.0, 0.0, 1.0);
+float y = clamp(p_prog * 2.0 - 1.0, 0.0, 1.0);
+float rmax = 0.5 * length(vec2(p_aspect, 1.0));
+o_rmax = rmax;
+if (p_prog < 0.5) {
+	o_scale = 1.0 - 0.5 * x * x;
+	o_blur = 0.5 * pow(x, 1.3);
+	o_toon = smoothstep(0.0, 0.3, x);
+	o_lon = 0.62 * smoothstep(0.0, 0.3, x);
+	o_rin = rmax * mix(0.8, 0.1, pow(x, 0.8));
+	o_iris = mix(rmax * 1.3, -0.3, pow(x, 1.7));
+	o_burst = x > 0.25 ? 0.3 * pow((x - 0.25) / 0.75, 1.5) : -1.0;
+	o_hole = -1.0;
+	o_bandk = 1.0;
+	o_wide = 0.0;
+	o_flash = 0.8 * p_flash * smoothstep(0.86, 1.0, x);
+} else {
+	float yy = clamp((y - 0.05) / 0.95, 0.0, 1.0);
+	float k = 1.0 - yy;
+	float e = 1.0 - k * k * k;
+	o_scale = 1.0 + 0.2 * exp(-5.0 * yy) * cos(9.0 * yy) * k;   // 살짝 지나쳤다가 튕겨 돌아온다
+	o_blur = 0.35 * k * k * k;
+	o_toon = 1.0 - smoothstep(0.4, 0.9, yy);
+	o_lon = 0.62 * (1.0 - smoothstep(0.3, 0.9, yy));
+	o_rin = rmax * mix(0.1, 1.3, yy);
+	o_iris = -1.0;
+	o_burst = -1.0;
+	o_hole = rmax * 1.4 * e - 0.3 * (1.0 - e);
+	o_bandk = 1.0 - 0.6 * yy;
+	o_wide = 0.35 * k * k * k;
+	o_flash = 0.8 * p_flash * exp(-pow(y / 0.08, 2.0));
+}
+"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_8tjhq"]
+size = Vector2(620, 298)
+expression = "
+float jit = wr_hash(dot(floor(p_suv * p_view), vec2(1.0, 57.0)) * 0.013 + p_tick);
+vec3 c = wr_scene(p_suv, p_scale, p_blur, jit);
+vec3 post = floor(c * 5.0 + 0.5) / 5.0;
+o_scene = mix(c, post, p_toon * p_toonamt);
+"
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_fq182"]
+parameter_name = "progress"
+hint = 1
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_3u1ap"]
+size = Vector2(620, 264)
+expression = "
+vec2 q = (p_suv - 0.5) * vec2(p_aspect, 1.0);
+float r = max(length(q), 0.002);
+float a = atan(q.y, q.x);
+float bv = fract(log2(r) * 1.1 - p_travel * 0.5 + 0.16 * wr_spike(a, 16.0, p_seed + 3.0));
+float fw = 1.1 * 1.5 / (r * 0.693 * p_view.y);
+float tail = 1.0 - smoothstep(1.0 - 2.0 * fw, 1.0, bv);
+o_mid = smoothstep(0.5 - fw, 0.5 + fw, bv) * tail;
+o_light = smoothstep(0.8 - fw, 0.8 + fw, bv) * tail;
+vec2 px = p_suv * p_view;
+vec2 gp = vec2(0.70710678 * (px.x - px.y), 0.70710678 * (px.x + px.y)) / 13.0;
+float rad = 0.5 * smoothstep(0.35, 1.05, r / p_rmax);
+o_dots = rad < 0.04 ? 0.0 : 0.5 * (1.0 - smoothstep(rad - 0.07, rad + 0.07, length(fract(gp) - 0.5)));
+"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_j7syc"]
+size = Vector2(620, 332)
+expression = "
+vec2 q = (p_suv - 0.5) * vec2(p_aspect, 1.0);
+float r = length(q);
+float a = atan(q.y, q.x);
+float sd = p_seed + p_tick * 7.3;
+float on = p_lon * p_lines;
+o_k = wr_focus(r, a, 38.0, p_rin * 1.15, on * 0.7, 0.2, sd + 11.0, p_view.y);
+o_p = wr_focus(r, a, 22.0, p_rin * 1.3, on * 0.5, 0.28, sd + 23.0, p_view.y);
+o_w = wr_focus(r, a, 60.0, p_rin, on, 0.22, sd, p_view.y);
+"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_36glf"]
+size = Vector2(620, 434)
+expression = "
+vec2 q = (p_suv - 0.5) * vec2(p_aspect, 1.0);
+float r = length(q);
+float a = atan(q.y, q.x);
+float aa = 1.5 / p_view.y;
+float sd = p_seed + p_tick * 3.1;
+float sp = max(wr_spike(a, 10.0, sd), 0.6 * wr_spike(a, 26.0, sd + 7.0));
+if (p_prog < 0.5) {
+	float d = r - (p_iris + 0.26 * sp);
+	o_t = smoothstep(-aa, aa, d);
+	o_eink = wr_band(d, -0.018, 0.0, aa);
+	o_epink = wr_band(d, 0.0, 0.03, aa);
+	float on = step(0.0, p_burst);
+	float db = r - p_burst * (0.5 + 0.5 * max(wr_spike(a, 14.0, sd + 19.0), 0.5 * wr_spike(a, 34.0, sd + 29.0)));
+	o_bw = on * (1.0 - smoothstep(-aa, aa, db));
+	o_bp = on * wr_band(db, 0.0, 0.026, aa);
+	o_bk = on * wr_band(db, 0.026, 0.04, aa);
+} else {
+	float d = r - (p_hole + 0.28 * sp);
+	float k = p_bandk;
+	float w1 = 0.02 * k;
+	float w2 = w1 + 0.09 * k + p_wide;
+	float w3 = w2 + 0.04 * k;
+	o_t = smoothstep(-aa, aa, d);
+	o_eink = wr_band(d, 0.0, w1, aa) * smoothstep(0.02, 0.07, p_hole + 0.28 * sp);
+	o_epink = 0.0;
+	o_bw = wr_band(d, w1, w2, aa);
+	o_bp = wr_band(d, w2, w3, aa);
+	o_bk = wr_band(d, w3, w3 + 0.014 * k, aa);
+}
+"
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_wudgt"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.38]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_vnsgf"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_lyrw7"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_1ifoy"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_c0gdo"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_nfln6"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_mlafv"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_s16lf"]
+parameter_name = "travel"
+hint = 1
+max = 50.0
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_5bea6"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_ylcjp"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_angp2"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_2pjbx"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_aogs1"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_d1any"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_t2oyd"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_5yica"]
+parameter_name = "tick"
+hint = 1
+max = 200.0
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_g2mhu"]
+parameter_name = "aspect"
+hint = 1
+min = 0.5
+max = 4.0
+default_value_enabled = true
+default_value = 1.7778
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_c026w"]
+parameter_name = "seed"
+hint = 1
+max = 100.0
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeVec2Parameter" id="VisualShaderNodeVec2Parameter_e1txl"]
+parameter_name = "view_size"
+default_value_enabled = true
+default_value = Vector2(1920, 1080)
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_8hkns"]
+parameter_name = "lines_amt"
+hint = 1
+max = 1.6
+default_value_enabled = true
+default_value = 1.0
+
+[resource]
+mode = 1
+flags/light_only = false
+nodes/fragment/2/node = SubResource("VisualShaderNodeGlobalExpression_7wovl")
+nodes/fragment/2/position = Vector2(-2600, -1500)
+nodes/fragment/2/size = Vector2(900, 900)
+nodes/fragment/2/input_ports = ""
+nodes/fragment/2/output_ports = ""
+nodes/fragment/2/expression = "
+// ---- 카툰 워프 함수. 이름은 모두 wr_ 접두사.
+uniform sampler2D wr_screen : hint_screen_texture, repeat_disable, filter_linear;
+float wr_hash(float n) { return fract(sin(n * 127.1 + 311.7) * 43758.5453); }
+float wr_band(float x, float lo, float hi, float aa) { return smoothstep(lo - aa, lo + aa, x) * (1.0 - smoothstep(hi - aa, hi + aa, x)); }
+
+// 장면: 가운데로 scale 배 당겨 읽고 blur 만큼 안쪽으로 8번 훑는다 (짧고 거친 방사 블러)
+vec3 wr_scene(vec2 suv, float scale, float blur, float jit) {
+	vec3 acc = vec3(0.0);
+	for (int i = 0; i < 8; i++) {
+		float t = (float(i) + jit) / 8.0;
+		acc += texture(wr_screen, vec2(0.5) + (suv - 0.5) * scale * (1.0 - blur * t)).rgb;
+	}
+	return acc / 8.0;
+}
+
+// 톱니: 각도를 n 칸으로 나눠 칸마다 직선 변 가시 하나 (높이는 칸 해시로 변주). 0..1
+float wr_spike(float a, float n, float sd) {
+	float ac = a / 6.2831853 * n;
+	float cell = mod(floor(ac), n);
+	float f = abs(fract(ac) - 0.5) * 2.0;
+	return (1.0 - f) * mix(0.3, 1.0, wr_hash(cell * 3.7 + sd));
+}
+
+// 집중선 한 벌: 각도 n 칸 중 켜진 칸(on)마다 쐐기 하나. 끝(tip)은 반지름 rin 근처(칸마다 다름)이고 바깥으로 갈수록 굵어진다. 가장자리는 1px AA 의 딱딱한 선.
+float wr_focus(float r, float a, float n, float rin, float on, float wid, float sd, float vy) {
+	float ac = a / 6.2831853 * n;
+	float cell = mod(floor(ac), n);
+	float f = abs(fract(ac) - 0.5);
+	if (wr_hash(cell * 1.31 + sd) > on) return 0.0;
+	float tip = rin * mix(0.55, 1.6, wr_hash(cell * 2.3 + sd + 3.0));
+	float span = r - tip;
+	if (span <= 0.0) return 0.0;
+	float w = wid * mix(0.35, 1.0, wr_hash(cell * 3.1 + sd + 5.0)) * clamp(span / 0.45, 0.0, 1.0);
+	float aaf = n / (6.2831853 * max(r, 0.003) * vy);
+	return 1.0 - smoothstep(w - aaf, w + aaf, f);
+}
+"
+nodes/fragment/3/node = SubResource("VisualShaderNodeFloatParameter_fq182")
+nodes/fragment/3/position = Vector2(-1600, -400)
+nodes/fragment/4/node = SubResource("VisualShaderNodeFloatParameter_s16lf")
+nodes/fragment/4/position = Vector2(-1600, -250)
+nodes/fragment/5/node = SubResource("VisualShaderNodeFloatParameter_5yica")
+nodes/fragment/5/position = Vector2(-1600, -100)
+nodes/fragment/6/node = SubResource("VisualShaderNodeFloatParameter_g2mhu")
+nodes/fragment/6/position = Vector2(-1600, 50)
+nodes/fragment/7/node = SubResource("VisualShaderNodeFloatParameter_c026w")
+nodes/fragment/7/position = Vector2(-1600, 200)
+nodes/fragment/8/node = SubResource("VisualShaderNodeVec2Parameter_e1txl")
+nodes/fragment/8/position = Vector2(-1600, 350)
+nodes/fragment/9/node = SubResource("VisualShaderNodeFloatParameter_8hkns")
+nodes/fragment/9/position = Vector2(-1600, 500)
+nodes/fragment/10/node = SubResource("VisualShaderNodeFloatParameter_oi4qb")
+nodes/fragment/10/position = Vector2(-1600, 650)
+nodes/fragment/11/node = SubResource("VisualShaderNodeFloatParameter_uh4bd")
+nodes/fragment/11/position = Vector2(-1600, 800)
+nodes/fragment/12/node = SubResource("VisualShaderNodeVectorDecompose_5abfp")
+nodes/fragment/12/position = Vector2(-1240, -400)
+nodes/fragment/13/node = SubResource("VisualShaderNodeColorParameter_l7mau")
+nodes/fragment/13/position = Vector2(-1240, -250)
+nodes/fragment/14/node = SubResource("VisualShaderNodeVectorCompose_8hqii")
+nodes/fragment/14/position = Vector2(-1240, -100)
+nodes/fragment/15/node = SubResource("VisualShaderNodeVectorDecompose_wqxes")
+nodes/fragment/15/position = Vector2(-1240, 50)
+nodes/fragment/16/node = SubResource("VisualShaderNodeColorParameter_kn66j")
+nodes/fragment/16/position = Vector2(-1240, 200)
+nodes/fragment/17/node = SubResource("VisualShaderNodeVectorCompose_rj7my")
+nodes/fragment/17/position = Vector2(-1240, 350)
+nodes/fragment/18/node = SubResource("VisualShaderNodeVectorDecompose_nada4")
+nodes/fragment/18/position = Vector2(-1240, 500)
+nodes/fragment/19/node = SubResource("VisualShaderNodeColorParameter_3qs6u")
+nodes/fragment/19/position = Vector2(-1240, 650)
+nodes/fragment/20/node = SubResource("VisualShaderNodeVectorCompose_7vkvx")
+nodes/fragment/20/position = Vector2(-1240, 800)
+nodes/fragment/21/node = SubResource("VisualShaderNodeVectorDecompose_7lbfy")
+nodes/fragment/21/position = Vector2(-1240, 950)
+nodes/fragment/22/node = SubResource("VisualShaderNodeColorParameter_ac6kx")
+nodes/fragment/22/position = Vector2(-1240, 1100)
+nodes/fragment/23/node = SubResource("VisualShaderNodeVectorCompose_yppsq")
+nodes/fragment/23/position = Vector2(-1240, 1250)
+nodes/fragment/24/node = SubResource("VisualShaderNodeVectorDecompose_lnl3b")
+nodes/fragment/24/position = Vector2(-1240, 1400)
+nodes/fragment/25/node = SubResource("VisualShaderNodeColorParameter_k2kbj")
+nodes/fragment/25/position = Vector2(-1240, 1550)
+nodes/fragment/26/node = SubResource("VisualShaderNodeVectorCompose_3ow3n")
+nodes/fragment/26/position = Vector2(-1240, 1700)
+nodes/fragment/27/node = SubResource("VisualShaderNodeInput_e8ceg")
+nodes/fragment/27/position = Vector2(-1240, 1850)
+nodes/fragment/28/node = SubResource("VisualShaderNodeExpression_djjsm")
+nodes/fragment/28/position = Vector2(-880, -400)
+nodes/fragment/28/size = Vector2(620, 468)
+nodes/fragment/28/input_ports = "0,0,p_prog;1,0,p_aspect;2,0,p_flash;"
+nodes/fragment/28/output_ports = "0,0,o_rmax;1,0,o_scale;2,0,o_blur;3,0,o_toon;4,0,o_lon;5,0,o_rin;6,0,o_iris;7,0,o_burst;8,0,o_hole;9,0,o_bandk;10,0,o_wide;11,0,o_flash;"
+nodes/fragment/28/expression = "
+float x = clamp(p_prog * 2.0, 0.0, 1.0);
+float y = clamp(p_prog * 2.0 - 1.0, 0.0, 1.0);
+float rmax = 0.5 * length(vec2(p_aspect, 1.0));
+o_rmax = rmax;
+if (p_prog < 0.5) {
+	o_scale = 1.0 - 0.5 * x * x;
+	o_blur = 0.5 * pow(x, 1.3);
+	o_toon = smoothstep(0.0, 0.3, x);
+	o_lon = 0.62 * smoothstep(0.0, 0.3, x);
+	o_rin = rmax * mix(0.8, 0.1, pow(x, 0.8));
+	o_iris = mix(rmax * 1.3, -0.3, pow(x, 1.7));
+	o_burst = x > 0.25 ? 0.3 * pow((x - 0.25) / 0.75, 1.5) : -1.0;
+	o_hole = -1.0;
+	o_bandk = 1.0;
+	o_wide = 0.0;
+	o_flash = 0.8 * p_flash * smoothstep(0.86, 1.0, x);
+} else {
+	float yy = clamp((y - 0.05) / 0.95, 0.0, 1.0);
+	float k = 1.0 - yy;
+	float e = 1.0 - k * k * k;
+	o_scale = 1.0 + 0.2 * exp(-5.0 * yy) * cos(9.0 * yy) * k;   // 살짝 지나쳤다가 튕겨 돌아온다
+	o_blur = 0.35 * k * k * k;
+	o_toon = 1.0 - smoothstep(0.4, 0.9, yy);
+	o_lon = 0.62 * (1.0 - smoothstep(0.3, 0.9, yy));
+	o_rin = rmax * mix(0.1, 1.3, yy);
+	o_iris = -1.0;
+	o_burst = -1.0;
+	o_hole = rmax * 1.4 * e - 0.3 * (1.0 - e);
+	o_bandk = 1.0 - 0.6 * yy;
+	o_wide = 0.35 * k * k * k;
+	o_flash = 0.8 * p_flash * exp(-pow(y / 0.08, 2.0));
+}
+"
+nodes/fragment/29/node = SubResource("VisualShaderNodeExpression_8tjhq")
+nodes/fragment/29/position = Vector2(-520, -400)
+nodes/fragment/29/size = Vector2(620, 298)
+nodes/fragment/29/input_ports = "0,3,p_suv;1,3,p_view;2,0,p_tick;3,0,p_scale;4,0,p_blur;5,0,p_toon;6,0,p_toonamt;"
+nodes/fragment/29/output_ports = "0,4,o_scene;"
+nodes/fragment/29/expression = "
+float jit = wr_hash(dot(floor(p_suv * p_view), vec2(1.0, 57.0)) * 0.013 + p_tick);
+vec3 c = wr_scene(p_suv, p_scale, p_blur, jit);
+vec3 post = floor(c * 5.0 + 0.5) / 5.0;
+o_scene = mix(c, post, p_toon * p_toonamt);
+"
+nodes/fragment/30/node = SubResource("VisualShaderNodeExpression_3u1ap")
+nodes/fragment/30/position = Vector2(-520, 350)
+nodes/fragment/30/size = Vector2(620, 264)
+nodes/fragment/30/input_ports = "0,3,p_suv;1,0,p_aspect;2,3,p_view;3,0,p_travel;4,0,p_seed;5,0,p_rmax;"
+nodes/fragment/30/output_ports = "0,0,o_mid;1,0,o_light;2,0,o_dots;"
+nodes/fragment/30/expression = "
+vec2 q = (p_suv - 0.5) * vec2(p_aspect, 1.0);
+float r = max(length(q), 0.002);
+float a = atan(q.y, q.x);
+float bv = fract(log2(r) * 1.1 - p_travel * 0.5 + 0.16 * wr_spike(a, 16.0, p_seed + 3.0));
+float fw = 1.1 * 1.5 / (r * 0.693 * p_view.y);
+float tail = 1.0 - smoothstep(1.0 - 2.0 * fw, 1.0, bv);
+o_mid = smoothstep(0.5 - fw, 0.5 + fw, bv) * tail;
+o_light = smoothstep(0.8 - fw, 0.8 + fw, bv) * tail;
+vec2 px = p_suv * p_view;
+vec2 gp = vec2(0.70710678 * (px.x - px.y), 0.70710678 * (px.x + px.y)) / 13.0;
+float rad = 0.5 * smoothstep(0.35, 1.05, r / p_rmax);
+o_dots = rad < 0.04 ? 0.0 : 0.5 * (1.0 - smoothstep(rad - 0.07, rad + 0.07, length(fract(gp) - 0.5)));
+"
+nodes/fragment/31/node = SubResource("VisualShaderNodeExpression_j7syc")
+nodes/fragment/31/position = Vector2(-520, 1100)
+nodes/fragment/31/size = Vector2(620, 332)
+nodes/fragment/31/input_ports = "0,3,p_suv;1,0,p_aspect;2,3,p_view;3,0,p_tick;4,0,p_seed;5,0,p_lon;6,0,p_rin;7,0,p_lines;"
+nodes/fragment/31/output_ports = "0,0,o_k;1,0,o_p;2,0,o_w;"
+nodes/fragment/31/expression = "
+vec2 q = (p_suv - 0.5) * vec2(p_aspect, 1.0);
+float r = length(q);
+float a = atan(q.y, q.x);
+float sd = p_seed + p_tick * 7.3;
+float on = p_lon * p_lines;
+o_k = wr_focus(r, a, 38.0, p_rin * 1.15, on * 0.7, 0.2, sd + 11.0, p_view.y);
+o_p = wr_focus(r, a, 22.0, p_rin * 1.3, on * 0.5, 0.28, sd + 23.0, p_view.y);
+o_w = wr_focus(r, a, 60.0, p_rin, on, 0.22, sd, p_view.y);
+"
+nodes/fragment/32/node = SubResource("VisualShaderNodeExpression_36glf")
+nodes/fragment/32/position = Vector2(-520, 1850)
+nodes/fragment/32/size = Vector2(620, 434)
+nodes/fragment/32/input_ports = "0,3,p_suv;1,0,p_aspect;2,3,p_view;3,0,p_prog;4,0,p_tick;5,0,p_seed;6,0,p_iris;7,0,p_burst;8,0,p_hole;9,0,p_bandk;10,0,p_wide;"
+nodes/fragment/32/output_ports = "0,0,o_t;1,0,o_eink;2,0,o_epink;3,0,o_bw;4,0,o_bp;5,0,o_bk;"
+nodes/fragment/32/expression = "
+vec2 q = (p_suv - 0.5) * vec2(p_aspect, 1.0);
+float r = length(q);
+float a = atan(q.y, q.x);
+float aa = 1.5 / p_view.y;
+float sd = p_seed + p_tick * 3.1;
+float sp = max(wr_spike(a, 10.0, sd), 0.6 * wr_spike(a, 26.0, sd + 7.0));
+if (p_prog < 0.5) {
+	float d = r - (p_iris + 0.26 * sp);
+	o_t = smoothstep(-aa, aa, d);
+	o_eink = wr_band(d, -0.018, 0.0, aa);
+	o_epink = wr_band(d, 0.0, 0.03, aa);
+	float on = step(0.0, p_burst);
+	float db = r - p_burst * (0.5 + 0.5 * max(wr_spike(a, 14.0, sd + 19.0), 0.5 * wr_spike(a, 34.0, sd + 29.0)));
+	o_bw = on * (1.0 - smoothstep(-aa, aa, db));
+	o_bp = on * wr_band(db, 0.0, 0.026, aa);
+	o_bk = on * wr_band(db, 0.026, 0.04, aa);
+} else {
+	float d = r - (p_hole + 0.28 * sp);
+	float k = p_bandk;
+	float w1 = 0.02 * k;
+	float w2 = w1 + 0.09 * k + p_wide;
+	float w3 = w2 + 0.04 * k;
+	o_t = smoothstep(-aa, aa, d);
+	o_eink = wr_band(d, 0.0, w1, aa) * smoothstep(0.02, 0.07, p_hole + 0.28 * sp);
+	o_epink = 0.0;
+	o_bw = wr_band(d, w1, w2, aa);
+	o_bp = wr_band(d, w2, w3, aa);
+	o_bk = wr_band(d, w3, w3 + 0.014 * k, aa);
+}
+"
+nodes/fragment/33/node = SubResource("VisualShaderNodeMix_wudgt")
+nodes/fragment/33/position = Vector2(-160, -400)
+nodes/fragment/34/node = SubResource("VisualShaderNodeMix_vnsgf")
+nodes/fragment/34/position = Vector2(-160, -250)
+nodes/fragment/35/node = SubResource("VisualShaderNodeMix_lyrw7")
+nodes/fragment/35/position = Vector2(-160, -100)
+nodes/fragment/36/node = SubResource("VisualShaderNodeMix_1ifoy")
+nodes/fragment/36/position = Vector2(-160, 50)
+nodes/fragment/37/node = SubResource("VisualShaderNodeMix_c0gdo")
+nodes/fragment/37/position = Vector2(200, -400)
+nodes/fragment/38/node = SubResource("VisualShaderNodeMix_nfln6")
+nodes/fragment/38/position = Vector2(200, -250)
+nodes/fragment/39/node = SubResource("VisualShaderNodeMix_mlafv")
+nodes/fragment/39/position = Vector2(200, -100)
+nodes/fragment/40/node = SubResource("VisualShaderNodeMix_5bea6")
+nodes/fragment/40/position = Vector2(200, 50)
+nodes/fragment/41/node = SubResource("VisualShaderNodeMix_ylcjp")
+nodes/fragment/41/position = Vector2(200, 200)
+nodes/fragment/42/node = SubResource("VisualShaderNodeMix_angp2")
+nodes/fragment/42/position = Vector2(200, 350)
+nodes/fragment/43/node = SubResource("VisualShaderNodeMix_2pjbx")
+nodes/fragment/43/position = Vector2(560, -400)
+nodes/fragment/44/node = SubResource("VisualShaderNodeMix_aogs1")
+nodes/fragment/44/position = Vector2(560, -250)
+nodes/fragment/45/node = SubResource("VisualShaderNodeMix_d1any")
+nodes/fragment/45/position = Vector2(560, -100)
+nodes/fragment/46/node = SubResource("VisualShaderNodeMix_t2oyd")
+nodes/fragment/46/position = Vector2(560, 50)
+nodes/fragment/connections = PackedInt32Array(13, 0, 12, 0, 12, 0, 14, 0, 12, 1, 14, 1, 12, 2, 14, 2, 16, 0, 15, 0, 15, 0, 17, 0, 15, 1, 17, 1, 15, 2, 17, 2, 19, 0, 18, 0, 18, 0, 20, 0, 18, 1, 20, 1, 18, 2, 20, 2, 22, 0, 21, 0, 21, 0, 23, 0, 21, 1, 23, 1, 21, 2, 23, 2, 25, 0, 24, 0, 24, 0, 26, 0, 24, 1, 26, 1, 24, 2, 26, 2, 3, 0, 28, 0, 6, 0, 28, 1, 11, 0, 28, 2, 27, 0, 29, 0, 8, 0, 29, 1, 5, 0, 29, 2, 28, 1, 29, 3, 28, 2, 29, 4, 28, 3, 29, 5, 10, 0, 29, 6, 27, 0, 30, 0, 6, 0, 30, 1, 8, 0, 30, 2, 4, 0, 30, 3, 7, 0, 30, 4, 28, 0, 30, 5, 27, 0, 31, 0, 6, 0, 31, 1, 8, 0, 31, 2, 5, 0, 31, 3, 7, 0, 31, 4, 28, 4, 31, 5, 28, 5, 31, 6, 9, 0, 31, 7, 27, 0, 32, 0, 6, 0, 32, 1, 8, 0, 32, 2, 3, 0, 32, 3, 5, 0, 32, 4, 7, 0, 32, 5, 28, 6, 32, 6, 28, 7, 32, 7, 28, 8, 32, 8, 28, 9, 32, 9, 28, 10, 32, 10, 14, 0, 33, 0, 17, 0, 33, 1, 14, 0, 34, 0, 33, 0, 34, 1, 30, 0, 34, 2, 34, 0, 35, 0, 17, 0, 35, 1, 30, 1, 35, 2, 35, 0, 36, 0, 26, 0, 36, 1, 30, 2, 36, 2, 29, 0, 37, 0, 36, 0, 37, 1, 32, 0, 37, 2, 37, 0, 38, 0, 26, 0, 38, 1, 31, 0, 38, 2, 38, 0, 39, 0, 20, 0, 39, 1, 31, 1, 39, 2, 39, 0, 40, 0, 23, 0, 40, 1, 31, 2, 40, 2, 40, 0, 41, 0, 26, 0, 41, 1, 32, 1, 41, 2, 41, 0, 42, 0, 20, 0, 42, 1, 32, 2, 42, 2, 42, 0, 43, 0, 20, 0, 43, 1, 32, 4, 43, 2, 43, 0, 44, 0, 26, 0, 44, 1, 32, 5, 44, 2, 44, 0, 45, 0, 23, 0, 45, 1, 32, 3, 45, 2, 45, 0, 46, 0, 23, 0, 46, 1, 28, 11, 46, 2, 46, 0, 0, 0)

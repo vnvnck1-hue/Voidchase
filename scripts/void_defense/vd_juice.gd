@@ -1,4 +1,4 @@
-## 손맛 연출 모음 (VDBattle 이 하나 들고 쓴다). 각 연출은 짧고 스스로 사라진다.
+## 손맛 연출 모음 (VDBattle 이 하나 들고 쓴다. VFX 쇼룸 칸도 같은 이름의 필드를 갖춰 그대로 쓴다). 각 연출은 짧고 스스로 사라진다.
 ##   telegraph : 보스·망루의 공격 예비 동작 동안 대상 발밑에 붉은 경고 마름모가 차오르고, 때리는 순간 번쩍
 ##   trail     : 투사체 뒤에 가늘어지며 사라지는 꼬리
 ##   scorch    : 착탄 지점 바닥 그을음 (천천히 사라짐)
@@ -11,15 +11,16 @@
 class_name VDJuice
 extends Node
 
+const WORLD_TEXT_SCALE := 0.6   # 전장 팝 글자(CRITICAL!·강타!·READY!·콤보 등) 크기 배율 (피해 숫자 VDDamageLog 와 같은 60%)
 const COMBO_GAP := 1.1          # 이 시간(실제 초) 안에 다음 처치면 콤보가 이어진다
 const COMBO_WORDS := ["", "", "DOUBLE!", "TRIPLE!", "QUADRA!"]
 
-var b: VDBattle
+var b                # VDBattle 또는 VFX 쇼룸 칸 (ground_fx · fx_root · world_top · hud_root · vfx · camera · audio · _run_id · _chest)
 var _combo := 0
 var _combo_at := -100.0
 
 
-func _init(battle: VDBattle) -> void:
+func _init(battle: Node) -> void:
 	b = battle
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
@@ -36,7 +37,7 @@ func telegraph(target: VDUnit, sec: float, col := Color(1.0, 0.25, 0.35)) -> voi
 		return
 	var n := Node2D.new()
 	n.position = target.foot_at(target.cell)
-	n.z_index = 2
+	n.z_index = 0   # 바닥 경고는 유닛 아래 (ground_fx 가 units_root 앞이라 z 0 이면 저절로 발밑에 깔린다)
 	var st := {"k": 0.0, "flash": 0.0}
 	var sz := target.size
 	n.draw.connect(func() -> void:
@@ -68,9 +69,7 @@ func trail(s: Node2D, col: Color, width := 8.0) -> void:
 		return
 	var n := Node2D.new()
 	n.z_index = s.z_index - 1
-	var add := CanvasItemMaterial.new()
-	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	n.material = add
+	n.material = VDVfx.add_material()
 	var pts: Array[Vector2] = []
 	var st := {"fade": 1.0}
 	n.draw.connect(func() -> void:
@@ -127,9 +126,9 @@ func scorch(at: Vector2, col: Color, r := 22.0) -> void:
 
 ## 대형 적·보스 발걸음: 이동이 끝나는 순간 쿵.
 func heavy_step(u: VDUnit, land_after: float) -> void:
-	var run := b._run_id
+	var run: int = b._run_id
 	var uref: WeakRef = weakref(u)
-	b.get_tree().create_timer(land_after * 0.9).timeout.connect(func() -> void:
+	b.get_tree().create_timer(land_after * 0.9, false).timeout.connect(func() -> void:
 		var u2 := uref.get_ref() as VDUnit
 		if run != b._run_id or u2 == null or not u2.alive:
 			return
@@ -149,13 +148,9 @@ func on_kill(world_at: Vector2) -> void:
 		return
 	var word: String = COMBO_WORDS[_combo] if _combo < COMBO_WORDS.size() else "%d COMBO!" % _combo
 	var col := Color(1.0, 0.85, 0.35).lerp(Color(1.0, 0.35, 0.6), clampf((_combo - 2) / 3.0, 0.0, 1.0))
-	pop_world(world_at + Vector2(0, -120), word, col, 34.0 + 5.0 * minf(_combo, 6), 0.9)
+	pop_world(world_at + Vector2(0, -120), word, col, 17.0 + 2.5 * minf(_combo, 6), 0.9)
 	b.audio.play("chime", 0.0, -2.0, 1.0 + 0.12 * (_combo - 2))
 	b.camera.shake(0.12)
-
-
-func world_to_screen(p: Vector2) -> Vector2:
-	return b.get_viewport().get_canvas_transform() * p
 
 
 ## 피해 숫자와 같은 모양의 ARCO 글자 라벨 (외곽선 + 아래 그림자).
@@ -175,7 +170,9 @@ func _text_label(text: String, col: Color, size: float) -> Label:
 
 ## 전장(월드) 글자: 캐릭터 머리 위 같은 월드 점에서 팡 튀어나와(가로로 넓게 → 세로로 → 제자리) 머문 뒤
 ## 위로 떠오르며 사라진다. 카메라와 함께 움직인다. size 는 월드 px. 화면 배율만큼 크게 래스터해 선명하게. 실제 시간.
+## 2026-11-09: 전투 글자는 부르는 크기의 WORLD_TEXT_SCALE(60%) 로 그린다. 안개 위 월드 레이어(b.world_top)에 붙어 HP 바 위에 보인다.
 func pop_world(world_at: Vector2, text: String, col: Color, size := 28.0, hold := 0.6) -> Node2D:
+	size *= WORLD_TEXT_SCALE
 	var z := maxf(b.get_viewport().get_canvas_transform().get_scale().x, 0.1)
 	var holder := Node2D.new()
 	holder.position = world_at
@@ -183,7 +180,7 @@ func pop_world(world_at: Vector2, text: String, col: Color, size := 28.0, hold :
 	holder.rotation = randf_range(-0.08, 0.08)
 	var l := _text_label(text, col, roundf(size * z))
 	holder.add_child(l)
-	b.add_child(holder)
+	(b.world_top if is_instance_valid(b.world_top) else b).add_child(holder)
 	l.reset_size()
 	l.position = -l.size * 0.5
 	var k := 1.0 / z

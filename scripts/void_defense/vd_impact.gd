@@ -23,11 +23,15 @@ const SIDE_COL := Color(0.85, 0.7, 1.0)
 
 var b: VDBattle
 var count := {"back": 0, "side": 0, "push": 0, "wall": 0, "bump": 0}   # 테스트용
-var _swings := {}              # instance id -> 기사 평타 수
+var _swings := {}              # instance id -> 기사 평타 수 (새 판마다 reset)
 
 
 func _init(battle: VDBattle) -> void:
 	b = battle
+
+
+func reset() -> void:
+	_swings.clear()
 
 
 ## 공격자 위치에 따른 피해 배율. 대상이 지금 노리는 상대가 없거나 공격자 자신이면 1.
@@ -101,7 +105,7 @@ func push(src: VDUnit, target: VDUnit, dir: Vector2i, cells: int) -> void:
 		count["wall"] += 1
 		_slam_damage(src, target, src.atk * WALL_DMG, WALL_STUN)
 		b.juice.pop_world(at_px + Vector2(0, -70), "벽꿍!", WALL_COL, 26.0, 0.2)
-		b.vfx.spawn("hit_heavy", b.fx_root, at_px, 1.8, randf() * TAU, WALL_COL)
+		b.vfx.spawn("hit_light", b.fx_root, at_px, 2.7, randf() * TAU, WALL_COL)
 		b.shockwave.add(at_px, "heavy")
 		b.camera.hitstop(0.08)
 		b.camera.shake(0.35)

@@ -1,0 +1,536 @@
+[gd_resource type="VisualShader" format=3]
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_bq4cd"]
+parameter_name = "distortion"
+hint = 1
+max = 2.0
+default_value_enabled = true
+default_value = 0.8
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_o08s1"]
+parameter_name = "taper"
+hint = 1
+max = 2.0
+default_value_enabled = true
+default_value = 0.45
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_nhi5m"]
+parameter_name = "wave"
+hint = 1
+max = 2.0
+default_value_enabled = true
+default_value = 0.8
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_86m2x"]
+parameter_name = "wave_freq"
+hint = 1
+min = 0.1
+max = 4.0
+default_value_enabled = true
+default_value = 1.1
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_3pp7r"]
+parameter_name = "edge_softness"
+hint = 1
+min = 0.001
+max = 0.3
+default_value_enabled = true
+default_value = 0.01
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_260hf"]
+parameter_name = "rim_width"
+hint = 1
+max = 0.5
+default_value_enabled = true
+default_value = 0.12
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_e6uqe"]
+parameter_name = "core_threshold"
+hint = 1
+default_value_enabled = true
+default_value = 0.45
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_041gs"]
+parameter_name = "glow_width"
+hint = 1
+max = 2.0
+default_value_enabled = true
+default_value = 0.45
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_21dih"]
+parameter_name = "glow_alpha"
+hint = 1
+default_value_enabled = true
+default_value = 0.55
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_jtnw6"]
+parameter_name = "layer"
+hint = 1
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_6p8jp"]
+parameter_name = "head_px"
+hint = 1
+max = 4000.0
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_7b3dl"]
+parameter_name = "shade_width"
+hint = 1
+max = 3.0
+default_value_enabled = true
+default_value = 1.2
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_e0omr"]
+parameter_name = "shade_alpha"
+hint = 1
+default_value_enabled = true
+default_value = 0.65
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_g8d76"]
+parameter_name = "shade_flicker"
+hint = 1
+max = 2.0
+default_value_enabled = true
+default_value = 1.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_wss1m"]
+parameter_name = "shade_len"
+hint = 1
+min = 0.5
+max = 3.0
+default_value_enabled = true
+default_value = 1.25
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_hmc2h"]
+parameter_name = "light_width"
+hint = 1
+max = 4.0
+default_value_enabled = true
+default_value = 1.6
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_ciaiu"]
+parameter_name = "light_intensity"
+hint = 1
+max = 4.0
+default_value_enabled = true
+default_value = 0.6
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_ofv20"]
+parameter_name = "light_flicker"
+hint = 1
+max = 2.0
+default_value_enabled = true
+default_value = 0.6
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_s3qmr"]
+parameter_name = "head_color"
+default_value_enabled = true
+default_value = Color(1, 0.78, 0.25, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_uls5s"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_4j07v"]
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_28q5t"]
+parameter_name = "half_w_px"
+hint = 1
+min = 1.0
+max = 400.0
+default_value_enabled = true
+default_value = 60.0
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_bpug2"]
+parameter_name = "mid_color"
+default_value_enabled = true
+default_value = Color(1, 0.45, 0.1, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_2rd1b"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_5ddtj"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_p7731"]
+parameter_name = "tail_color"
+default_value_enabled = true
+default_value = Color(1, 0.25, 0.05, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_kjy1m"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_uwb7q"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_y383g"]
+parameter_name = "core_color"
+default_value_enabled = true
+default_value = Color(1, 1, 0.85, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_crayn"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_w2ybl"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_dvb0h"]
+parameter_name = "glow_color"
+default_value_enabled = true
+default_value = Color(1, 0.3, 0.05, 1)
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_7mu6b"]
+parameter_name = "radius_px"
+hint = 1
+min = 1.0
+max = 200.0
+default_value_enabled = true
+default_value = 24.0
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_mxjyx"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_g4elp"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_lc0b0"]
+parameter_name = "shade_color"
+default_value_enabled = true
+default_value = Color(0.14, 0.02, 0.05, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_s1rww"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_bwjg4"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_ov4jb"]
+parameter_name = "light_color"
+default_value_enabled = true
+default_value = Color(1, 0.45, 0.12, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_xv5yk"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_o5kvb"]
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_lxatc"]
+input_name = "uv"
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_n6qbm"]
+input_name = "time"
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_75kn8"]
+parameter_name = "tail_r"
+hint = 1
+min = 0.5
+max = 12.0
+default_value_enabled = true
+default_value = 4.5
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_1xisy"]
+size = Vector2(620, 298)
+expression = "float r = max(radius_px, 0.001);
+along = (head_px - uv.x) / r;
+across = (uv.y - 0.5) * 2.0 * half_w_px / r;
+float t = (time + time_offset) * scroll_speed;
+// 노이즈 A: 크게, 꼬리 쪽으로 흘러간다 (along - t). B: 잘게, 더 빨리
+uv_a = fract(vec2(across * 0.09 + time_offset * 0.37, (along - t * 9.0) * 0.08));
+uv_b = fract(vec2(across * 0.16 + time_offset * 0.61, (along - t * 14.0) * 0.15));
+// 띠 메시 가장자리에서 후광이 칼같이 잘리지 않게
+edge_fade = smoothstep(0.0, 0.06, uv.y) * smoothstep(1.0, 0.94, uv.y) * smoothstep(0.0, r * 1.5, uv.x);   // 출발점(띠 시작)에서도 부드럽게"
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_hxuji"]
+frequency = 0.008
+fractal_octaves = 2
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_5q4sa"]
+width = 256
+height = 256
+noise = SubResource("FastNoiseLite_hxuji")
+seamless = true
+
+[sub_resource type="VisualShaderNodeTexture" id="VisualShaderNodeTexture_u4bxr"]
+texture = SubResource("NoiseTexture2D_5q4sa")
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_fuv8h"]
+frequency = 0.014
+fractal_octaves = 3
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_xxdus"]
+width = 256
+height = 256
+noise = SubResource("FastNoiseLite_fuv8h")
+seamless = true
+
+[sub_resource type="VisualShaderNodeTexture" id="VisualShaderNodeTexture_ttdrp"]
+texture = SubResource("NoiseTexture2D_xxdus")
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_02uru"]
+input_name = "time"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_iif8o"]
+size = Vector2(620, 1250)
+expression = "float n1 = na.r - 0.5;
+float n2 = nb.r;
+float sb = max(along, 0.0);                       // 머리 뒤쪽만
+float tr = max(tail_r, 0.5);
+float sf = clamp(along / tr, 0.0, 1.0);           // 꼬리 비율 0(불덩이) → 1(꼬리 끝)
+float t = (time + time_offset) * scroll_speed;
+// 뒤로 갈수록 가늘게 (먼저 좁히고 그다음 흔들어야 꼬리가 궤적에서 떨어져 나가지 않는다)
+float xd = across * (1.0 + sb * taper);
+// 가로 흔들기: 노이즈 A (머리는 거의 둥글게, 꼬리로 갈수록 크게) + 꼬리 쪽으로 흘러가는 물결
+xd += n1 * distortion * (0.5 + 0.6 * sb) + sin(along * wave_freq - t * 7.0) * wave * sf * 1.2;
+// 꼬리 쪽만 tail_r 만큼 늘인 원 거리장 (앞쪽은 둥근 머리)
+float dy = along > 0.0 ? along / tr : along;
+float field = 1.0 - length(vec2(xd, dy));
+// 노이즈 B 로 갉기: 머리는 살짝, 꼬리 끝으로 갈수록 크게 (끝이 혀처럼 갈라진다)
+field -= n2 * erosion * (0.12 + 0.8 * sf);
+float mask = smoothstep(0.0, edge_softness, field);
+float rim = 1.0 - smoothstep(edge_softness, edge_softness + rim_width, field);
+float core = smoothstep(core_threshold, core_threshold + edge_softness, field + n1 * 0.5);
+float glow = smoothstep(-glow_width, 0.0, field);
+glow *= glow;
+// 머리(0) → 꼬리(1) 그라데이션: 노이즈로 경계가 일렁인다. 0~0.5 머리→가운데, 0.5~1 가운데→꼬리
+float grad = smoothstep(0.0, 1.0, sf * 1.1 + n1 * 0.35);
+vec3 c = mix(mix(head_color, mid_color, clamp(grad * 2.0, 0.0, 1.0)), tail_color, clamp(grad * 2.0 - 1.0, 0.0, 1.0));
+c = mix(c, tail_color, rim * 0.85);
+c = mix(c, core_color, core);
+col = mix(glow_color, c, mask);
+alpha = max(mask, glow * glow_alpha) * opacity * edge_fade;
+// 뒤 어두운 글로우 (layer 1): 불꽃과 같은 노이즈·물결로 일렁이는 넓은 그림자. 꼬리는 shade_len 배 더 길게
+if (layer > 0.5 && layer < 1.5) {
+	float trs = tr * shade_len;
+	float sfs = clamp(along / trs, 0.0, 1.0);
+	float xs = across * (1.0 + sb * taper * 0.4);
+	xs += (n1 * distortion * (0.7 + 0.7 * sb) + sin(along * wave_freq * 0.8 - t * 6.0 + 1.3) * wave * sfs * 0.9) * shade_flicker;
+	float dys = along > 0.0 ? along / trs : along;
+	float fs = 1.0 - length(vec2(xs, dys));
+	fs -= (n2 - 0.35) * shade_flicker * (0.25 + 0.9 * sfs);     // 가장자리가 혀처럼 갈라진다
+	float a = smoothstep(-shade_width, 0.3, fs);
+	a *= 1.0 - shade_flicker * 0.12 * (0.5 + 0.5 * sin(t * 9.0 - along * 0.7));   // 숨 쉬듯 진하기가 흔들린다
+	col = shade_color;
+	alpha = a * shade_alpha * opacity * edge_fade;
+}
+// 에디티브 글로우 라이팅 (layer 2, blend_add): 불덩이 둘레로 light_width(반지름 배)만큼 퍼지는 빛.
+// 머리가 가장 밝고 꼬리 쪽으로 늘어지며, 노이즈와 빠른 맥동으로 깜빡인다
+if (layer > 1.5) {
+	float trl = max(tr * 0.7, 0.5);
+	float xl = across + n1 * distortion * 0.6 * light_flicker;
+	float dl = along > 0.0 ? along / trl : along;
+	float d = length(vec2(xl, dl));
+	float fall = clamp(1.0 - d / (1.0 + light_width), 0.0, 1.0);
+	fall = fall * fall * (0.55 + 0.45 * fall);                 // 가운데 뜨겁고 바깥은 부드럽게
+	float pulse = 1.0 + light_flicker * ((n2 - 0.5) * 0.9 + 0.18 * sin(t * 17.0 + time_offset));
+	col = light_color * light_intensity * max(pulse, 0.0);
+	alpha = fall * opacity * edge_fade;
+}"
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_riuj6"]
+parameter_name = "erosion"
+hint = 1
+max = 6.0
+default_value_enabled = true
+default_value = 1.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_62py7"]
+parameter_name = "opacity"
+hint = 1
+default_value_enabled = true
+default_value = 1.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_fcp8w"]
+parameter_name = "time_offset"
+hint = 1
+max = 100.0
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_pb6mx"]
+parameter_name = "scroll_speed"
+hint = 1
+max = 4.0
+default_value_enabled = true
+default_value = 1.1
+
+[resource]
+mode = 1
+flags/unshaded = true
+flags/light_only = false
+nodes/fragment/2/node = SubResource("VisualShaderNodeFloatParameter_6p8jp")
+nodes/fragment/2/position = Vector2(-1600, -600)
+nodes/fragment/3/node = SubResource("VisualShaderNodeFloatParameter_28q5t")
+nodes/fragment/3/position = Vector2(-1600, -450)
+nodes/fragment/4/node = SubResource("VisualShaderNodeFloatParameter_7mu6b")
+nodes/fragment/4/position = Vector2(-1600, -300)
+nodes/fragment/5/node = SubResource("VisualShaderNodeFloatParameter_75kn8")
+nodes/fragment/5/position = Vector2(-1600, -150)
+nodes/fragment/6/node = SubResource("VisualShaderNodeFloatParameter_riuj6")
+nodes/fragment/6/position = Vector2(-1600, 0)
+nodes/fragment/7/node = SubResource("VisualShaderNodeFloatParameter_62py7")
+nodes/fragment/7/position = Vector2(-1600, 150)
+nodes/fragment/8/node = SubResource("VisualShaderNodeFloatParameter_fcp8w")
+nodes/fragment/8/position = Vector2(-1260, -600)
+nodes/fragment/9/node = SubResource("VisualShaderNodeFloatParameter_pb6mx")
+nodes/fragment/9/position = Vector2(-1260, -450)
+nodes/fragment/10/node = SubResource("VisualShaderNodeFloatParameter_bq4cd")
+nodes/fragment/10/position = Vector2(-1260, -300)
+nodes/fragment/11/node = SubResource("VisualShaderNodeFloatParameter_o08s1")
+nodes/fragment/11/position = Vector2(-1260, -150)
+nodes/fragment/12/node = SubResource("VisualShaderNodeFloatParameter_nhi5m")
+nodes/fragment/12/position = Vector2(-1260, 0)
+nodes/fragment/13/node = SubResource("VisualShaderNodeFloatParameter_86m2x")
+nodes/fragment/13/position = Vector2(-1260, 150)
+nodes/fragment/14/node = SubResource("VisualShaderNodeFloatParameter_3pp7r")
+nodes/fragment/14/position = Vector2(-1260, 300)
+nodes/fragment/15/node = SubResource("VisualShaderNodeFloatParameter_260hf")
+nodes/fragment/15/position = Vector2(-1260, 450)
+nodes/fragment/16/node = SubResource("VisualShaderNodeFloatParameter_e6uqe")
+nodes/fragment/16/position = Vector2(-1260, 600)
+nodes/fragment/17/node = SubResource("VisualShaderNodeFloatParameter_041gs")
+nodes/fragment/17/position = Vector2(-1260, 750)
+nodes/fragment/18/node = SubResource("VisualShaderNodeFloatParameter_21dih")
+nodes/fragment/18/position = Vector2(-1260, 900)
+nodes/fragment/19/node = SubResource("VisualShaderNodeFloatParameter_jtnw6")
+nodes/fragment/19/position = Vector2(-1260, 1050)
+nodes/fragment/20/node = SubResource("VisualShaderNodeFloatParameter_7b3dl")
+nodes/fragment/20/position = Vector2(-1260, 1200)
+nodes/fragment/21/node = SubResource("VisualShaderNodeFloatParameter_e0omr")
+nodes/fragment/21/position = Vector2(-1260, 1350)
+nodes/fragment/22/node = SubResource("VisualShaderNodeFloatParameter_g8d76")
+nodes/fragment/22/position = Vector2(-1260, 1500)
+nodes/fragment/23/node = SubResource("VisualShaderNodeFloatParameter_wss1m")
+nodes/fragment/23/position = Vector2(-1260, 1650)
+nodes/fragment/24/node = SubResource("VisualShaderNodeFloatParameter_hmc2h")
+nodes/fragment/24/position = Vector2(-1260, 1800)
+nodes/fragment/25/node = SubResource("VisualShaderNodeFloatParameter_ciaiu")
+nodes/fragment/25/position = Vector2(-1260, 1950)
+nodes/fragment/26/node = SubResource("VisualShaderNodeFloatParameter_ofv20")
+nodes/fragment/26/position = Vector2(-1260, 2100)
+nodes/fragment/27/node = SubResource("VisualShaderNodeColorParameter_s3qmr")
+nodes/fragment/27/position = Vector2(-920, -600)
+nodes/fragment/28/node = SubResource("VisualShaderNodeVectorDecompose_uls5s")
+nodes/fragment/28/position = Vector2(-920, -450)
+nodes/fragment/29/node = SubResource("VisualShaderNodeVectorCompose_4j07v")
+nodes/fragment/29/position = Vector2(-920, -300)
+nodes/fragment/30/node = SubResource("VisualShaderNodeColorParameter_bpug2")
+nodes/fragment/30/position = Vector2(-920, -150)
+nodes/fragment/31/node = SubResource("VisualShaderNodeVectorDecompose_2rd1b")
+nodes/fragment/31/position = Vector2(-920, 0)
+nodes/fragment/32/node = SubResource("VisualShaderNodeVectorCompose_5ddtj")
+nodes/fragment/32/position = Vector2(-920, 150)
+nodes/fragment/33/node = SubResource("VisualShaderNodeColorParameter_p7731")
+nodes/fragment/33/position = Vector2(-920, 300)
+nodes/fragment/34/node = SubResource("VisualShaderNodeVectorDecompose_kjy1m")
+nodes/fragment/34/position = Vector2(-920, 450)
+nodes/fragment/35/node = SubResource("VisualShaderNodeVectorCompose_uwb7q")
+nodes/fragment/35/position = Vector2(-920, 600)
+nodes/fragment/36/node = SubResource("VisualShaderNodeColorParameter_y383g")
+nodes/fragment/36/position = Vector2(-920, 750)
+nodes/fragment/37/node = SubResource("VisualShaderNodeVectorDecompose_crayn")
+nodes/fragment/37/position = Vector2(-920, 900)
+nodes/fragment/38/node = SubResource("VisualShaderNodeVectorCompose_w2ybl")
+nodes/fragment/38/position = Vector2(-920, 1050)
+nodes/fragment/39/node = SubResource("VisualShaderNodeColorParameter_dvb0h")
+nodes/fragment/39/position = Vector2(-920, 1200)
+nodes/fragment/40/node = SubResource("VisualShaderNodeVectorDecompose_mxjyx")
+nodes/fragment/40/position = Vector2(-920, 1350)
+nodes/fragment/41/node = SubResource("VisualShaderNodeVectorCompose_g4elp")
+nodes/fragment/41/position = Vector2(-920, 1500)
+nodes/fragment/42/node = SubResource("VisualShaderNodeColorParameter_lc0b0")
+nodes/fragment/42/position = Vector2(-920, 1650)
+nodes/fragment/43/node = SubResource("VisualShaderNodeVectorDecompose_s1rww")
+nodes/fragment/43/position = Vector2(-920, 1800)
+nodes/fragment/44/node = SubResource("VisualShaderNodeVectorCompose_bwjg4")
+nodes/fragment/44/position = Vector2(-920, 1950)
+nodes/fragment/45/node = SubResource("VisualShaderNodeColorParameter_ov4jb")
+nodes/fragment/45/position = Vector2(-920, 2100)
+nodes/fragment/46/node = SubResource("VisualShaderNodeVectorDecompose_xv5yk")
+nodes/fragment/46/position = Vector2(-920, 2250)
+nodes/fragment/47/node = SubResource("VisualShaderNodeVectorCompose_o5kvb")
+nodes/fragment/47/position = Vector2(-920, 2400)
+nodes/fragment/48/node = SubResource("VisualShaderNodeInput_lxatc")
+nodes/fragment/48/position = Vector2(-580, -600)
+nodes/fragment/49/node = SubResource("VisualShaderNodeInput_n6qbm")
+nodes/fragment/49/position = Vector2(-580, -450)
+nodes/fragment/50/node = SubResource("VisualShaderNodeExpression_1xisy")
+nodes/fragment/50/position = Vector2(-580, -300)
+nodes/fragment/50/size = Vector2(620, 298)
+nodes/fragment/50/input_ports = "0,3,uv;1,0,time;2,0,head_px;3,0,half_w_px;4,0,radius_px;5,0,time_offset;6,0,scroll_speed;"
+nodes/fragment/50/output_ports = "0,0,along;1,0,across;2,3,uv_a;3,3,uv_b;4,0,edge_fade;"
+nodes/fragment/50/expression = "float r = max(radius_px, 0.001);
+along = (head_px - uv.x) / r;
+across = (uv.y - 0.5) * 2.0 * half_w_px / r;
+float t = (time + time_offset) * scroll_speed;
+// 노이즈 A: 크게, 꼬리 쪽으로 흘러간다 (along - t). B: 잘게, 더 빨리
+uv_a = fract(vec2(across * 0.09 + time_offset * 0.37, (along - t * 9.0) * 0.08));
+uv_b = fract(vec2(across * 0.16 + time_offset * 0.61, (along - t * 14.0) * 0.15));
+// 띠 메시 가장자리에서 후광이 칼같이 잘리지 않게
+edge_fade = smoothstep(0.0, 0.06, uv.y) * smoothstep(1.0, 0.94, uv.y) * smoothstep(0.0, r * 1.5, uv.x);   // 출발점(띠 시작)에서도 부드럽게"
+nodes/fragment/51/node = SubResource("VisualShaderNodeTexture_u4bxr")
+nodes/fragment/51/position = Vector2(-240, -600)
+nodes/fragment/52/node = SubResource("VisualShaderNodeTexture_ttdrp")
+nodes/fragment/52/position = Vector2(-240, -300)
+nodes/fragment/53/node = SubResource("VisualShaderNodeInput_02uru")
+nodes/fragment/53/position = Vector2(100, -600)
+nodes/fragment/54/node = SubResource("VisualShaderNodeExpression_iif8o")
+nodes/fragment/54/position = Vector2(100, -450)
+nodes/fragment/54/size = Vector2(620, 1250)
+nodes/fragment/54/input_ports = "0,0,along;1,0,across;2,5,na;3,5,nb;4,0,time;5,0,time_offset;6,0,scroll_speed;7,0,tail_r;8,0,distortion;9,0,taper;10,0,wave;11,0,wave_freq;12,0,erosion;13,0,edge_softness;14,0,rim_width;15,0,core_threshold;16,0,glow_width;17,0,glow_alpha;18,4,head_color;19,4,mid_color;20,4,tail_color;21,4,core_color;22,4,glow_color;23,0,opacity;24,0,edge_fade;25,0,layer;26,0,shade_width;27,0,shade_alpha;28,4,shade_color;29,0,shade_flicker;30,0,shade_len;31,0,light_width;32,0,light_intensity;33,0,light_flicker;34,4,light_color;"
+nodes/fragment/54/output_ports = "0,4,col;1,0,alpha;"
+nodes/fragment/54/expression = "float n1 = na.r - 0.5;
+float n2 = nb.r;
+float sb = max(along, 0.0);                       // 머리 뒤쪽만
+float tr = max(tail_r, 0.5);
+float sf = clamp(along / tr, 0.0, 1.0);           // 꼬리 비율 0(불덩이) → 1(꼬리 끝)
+float t = (time + time_offset) * scroll_speed;
+// 뒤로 갈수록 가늘게 (먼저 좁히고 그다음 흔들어야 꼬리가 궤적에서 떨어져 나가지 않는다)
+float xd = across * (1.0 + sb * taper);
+// 가로 흔들기: 노이즈 A (머리는 거의 둥글게, 꼬리로 갈수록 크게) + 꼬리 쪽으로 흘러가는 물결
+xd += n1 * distortion * (0.5 + 0.6 * sb) + sin(along * wave_freq - t * 7.0) * wave * sf * 1.2;
+// 꼬리 쪽만 tail_r 만큼 늘인 원 거리장 (앞쪽은 둥근 머리)
+float dy = along > 0.0 ? along / tr : along;
+float field = 1.0 - length(vec2(xd, dy));
+// 노이즈 B 로 갉기: 머리는 살짝, 꼬리 끝으로 갈수록 크게 (끝이 혀처럼 갈라진다)
+field -= n2 * erosion * (0.12 + 0.8 * sf);
+float mask = smoothstep(0.0, edge_softness, field);
+float rim = 1.0 - smoothstep(edge_softness, edge_softness + rim_width, field);
+float core = smoothstep(core_threshold, core_threshold + edge_softness, field + n1 * 0.5);
+float glow = smoothstep(-glow_width, 0.0, field);
+glow *= glow;
+// 머리(0) → 꼬리(1) 그라데이션: 노이즈로 경계가 일렁인다. 0~0.5 머리→가운데, 0.5~1 가운데→꼬리
+float grad = smoothstep(0.0, 1.0, sf * 1.1 + n1 * 0.35);
+vec3 c = mix(mix(head_color, mid_color, clamp(grad * 2.0, 0.0, 1.0)), tail_color, clamp(grad * 2.0 - 1.0, 0.0, 1.0));
+c = mix(c, tail_color, rim * 0.85);
+c = mix(c, core_color, core);
+col = mix(glow_color, c, mask);
+alpha = max(mask, glow * glow_alpha) * opacity * edge_fade;
+// 뒤 어두운 글로우 (layer 1): 불꽃과 같은 노이즈·물결로 일렁이는 넓은 그림자. 꼬리는 shade_len 배 더 길게
+if (layer > 0.5 && layer < 1.5) {
+	float trs = tr * shade_len;
+	float sfs = clamp(along / trs, 0.0, 1.0);
+	float xs = across * (1.0 + sb * taper * 0.4);
+	xs += (n1 * distortion * (0.7 + 0.7 * sb) + sin(along * wave_freq * 0.8 - t * 6.0 + 1.3) * wave * sfs * 0.9) * shade_flicker;
+	float dys = along > 0.0 ? along / trs : along;
+	float fs = 1.0 - length(vec2(xs, dys));
+	fs -= (n2 - 0.35) * shade_flicker * (0.25 + 0.9 * sfs);     // 가장자리가 혀처럼 갈라진다
+	float a = smoothstep(-shade_width, 0.3, fs);
+	a *= 1.0 - shade_flicker * 0.12 * (0.5 + 0.5 * sin(t * 9.0 - along * 0.7));   // 숨 쉬듯 진하기가 흔들린다
+	col = shade_color;
+	alpha = a * shade_alpha * opacity * edge_fade;
+}
+// 에디티브 글로우 라이팅 (layer 2, blend_add): 불덩이 둘레로 light_width(반지름 배)만큼 퍼지는 빛.
+// 머리가 가장 밝고 꼬리 쪽으로 늘어지며, 노이즈와 빠른 맥동으로 깜빡인다
+if (layer > 1.5) {
+	float trl = max(tr * 0.7, 0.5);
+	float xl = across + n1 * distortion * 0.6 * light_flicker;
+	float dl = along > 0.0 ? along / trl : along;
+	float d = length(vec2(xl, dl));
+	float fall = clamp(1.0 - d / (1.0 + light_width), 0.0, 1.0);
+	fall = fall * fall * (0.55 + 0.45 * fall);                 // 가운데 뜨겁고 바깥은 부드럽게
+	float pulse = 1.0 + light_flicker * ((n2 - 0.5) * 0.9 + 0.18 * sin(t * 17.0 + time_offset));
+	col = light_color * light_intensity * max(pulse, 0.0);
+	alpha = fall * opacity * edge_fade;
+}"
+nodes/fragment/connections = PackedInt32Array(27, 0, 28, 0, 28, 0, 29, 0, 28, 1, 29, 1, 28, 2, 29, 2, 30, 0, 31, 0, 31, 0, 32, 0, 31, 1, 32, 1, 31, 2, 32, 2, 33, 0, 34, 0, 34, 0, 35, 0, 34, 1, 35, 1, 34, 2, 35, 2, 36, 0, 37, 0, 37, 0, 38, 0, 37, 1, 38, 1, 37, 2, 38, 2, 39, 0, 40, 0, 40, 0, 41, 0, 40, 1, 41, 1, 40, 2, 41, 2, 42, 0, 43, 0, 43, 0, 44, 0, 43, 1, 44, 1, 43, 2, 44, 2, 45, 0, 46, 0, 46, 0, 47, 0, 46, 1, 47, 1, 46, 2, 47, 2, 48, 0, 50, 0, 49, 0, 50, 1, 2, 0, 50, 2, 3, 0, 50, 3, 4, 0, 50, 4, 8, 0, 50, 5, 9, 0, 50, 6, 50, 2, 51, 0, 50, 3, 52, 0, 50, 0, 54, 0, 50, 1, 54, 1, 51, 0, 54, 2, 52, 0, 54, 3, 53, 0, 54, 4, 8, 0, 54, 5, 9, 0, 54, 6, 5, 0, 54, 7, 10, 0, 54, 8, 11, 0, 54, 9, 12, 0, 54, 10, 13, 0, 54, 11, 6, 0, 54, 12, 14, 0, 54, 13, 15, 0, 54, 14, 16, 0, 54, 15, 17, 0, 54, 16, 18, 0, 54, 17, 29, 0, 54, 18, 32, 0, 54, 19, 35, 0, 54, 20, 38, 0, 54, 21, 41, 0, 54, 22, 7, 0, 54, 23, 50, 4, 54, 24, 19, 0, 54, 25, 20, 0, 54, 26, 21, 0, 54, 27, 44, 0, 54, 28, 22, 0, 54, 29, 23, 0, 54, 30, 24, 0, 54, 31, 25, 0, 54, 32, 26, 0, 54, 33, 47, 0, 54, 34, 54, 0, 0, 0, 54, 1, 0, 1)

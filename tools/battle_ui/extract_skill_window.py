@@ -1,0 +1,224 @@
+"""Read the character skill window (캐릭터 스킬창) of the screen mockup PSD into layout constants.
+
+  python tools/battle_ui/extract_skill_window.py [path/to/화면 컨셉_2.psd]
+
+Writes
+  scripts/void_defense/vd_skill_window_layout.gd   generated constants (1920x1080 design coords)
+
+The window is drawn procedurally in Godot (StyleBoxFlat rounded boxes under a skew transform), so no textures are
+written: every box in the mockup is a parallelogram whose vertical edges stay vertical and whose horizontal edges
+tilt by the same angle (a shear, not a rotation). Each shape path is "un-sheared" here into an axis-aligned
+rectangle, and the game shears everything back with SKEW_DEG.
+
+Layers (ids are checked by name):
+  225 사각형 3           panel body (fill, 4px stroke, drop shadow) + the speech tail path
+  231 사각형 3 복사      header band (purple, 55% opacity) — clipped to the body in game
+  232 사각형 3 복사 2    highlighted (selected) row: white, bigger than a plain row
+  233/234/235 복사 3/4/5 plain rows (lavender, 55% opacity); row 1's plain geometry is extrapolated from the pitch
+  277 복사 6             icon box of the highlighted row (opaque)      278/279/280 복사 7/8/9  plain icon boxes (44%)
+  228 캐릭터 이름        name text          226 캐릭터에 대한 정보 이것저것 (+복사 1..3)  four info lines
+"""
+import math
+import os
+import sys
+
+from psd_tools import PSDImage
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PSD = os.path.join(ROOT, "assets", "컨셉 원화", "화면 컨셉_2.psd")
+OUT_GD = os.path.join(ROOT, "scripts", "void_defense", "vd_skill_window_layout.gd")
+W, H = 1920, 1080
+
+L_BODY = (225, "사각형 3")
+L_HEADER = (231, "사각형 3 복사")
+L_ROW_HI = (232, "사각형 3 복사 2")
+L_ROWS = [(233, "사각형 3 복사 3"), (234, "사각형 3 복사 4"), (235, "사각형 3 복사 5")]
+L_ICON_HI = (277, "사각형 3 복사 6")
+L_ICONS = [(278, "사각형 3 복사 7"), (279, "사각형 3 복사 8"), (280, "사각형 3 복사 9")]
+L_NAME = (228, "캐릭터 이름")
+L_INFO = [(226, "캐릭터에 대한 정보 이것저것"), (274, "캐릭터에 대한 정보 이것저것 복사"),
+	(275, "캐릭터에 대한 정보 이것저것 복사 2"), (276, "캐릭터에 대한 정보 이것저것 복사 3")]
+
+
+def find(psd, lid, name):
+	for l in psd.descendants():
+		if l.layer_id == lid:
+			if l.name != name:
+				sys.exit("layer %d is %r, expected %r — the PSD changed, update the ids" % (lid, l.name, name))
+			return l
+	sys.exit("layer %d (%s) not found" % (lid, name))
+
+
+def col(d, key=b"Clr "):
+	c = d[key]
+	return (c[b"Rd  "] / 255.0, c[b"Grn "] / 255.0, c[b"Bl  "] / 255.0)
+
+
+def fill_of(layer):
+	return col(layer.tagged_blocks.get_data(b"vscg"))
+
+
+def paths_of(layer):
+	return [[(k.anchor[1] * W, k.anchor[0] * H) for k in p] for p in layer.vector_mask.paths]
+
+
+def main_path(layer):
+	return max(paths_of(layer), key=len)
+
+
+def effects_of(layer):
+	stroke, shadow = None, None
+	if layer.has_effects():
+		for e in layer.effects:
+			v = e.descriptor
+			if not e.enabled:
+				continue
+			if e.__class__.__name__ == "Stroke":
+				stroke = (float(v[b"Sz  "]), col(v), float(v[b"Opct"]) / 100.0)
+			elif e.__class__.__name__ == "DropShadow":
+				ang = math.radians(float(v[b"lagl"]))
+				dist = float(v[b"Dstn"])
+				shadow = (col(v), float(v[b"Opct"]) / 100.0, (-math.cos(ang) * dist, math.sin(ang) * dist), float(v[b"blur"]))
+	return stroke, shadow
+
+
+def slope_of(pts):
+	"""Tilt of the longest near-horizontal edge (dy/dx)."""
+	best, best_len = 0.0, 0.0
+	for i in range(len(pts)):
+		(x0, y0), (x1, y1) = pts[i], pts[(i + 1) % len(pts)]
+		if abs(x1 - x0) > abs(y1 - y0) and abs(x1 - x0) > best_len:
+			best_len = abs(x1 - x0)
+			best = (y1 - y0) / (x1 - x0)
+	return best
+
+
+def unshear_rect(pts, slope, x_ref):
+	"""Axis-aligned rect (x, y, w, h) of the polygon after removing the shear y -= slope * (x - x_ref)."""
+	xs = [p[0] for p in pts]
+	ys = [p[1] - slope * (p[0] - x_ref) for p in pts]
+	return (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
+
+
+def corner_radius(pts):
+	"""Chamfer size of the first corner ≈ rounded corner radius."""
+	(x0, y0), (x1, y1) = pts[1], pts[2]
+	return math.hypot(x1 - x0, y1 - y0) * 0.75
+
+
+def text_style(layer):
+	ed = layer.engine_dict
+	run = ed["StyleRun"]["RunArray"][0]["StyleSheet"]["StyleSheetData"]
+	t = layer.transform
+	size = float(run["FontSize"]) * math.hypot(t[2], t[3])   # y scale
+	fc = run["FillColor"]["Values"]
+	fonts = [f["Name"] for f in layer.resource_dict["FontSet"]]
+	return {"size": size, "color": (fc[1], fc[2], fc[3]), "font": fonts[int(run.get("Font", 0))], "pos": (t[4], t[5]),
+		"rot": math.degrees(math.atan2(t[1], t[0]))}
+
+
+def gd_rect(r):
+	return "Rect2(%.1f, %.1f, %.1f, %.1f)" % r
+
+
+def gd_color(c, a=1.0):
+	return "Color(%.4f, %.4f, %.4f, %.4f)" % (c[0], c[1], c[2], a)
+
+
+def gd_vec(v):
+	return "Vector2(%.1f, %.1f)" % v
+
+
+def main():
+	src = sys.argv[1] if len(sys.argv) > 1 else PSD
+	psd = PSDImage.open(src)
+	body = find(psd, *L_BODY)
+	bpts = main_path(body)
+	slope = slope_of(bpts)
+	x_ref = min(p[0] for p in bpts)
+	stroke, shadow = effects_of(body)
+	body_rect = unshear_rect(bpts, slope, x_ref)
+	L = ["## GENERATED by tools/battle_ui/extract_skill_window.py from assets/컨셉 원화/화면 컨셉_2.psd — do not edit.",
+		"## 캐릭터 스킬창 시안 수치 (1920x1080 디자인 좌표). 모든 상자는 세로변은 수직, 가로변만 SKEW_DEG 만큼 기운 평행사변형이라",
+		"## 여기 사각형은 기울기를 뺀 값이고, 그리는 쪽이 Transform2D 로 다시 기울인다. 좌표 기준점은 PANEL_RECT 의 왼쪽 위.",
+		"## class_name 없음: 쓰는 쪽에서 preload.",
+		"extends RefCounted",
+		"",
+		"const SKEW_DEG := %.2f                 # 가로변 기울기 (시안 본체 윗변)" % math.degrees(math.atan(slope)),
+		"const SKEW_X_REF := %.1f              # 기울기를 뺄 때 기준으로 삼은 x (본체 왼쪽)" % x_ref,
+		"const PANEL_RECT := %s" % gd_rect(body_rect),
+		"const PANEL_FILL := %s" % gd_color(fill_of(body)),
+		"const PANEL_RADIUS := %.1f" % corner_radius(bpts),
+		"const PANEL_BORDER := %d" % round(stroke[0]),
+		"const PANEL_BORDER_COLOR := %s" % gd_color(stroke[1], stroke[2]),
+		"const PANEL_SHADOW_COLOR := %s" % gd_color(shadow[0], shadow[1]),
+		"const PANEL_SHADOW_OFFSET := %s" % gd_vec(shadow[2]),
+		"const PANEL_SHADOW_BLUR := %.1f" % shadow[3],
+	]
+	tail = min(paths_of(body), key=len)
+	tail_pts = [(p[0] - body_rect[0], p[1] - slope * (p[0] - x_ref) - body_rect[1]) for p in tail]
+	L.append("const TAIL := [%s]   # 말꼬리 (아래로 향함), 패널 로컬" % ", ".join(gd_vec(p) for p in tail_pts))
+
+	def local(rect):
+		return (rect[0] - body_rect[0], rect[1] - body_rect[1], rect[2], rect[3])
+
+	header = find(psd, *L_HEADER)
+	hr = local(unshear_rect(main_path(header), slope, x_ref))
+	L.append("const HEADER_RECT := %s        # 본체에 맞춰 자른다" % gd_rect(hr))
+	L.append("const HEADER_FILL := %s" % gd_color(fill_of(header), header.opacity / 255.0))
+
+	rows = [local(unshear_rect(main_path(find(psd, *l)), slope, x_ref)) for l in L_ROWS]
+	pitch = (rows[-1][1] - rows[0][1]) / (len(rows) - 1)
+	row0 = (rows[0][0], rows[0][1] - pitch, rows[0][2], rows[0][3])
+	plain = find(psd, *L_ROWS[0])
+	L.append("const ROW_RECTS := [%s]   # 줄 1 은 시안에서 강조 상태라 간격으로 되살렸다" % ", ".join(gd_rect(r) for r in [row0] + rows))
+	L.append("const ROW_PITCH := %.1f" % pitch)
+	L.append("const ROW_FILL := %s" % gd_color(fill_of(plain), plain.opacity / 255.0))
+	L.append("const ROW_RADIUS := %.1f" % corner_radius(main_path(plain)))
+	hi = find(psd, *L_ROW_HI)
+	hi_rect = local(unshear_rect(main_path(hi), slope, x_ref))
+	# 강조 줄은 제 줄(줄 1)의 세로 가운데를 기준으로 얼마나 커지는지로 기록한다
+	row0_cy = row0[1] + row0[3] * 0.5
+	L.append("const ROW_HI_DX := %.1f              # 강조 줄: 왼쪽으로 이만큼 넓어짐" % (hi_rect[0] - row0[0]))
+	L.append("const ROW_HI_W := %.1f" % hi_rect[2])
+	L.append("const ROW_HI_H := %.1f" % hi_rect[3])
+	L.append("const ROW_HI_DY := %.1f              # 강조 줄 세로 가운데 - 줄 세로 가운데" % (hi_rect[1] + hi_rect[3] * 0.5 - row0_cy))
+	L.append("const ROW_HI_FILL := %s" % gd_color(fill_of(hi), hi.opacity / 255.0))
+
+	icon = find(psd, *L_ICONS[0])
+	ir = local(unshear_rect(main_path(icon), slope, x_ref))
+	istroke, _ = effects_of(icon)
+	L.append("const ICON_OFFSET := %s        # 아이콘 상자: 줄 왼쪽 위 기준" % gd_vec((ir[0] - rows[0][0], ir[1] - rows[0][1])))
+	L.append("const ICON_SIZE := %s" % gd_vec((ir[2], ir[3])))
+	L.append("const ICON_FILL := %s" % gd_color(fill_of(icon), icon.opacity / 255.0))
+	L.append("const ICON_BORDER := %d" % round(istroke[0]))
+	L.append("const ICON_BORDER_COLOR := %s" % gd_color(istroke[1], istroke[2]))
+	L.append("const ICON_RADIUS := %.1f" % corner_radius(main_path(icon)))
+	icon_hi = find(psd, *L_ICON_HI)
+	ihr = local(unshear_rect(main_path(icon_hi), slope, x_ref))
+	L.append("const ICON_HI_OFFSET := %s     # 강조 줄의 아이콘 상자: 강조 줄 왼쪽 위 기준" % gd_vec((ihr[0] - hi_rect[0], ihr[1] - hi_rect[1])))
+	L.append("const ICON_HI_SIZE := %s" % gd_vec((ihr[2], ihr[3])))
+	L.append("const ICON_HI_FILL := %s" % gd_color(fill_of(icon_hi), icon_hi.opacity / 255.0))
+
+	name = text_style(find(psd, *L_NAME))
+	npos = name["pos"]
+	L.append("const NAME_POS := %s           # 글자 기준선 왼쪽 (패널 로컬, 기울기 뺀 값)" % gd_vec((npos[0] - body_rect[0], npos[1] - slope * (npos[0] - x_ref) - body_rect[1])))
+	L.append("const NAME_SIZE := %d" % round(name["size"]))
+	L.append("const NAME_COLOR := %s" % gd_color(name["color"]))
+	L.append("const NAME_FONT := %r   # 시안 글꼴 (없으면 굵은 고딕)" % name["font"])
+	infos = [text_style(find(psd, *l)) for l in L_INFO]
+	ipos = infos[0]["pos"]
+	ipitch = (infos[-1]["pos"][1] - infos[0]["pos"][1]) / (len(infos) - 1)
+	L.append("const INFO_POS := %s" % gd_vec((ipos[0] - body_rect[0], ipos[1] - slope * (ipos[0] - x_ref) - body_rect[1])))
+	L.append("const INFO_PITCH := %.1f" % ipitch)
+	L.append("const INFO_LINES := %d" % len(infos))
+	L.append("const INFO_SIZE := %d" % round(infos[0]["size"]))
+	L.append("const INFO_COLOR := %s" % gd_color(infos[0]["color"]))
+	with open(OUT_GD, "w", encoding="utf-8", newline="\n") as f:
+		f.write("\n".join(L) + "\n")
+	print("wrote", OUT_GD)
+	print("\n".join(L))
+
+
+if __name__ == "__main__":
+	main()

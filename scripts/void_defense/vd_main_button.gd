@@ -3,6 +3,7 @@
 ## 버튼이 작게 맥동해 눈에 띈다. 아래에 SPACE 키캡.
 ## class_name 없음: vd_battle.gd 가 preload 해서 쓴다.
 extends Button
+const GameFonts := preload("res://scripts/game_fonts.gd")
 
 const SKEW := Vector2(-0.16, 0.0)
 const BG := Color(0.66, 0.27, 0.98)            # 시안 게이지 보라(#AA57FF)보다 조금 진하게
@@ -46,10 +47,7 @@ func _ready() -> void:
 	add_theme_stylebox_override("disabled", off)
 	add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 
-	var f := SystemFont.new()
-	f.font_names = PackedStringArray(["Malgun Gothic", "맑은 고딕", "Noto Sans KR", "Apple SD Gothic Neo", "sans-serif"])
-	f.font_weight = 900
-	add_theme_font_override("font", f)
+	add_theme_font_override("font", GameFonts.bold())   # 강조 역할 (scripts/game_fonts.gd)
 	add_theme_font_size_override("font_size", 34)
 	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 		add_theme_color_override(k, Color.WHITE)
@@ -68,7 +66,7 @@ func _ready() -> void:
 	_keycap.set_border_width_all(2)
 	_keycap.border_width_bottom = 4
 	_keycap.set_corner_radius_all(6)
-	_key_font = load("res://assets/fonts/ARCO.otf")
+	_key_font = GameFonts.display()
 	resized.connect(func() -> void: pivot_offset = size * 0.5)
 	pivot_offset = size * 0.5
 
@@ -91,6 +89,9 @@ func _box(col: Color, border: int) -> StyleBoxFlat:
 
 
 func _process(_dt: float) -> void:
+	if not is_visible_in_tree():
+		_clock_us = 0   # 숨은 동안은 맥박·스타일 갱신을 쉰다 (다시 보이면 시계를 새로 잡는다)
+		return
 	var t := Time.get_ticks_msec() * 0.001
 	var now_us := Time.get_ticks_usec()
 	var real := clampf((now_us - _clock_us) / 1000000.0, 0.0, 0.1) if _clock_us > 0 else 0.0

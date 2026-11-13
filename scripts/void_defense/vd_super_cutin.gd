@@ -7,6 +7,7 @@
 ## 트리가 일시정지돼도 돈다. 시간은 모두 실제 시간(배속·히트스탑과 무관). class_name 없음: preload 해서 쓴다.
 ## 위 박자(기본값 기준)·세기는 Fx(vd_super_cutin_fx.gd) — 연출 연구실에서 바꾸고 저장한 값을 읽는다.
 extends CanvasLayer
+const GameFonts := preload("res://scripts/game_fonts.gd")
 
 const Layout := preload("res://scripts/void_defense/vd_ult_cutin_layout.gd")
 const Fx := preload("res://scripts/void_defense/vd_super_cutin_fx.gd")
@@ -46,16 +47,20 @@ var _last := 0.0
 var _hero := "mage"           # Layout.PORTRAITS 의 키
 var _hue := 0.0               # BASE_COL 에서 영웅 색까지 돌릴 색상 (0~1)
 var speed := 1.0              # 재생 배속 (연구실 슬로 모션). play() 전에 정한다
+static var _flash_shader_s: Shader
 
 
 func _init() -> void:
 	layer = 30
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_flash_shader = Shader.new()
-	_flash_shader.code = """shader_type canvas_item;
+	# 셰이더는 한 번만 만든다: 컷인마다 새로 만들면 첫 그리기에서 매번 다시 컴파일되어 멈칫한다
+	if _flash_shader_s == null:
+		_flash_shader_s = Shader.new()
+		_flash_shader_s.code = """shader_type canvas_item;
 uniform float flash = 0.0;
 uniform vec4 flash_col : source_color = vec4(1.0);
 void fragment() { COLOR.rgb = mix(COLOR.rgb, flash_col.rgb, flash); }"""
+	_flash_shader = _flash_shader_s
 
 
 func _now() -> float:
@@ -91,9 +96,7 @@ func _sprite(parent: Node, n: String, add := false) -> Sprite2D:
 	if not is_zero_approx(_hue) and n in TINTED:
 		s.material = _hue_mat(add)
 	elif add:
-		var m := CanvasItemMaterial.new()
-		m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-		s.material = m
+		s.material = VDVfx.add_material()
 	parent.add_child(s)
 	return s
 
@@ -240,10 +243,8 @@ func _on_impact(audio: Node, col: Color, voice: String) -> void:
 		var g := Sprite2D.new()
 		g.texture = _portrait.texture
 		g.scale = _portrait.scale
-		var m := CanvasItemMaterial.new()
-		m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-		g.material = m
-		g.modulate = Color(1.0, 0.1, 0.45, _f("rgb_alpha")) if k == 0 else Color(0.1, 0.65, 1.0, _f("rgb_alpha"))
+		g.material = VDVfx.add_material()
+		g.modulate = Fx.col("rgb_col_a", _f("rgb_alpha")) if k == 0 else Fx.col("rgb_col_b", _f("rgb_alpha"))
 		var off := Vector2(-split if k == 0 else split, 4 if k == 0 else -4)
 		g.position = _portrait.position + off
 		_content.add_child(g)
@@ -253,7 +254,7 @@ func _on_impact(audio: Node, col: Color, voice: String) -> void:
 		gt.tween_property(g, "modulate:a", 0.0, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		gt.chain().tween_callback(g.queue_free)
 	# 화면 섬광 + 창 흰 번쩍
-	_flash.color = Color(1, 1, 1, _f("flash"))
+	_flash.color = Fx.col("flash_col", _f("flash"))
 	_tw().tween_property(_flash, "color:a", 0.0, maxf(_f("flash_sec"), 0.001)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	var wf: ColorRect = _content.get_node("window_flash")
 	wf.color.a = _f("window_flash")
@@ -291,14 +292,12 @@ func _on_glint(audio: Node, col: Color) -> void:
 	_sfx(audio, "chime", 0.0, 2.0, 1.7)
 	var g := Sprite2D.new()
 	g.texture = _tex("sparkle_b")
-	var m := CanvasItemMaterial.new()
-	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	g.material = m
+	g.material = VDVfx.add_material()
 	# 눈: 지금(밀려 들어오고 줌인 중인) 초상 위의 눈 자리를 반짝 노드 좌표로 옮긴다
 	var eye := _shake_node.get_global_transform().affine_inverse() * (_portrait.get_global_transform() * (Layout.PORTRAITS[_hero][3] as Vector2))
 	g.position = eye
 	g.scale = Vector2.ZERO
-	g.modulate = Color(1.4, 1.2, 1.5)
+	g.modulate = Fx.col("glint_col")
 	_shake_node.add_child(g)
 	var tw := _seq()
 	tw.tween_property(g, "scale", Vector2.ONE * 0.95, 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -333,7 +332,7 @@ func _on_exit(audio: Node) -> void:
 	# 접힌 자리에서 밝은 선이 가로로 퍼지며 사라진다
 	var line := Polygon2D.new()
 	line.polygon = PackedVector2Array([Vector2(-1200, -7), Vector2(1200, -7), Vector2(1200, 7), Vector2(-1200, 7)])
-	line.color = _tint(Color(1.0, 0.85, 1.0))
+	line.color = _tint(Fx.col("line_col"))
 	line.position = Vector2(0, band_y)
 	line.rotation = _band_frame.rotation
 	line.scale = Vector2(0.3, 1.0)
@@ -385,7 +384,7 @@ func _speed_line() -> void:
 	var ln := randf_range(180, 520)
 	var th := randf_range(2.0, 5.0)
 	l.polygon = PackedVector2Array([Vector2(0, -th * 0.5), Vector2(ln, -th * 0.2), Vector2(ln, th * 0.2), Vector2(0, th * 0.5)])
-	l.color = Color(1.0, 0.9, 1.0, randf_range(0.25, 0.6))
+	l.color = Fx.col("speed_col", randf_range(0.25, 0.6))
 	l.position = Vector2(w.x * 0.55, randf_range(-w.y * 0.45, w.y * 0.45))
 	_speed_root.add_child(l)
 	var tw := _tw()
@@ -402,9 +401,7 @@ func _spark(at: Vector2, col: Color) -> void:
 		pts.append(Vector2(cos(a), sin(a)) * (r if k % 2 == 0 else r * 0.28))
 	s.polygon = pts
 	s.color = col.lightened(randf_range(0.4, 0.8))
-	var m := CanvasItemMaterial.new()
-	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	s.material = m
+	s.material = VDVfx.add_material()
 	s.position = at
 	_shake_node.add_child(s)
 	var dir := Vector2(randf_range(-1, 1), randf_range(-1.2, 0.4)).normalized() * randf_range(140, 320)
@@ -422,9 +419,7 @@ func _ring(col: Color, r: float) -> Line2D:
 		l.add_point(Vector2(cos(a), sin(a)) * r)
 	l.width = 5.0
 	l.default_color = col
-	var m := CanvasItemMaterial.new()
-	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	l.material = m
+	l.material = VDVfx.add_material()
 	return l
 
 
@@ -440,10 +435,10 @@ func _title(skill_name: String, hero_name: String, col: Color) -> void:
 	var sh := _label(skill_name + "!", 84, col.darkened(0.55), col.darkened(0.55), 22)
 	sh.position = Vector2(-414, -50)
 	g.add_child(sh)
-	var nm := _label(skill_name + "!", 84, Color(1, 0.98, 1), Color(0.09, 0.03, 0.16), 20)
+	var nm := _label(skill_name + "!", 84, Fx.col("title_fill"), Fx.col("title_ink"), 20)
 	nm.position = Vector2(-420, -58)
 	g.add_child(nm)
-	var hn := _label(hero_name, 30, col.lightened(0.6), Color(0.05, 0.02, 0.1), 10)
+	var hn := _label(hero_name, 30, col.lightened(0.6), Fx.col("hero_ink"), 10)
 	hn.position = Vector2(-440, -116)
 	g.add_child(hn)
 	g.scale = Vector2.ONE * _f("title_scale")
@@ -456,10 +451,7 @@ func _title(skill_name: String, hero_name: String, col: Color) -> void:
 
 func _label(text: String, size: int, col: Color, outline_col: Color, outline: int) -> Label:
 	if _bold_font == null:
-		var sf := SystemFont.new()
-		sf.font_names = PackedStringArray(["Malgun Gothic", "맑은 고딕", "Noto Sans KR", "sans-serif"])
-		sf.font_weight = 900
-		_bold_font = sf
+		_bold_font = GameFonts.bold()   # 강조 역할
 	var l := Label.new()
 	l.text = text
 	l.size = Vector2(840, size * 1.4)
@@ -508,7 +500,7 @@ func _build(_skill_name: String, _hero_name: String, _col: Color) -> void:
 	_window = _sprite(_band_frame, "window")
 	_window.position = Layout.PIECES["window"][0] - _band_frame.position
 	_window.scale.x = kx
-	_window.self_modulate = _tint(Color(0.06, 0.03, 0.12))   # 창 바탕 (성운 띠 밖)
+	_window.self_modulate = _tint(Fx.col("window_bg"))   # 창 바탕 (성운 띠 밖)
 	_window.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
 	_content = Node2D.new()
 	_content.scale.x = 1.0 / kx

@@ -36,6 +36,9 @@ const SFX := {
 	"boom": ["synth:boom"],
 	"rise": ["synth:rise"],
 	"clash": ["synth:clash"],
+	"parry_warn": ["synth:parry_warn"],                   # 패링 예고 "팟" (VDParry)
+	"parry_ching": ["synth:parry_ching"],                 # 예고 별이 꽂히는 "칭!"
+	"parry_ok": ["synth:parry_ok"],                       # 패링 성공 "카앙!"
 	# 흐름
 	"wave_start": ["trio/sfx-wave_start.wav"],
 	"wave_clear": ["trio/sfx-wave_clear.wav"],
@@ -77,7 +80,7 @@ const VOLUME_DB := {
 	"knight_attack": -12.0, "knight_hit": -1.0, "gun": -14.0, "gun_hit": -9.5, "mage_cast": -14.0, "mage_hit": -3.5,
 	"heal": -4.5, "enemy_attack": -18.0, "ally_hurt": -9.5, "enemy_hit": -6.0, "enemy_die": -2.5, "boss_die": -6.5,
 	"hero_down": -4.5, "boss_slam": 0.5, "explode": -7.5, "frost": -3.5, "lightning": -12.5, "fizzle": -4.0,
-	"whoosh": -7.5, "boom": -3.5, "rise": -6.0, "clash": -9.5,
+	"whoosh": -7.5, "boom": -3.5, "rise": -6.0, "clash": -9.5, "parry_warn": -5.0, "parry_ching": -6.0, "parry_ok": -3.0,
 	"wave_start": -5.5, "wave_clear": -2.5, "victory": 0.5, "defeat": -8.0,
 	"essence": -4.5, "tick": -2.5, "chime": 1.0, "pop": 3.0, "click": -3.0, "denied": -7.5, "place": 3.0,
 	"enemy_spawn": -8.0, "boss_spawn": 0.0, "boss_roar": -1.0, "step": -14.0, "slab_rise": -6.0, "slab_rise_boss": -5.0, "super_ult": -2.0,   # step: 마녀산장 selected.json 값
@@ -150,7 +153,7 @@ func voice(hero_id: String, kind: String) -> void:
 
 
 static func _is_synth(s: AudioStream) -> bool:
-	return _synth.values().has(s)
+	return s is AudioStreamWAV and s.resource_path.is_empty()   # 합성음만 파일 없이 메모리에서 만든 WAV (values() 배열을 매번 만들지 않게)
 
 
 # ---------------------------------------------------------------- TrioChess sfx.gd 합성식
@@ -165,6 +168,21 @@ func _synthesize() -> void:
 	_synth["clash"] = _make(0.7, func(t: float) -> float:
 		var f := 220.0 + 40.0 * sin(t * 30.0)
 		return (sin(TAU * f * t) * 0.4 + sin(TAU * f * 1.5 * t) * 0.3 + (randf() * 2.0 - 1.0) * 0.3 * exp(-t * 10.0)) * exp(-t * 3.5))
+	# 패링 (VDParry): 예고 "팟"(짧은 저음 타격 + 솟는 소리) · 별이 꽂히는 "칭!"(높은 금속 핑) · 성공 "카앙!"(두꺼운 금속 울림 + 타격 잡음)
+	_synth["parry_warn"] = _make(0.16, func(t: float) -> float:
+		var f := 150.0 + 2600.0 * t
+		return (sin(TAU * f * t) * 0.45 + (randf() * 2.0 - 1.0) * 0.5 * exp(-t * 40.0)) * exp(-t * 16.0))
+	_synth["parry_ching"] = _make(0.6, func(t: float) -> float:
+		var e := exp(-t * 7.5)
+		var shimmer := 1.0 + 0.004 * sin(TAU * 9.0 * t)
+		return (sin(TAU * 2637.0 * shimmer * t) * 0.34 + sin(TAU * 3951.0 * t) * 0.26 + sin(TAU * 5274.0 * t) * 0.16 * exp(-t * 14.0)
+			+ (randf() * 2.0 - 1.0) * 0.3 * exp(-t * 90.0)) * e)
+	_synth["parry_ok"] = _make(0.9, func(t: float) -> float:
+		var e := exp(-t * 4.2)
+		var beat := 1.0 + 0.006 * sin(TAU * 13.0 * t)
+		return (sin(TAU * 1318.5 * beat * t) * 0.3 + sin(TAU * 1975.5 * t) * 0.24 + sin(TAU * 3322.4 * t) * 0.18 * exp(-t * 6.0)
+			+ sin(TAU * 4698.6 * t) * 0.1 * exp(-t * 12.0) + sin(TAU * 110.0 * t) * 0.5 * exp(-t * 18.0)
+			+ (randf() * 2.0 - 1.0) * 0.5 * exp(-t * 55.0)) * e)
 	_synth["rise"] = _make(0.65, func(t: float) -> float:
 		var f := 260.0 + 900.0 * t * t
 		var env := minf(1.0, t * 5.0) * (1.0 - smoothstep(0.55, 0.65, t))

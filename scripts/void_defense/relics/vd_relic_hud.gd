@@ -1,9 +1,12 @@
 ## 성좌판 HUD: 화면 오른쪽에 육각 10칸 + 아래 보관함. 전투 밖에서 드래그로 놓고/옮기고/빼고,
 ## 침식 칸은 우클릭으로 정화(정수 소모). 구역 클리어 보상(3택1) 패널도 여기서 띄운다.
+## 슬롯(2026-11-09): 칸은 자동으로 열리지 않는다. 보상 카드에 섞여 나오는 "성좌판 슬롯"을 고르면 보관함에 빈 육각 아이콘으로 들어오고,
+## 유물처럼 끌어다 잠긴 칸 아무 데나 놓으면 그 칸이 열린다. 슬롯을 끄는 동안 잠긴 칸들이 빛나 "놓을 수 있는 자리"임을 알린다.
 ## 발동 순간 칸이 펄스하고, 투사체는 이 칸의 화면 좌표를 월드로 바꿔 전장으로 날아간다.
 ## 생김새는 시안 PSD(화면 컨셉_2) 그대로: 칸 좌표·투명도·색·아이콘은 VDRelicLayout(생성물)과 assets/textures/relic_ui/.
 class_name VDRelicHud
 extends Control
+const GameFonts := preload("res://scripts/game_fonts.gd")
 
 const Layout := preload("res://scripts/void_defense/relics/vd_relic_layout.gd")
 
@@ -28,6 +31,7 @@ var _hover_cell := Vector2i(-99, -99)
 var _hover_tray := -1
 var _pulses := []                    # [{cell, t}]
 var _offers := []                    # 대기 중인 보상 묶음 (각각 Array[String])
+var _cur_offer := []                 # 지금 떠 있는 보상 카드의 id 들 (테스트·디버그용)
 var _tex := {}                       # 이름 -> Texture2D
 var _badge_font: Font
 var _tip_root: Control               # 말꼬리 끝이 원점, 시안처럼 살짝 기울어진 툴팁
@@ -43,7 +47,22 @@ var _cards: Array[Button] = []
 var _cell_fx := {}                   # Vector2i -> {kind, t}: 칸 연출 (해금·침식·정화·놓기)
 var _tray_pop := {}                  # 보관함 칸 i -> 경과(초): 날아온 유물이 톡 튄다
 const CELL_FX_SEC := {"unlock": 0.7, "corrupt": 0.6, "purify": 0.6, "place": 0.35, "rotate": 0.25}
+
+## 침식 칸 (2026-11-09): 칸마다 칸보다 조금 넓은 ColorRect 를 HUD 그림 뒤(show_behind_parent)에 깔고 생성형 VisualShader 를 건다
+## (tools/shaders/build_relic_corrupt.gd). 프리셋 두 가지는 설정 메뉴 [침식 스타일] 에서 고르고 user://relic_corrupt.cfg 에 저장.
+##   0 데이터 붕괴 — 가로 찢김 · 블록 침식 · 자홍/청록 RGB 분리 테두리      1 나노 감염 — 특이점 · 회로 혈관 맥동 · 나노 격자 · 촉수
+## 침식되면 가운데서 퍼지고(spawn 0 → 1), 정화하면 거꾸로 걷힌다. 가리키면 hover, 침식 순간·정화 거절 땐 jolt 로 크게 튄다.
+const CORRUPT_SHADERS := [preload("res://shaders/relic_corrupt_glitch.tres"), preload("res://shaders/relic_corrupt_infect.tres")]
+const CORRUPT_NAMES := ["데이터 붕괴", "나노 감염"]
+const CORRUPT_CFG := "user://relic_corrupt.cfg"
+const CORRUPT_QUAD := Vector2(200, 180)    # 셰이더 사각형 (칸 텍스처 152x136 보다 넓게: 찢김·촉수·후광이 칸 밖으로 번진다)
+const CORRUPT_IN_SEC := 0.75               # 침식이 다 퍼지는 시간
+const CORRUPT_OUT_SEC := 0.5               # 정화로 걷히는 시간
+static var _corrupt_style := -1
+var _corrupt_nodes := {}                   # Vector2i -> ColorRect (침식 중이거나 걷히는 중인 칸)
 const CARD := Vector2(300, 400)
+const GLITCH_IN := preload("res://shaders/ui_glitch_in.gdshader")   # 보상 카드·제목의 사이파이 글리치 등장
+const GLITCH_IN_SEC := 0.55          # 카드 한 장이 다 물질화되는 시간
 const CARD_GAP := 36.0
 
 ## 회전 UX: 소켓 유물에는 늘 작은 ⟳ 배지, 가리키면 칸 둘레에 도는 화살표 + "클릭·휠 회전" 안내.
@@ -65,8 +84,10 @@ var _floats := []                    # [{pos, text, col, t}]: 칸 위로 떠오�
 var _hint := {}                      # {cell, t}: 회전 안내 말풍선
 var _rotated_once := false           # 한 번이라도 돌려 봤으면 처음 놓을 때 안내는 생략
 var _press_pos := Vector2.ZERO
+var _mouse_pos := Vector2.ZERO        # 마지막 마우스 이동 위치(로컬): 드래그 고스트는 여기에 그린다 (주입된 입력도 따라온다)
 var _dim: ColorRect
 var _dim_k := 0.0
+var backdrop: TextureRect            # 보드 뒤 어두운 구름 (HUD 루트 맨 뒤의 형제 노드) — 입장 애니메이션이 보드와 함께 민다
 var _hov_k := {}                     # Vector2i -> 0..1 호버 강조 정도 (부드럽게)
 
 
@@ -93,12 +114,12 @@ func setup(battle: VDBattle, board_: VDRelicBoard, runtime_: VDRelicRuntime) -> 
 		_tex[n] = load(Layout.DIR + n + ".png")
 	for id in Layout.RELIC_ICON:
 		_tex[Layout.RELIC_ICON[id]] = load(Layout.DIR + Layout.RELIC_ICON[id] + ".png")
-	_badge_font = load("res://assets/fonts/ARCO.otf")
+	_badge_font = GameFonts.display()   # 숫자·타이틀 역할
 
 	_build_tip()
 
 	# 보드 뒤 어두운 구름 (시안의 사각형 4): 시안에서 분대 카드·하단 패널보다 아래 레이어라 HUD 맨 뒤에 끼운다
-	var backdrop := TextureRect.new()
+	backdrop = TextureRect.new()
 	backdrop.texture = load(Layout.DIR + "board_backdrop.png")
 	backdrop.stretch_mode = TextureRect.STRETCH_SCALE
 	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -118,6 +139,7 @@ func setup(battle: VDBattle, board_: VDRelicBoard, runtime_: VDRelicRuntime) -> 
 	_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_dim.z_index = Z_DIM
 	z_index = Z_DIM + 1
+	SceneSwitcher.add_choice_setting(self, "침식 스타일", CORRUPT_NAMES, get_corrupt_style, set_corrupt_style)
 
 	# 보상 선택 패널: 보드 왼쪽에 세로로 3장
 	_pick = PanelContainer.new()
@@ -170,10 +192,7 @@ func _build_tip() -> void:
 	_tip_title = Label.new()
 	_tip_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_tip_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var tf := SystemFont.new()
-	tf.font_names = PackedStringArray(["Malgun Gothic", "맑은 고딕", "Noto Sans KR", "sans-serif"])
-	tf.font_weight = 800
-	_tip_title.add_theme_font_override("font", tf)
+	_tip_title.add_theme_font_override("font", GameFonts.bold())   # 강조 역할
 	_tip_title.add_theme_font_size_override("font_size", Layout.TIP_TITLE_SIZE)
 	_tip_title.add_theme_color_override("font_color", Layout.TIP_TITLE_COLOR)
 	box.add_child(_tip_title)
@@ -240,7 +259,79 @@ func _process(dt: float) -> void:
 			_hov_k.erase(c)
 		else:
 			_hov_k[c] = k
+	_sync_corrupt(dt)
 	queue_redraw()
+
+
+# ---------------------------------------------------------------- 침식 칸 셰이더
+
+static func get_corrupt_style() -> int:
+	if _corrupt_style < 0:
+		_corrupt_style = 0
+		var cfg := ConfigFile.new()
+		if cfg.load(CORRUPT_CFG) == OK:
+			_corrupt_style = clampi(int(cfg.get_value("relic", "corrupt_style", 0)), 0, CORRUPT_SHADERS.size() - 1)
+	return _corrupt_style
+
+
+## 프리셋을 바꾸고(저장) 떠 있는 침식 칸의 셰이더를 바로 갈아 끼운다.
+func set_corrupt_style(i: int, persist := true) -> void:
+	_corrupt_style = clampi(i, 0, CORRUPT_SHADERS.size() - 1)
+	if persist:
+		var cfg := ConfigFile.new()
+		cfg.set_value("relic", "corrupt_style", _corrupt_style)
+		cfg.save(CORRUPT_CFG)
+	for c in _corrupt_nodes:
+		(_corrupt_nodes[c].material as ShaderMaterial).shader = CORRUPT_SHADERS[_corrupt_style]
+
+
+## 침식 칸마다 셰이더 사각형을 두고 퍼짐·걷힘·호버·튐 값을 넣는다. 다 걷히면 지운다.
+func _sync_corrupt(dt: float) -> void:
+	for c in VDRelicData.BOARD_CELLS:
+		var on := board != null and board.state_of(c) == VDRelicBoard.Cell.CORRUPT
+		var n: ColorRect = _corrupt_nodes.get(c)
+		if n == null:
+			if not on:
+				continue
+			n = ColorRect.new()
+			n.show_behind_parent = true
+			n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			n.size = CORRUPT_QUAD
+			n.pivot_offset = CORRUPT_QUAD * 0.5
+			var m := ShaderMaterial.new()
+			m.shader = CORRUPT_SHADERS[get_corrupt_style()]
+			m.set_shader_parameter("rect_px", CORRUPT_QUAD)
+			m.set_shader_parameter("seed", float(absi(hash(c)) % 97))
+			m.set_shader_parameter("cell_alpha", Layout.OPACITY_OPEN)
+			m.set_shader_parameter("edge_alpha", EDGE_OPACITY)
+			m.set_shader_parameter("spawn", 0.0)
+			n.material = m
+			n.set_meta("spawn", 0.0)
+			add_child(n)
+			_corrupt_nodes[c] = n
+		var sp: float = n.get_meta("spawn")
+		sp = move_toward(sp, 1.0 if on else 0.0, dt / (CORRUPT_IN_SEC if on else CORRUPT_OUT_SEC))
+		n.set_meta("spawn", sp)
+		if sp <= 0.0 and not on:
+			n.queue_free()
+			_corrupt_nodes.erase(c)
+			continue
+		# 칸 연출과 같은 흔들림·호버 확대
+		var cfx: Dictionary = _cell_fx.get(c, {})
+		var shake := Vector2.ZERO
+		var jolt := 0.0
+		if cfx.get("kind", "") == "corrupt":
+			var k: float = cfx["t"] / CELL_FX_SEC["corrupt"]
+			shake = Vector2(sin(cfx["t"] * 90.0), cos(cfx["t"] * 70.0)) * 5.0 * (1.0 - k)
+			jolt = 1.0 - k
+		var hk: float = _hov_k.get(c, 0.0)
+		n.position = cell_center(c) - CORRUPT_QUAD * 0.5 + shake
+		n.scale = Vector2.ONE * (1.0 + HOVER_SCALE * hk)
+		var m: ShaderMaterial = n.material
+		# 퍼짐은 끝에서 살짝 감속, 걷힘은 그대로
+		m.set_shader_parameter("spawn", 1.0 - pow(1.0 - sp, 2.0) if on else sp)
+		m.set_shader_parameter("hover", hk)
+		m.set_shader_parameter("jolt", jolt)
 
 
 func editable() -> bool:
@@ -284,12 +375,9 @@ func cell_world_pos(c: Vector2i) -> Vector2:
 	return b.get_viewport().get_canvas_transform().affine_inverse() * screen
 
 
-## 다음에 열릴 칸 (BOARD_CELLS 순서상 첫 잠긴 칸). 시안처럼 잠긴 칸보다 덜 흐리게 그린다.
-func _next_locked() -> Vector2i:
-	for c in VDRelicData.BOARD_CELLS:
-		if board.state_of(c) == VDRelicBoard.Cell.LOCKED:
-			return c
-	return Vector2i(-99, -99)
+## 슬롯을 끌고 있는 중인가 (잠긴 칸이 놓을 자리가 된다).
+func dragging_slot() -> bool:
+	return not _drag.is_empty() and VDRelicData.is_slot(String(_drag["id"]))
 
 
 # ---------------------------------------------------------------- input
@@ -297,6 +385,7 @@ func _next_locked() -> Vector2i:
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		var p: Vector2 = event.position
+		_mouse_pos = p
 		_hover_cell = cell_at(p)
 		_hover_tray = tray_at(p)
 		if not _drag.is_empty():
@@ -323,6 +412,11 @@ func _gui_input(event: InputEvent) -> void:
 				_drag = {"from": "tray", "index": ti, "id": board.tray[ti]}
 				accept_event()
 		elif not _drag.is_empty():
+			# 누른 채로 전투가 시작됐으면 놓아도 성좌판을 바꾸지 않는다
+			if not editable():
+				_drag = {}
+				accept_event()
+				return
 			# 유물 칸을 누르고 거의 안 움직이고 떼면 = 클릭: 회전
 			if _drag["from"] == "cell" and not _drag.get("moved", false):
 				var c: Vector2i = _drag["cell"]
@@ -410,13 +504,26 @@ func _drop(p: Vector2) -> void:
 	var c := cell_at(p)
 	var ti := tray_at(p)
 	var moved := false
-	if board.can_place(c):
+	if dragging_slot():
+		# 슬롯: 잠긴 칸에만. 열린 칸·침식 칸·보드 밖이면 보관함으로 돌아간다
+		if board.can_unlock(c):
+			moved = board.unlock_from_tray(int(_drag["index"]), c)
+			if moved:
+				b._show_msg("성좌판 칸이 열렸습니다  (%d/%d)" % [board.open_count(), VDRelicData.BOARD_CELLS.size()], 1.6)
+		elif c.x != -99:
+			b._show_msg("슬롯은 잠긴 칸에만 놓을 수 있습니다", 1.2)
+			b.audio.play("denied", 0.03)
+	elif board.can_place(c):
 		if _drag["from"] == "tray":
 			moved = board.place_from_tray(int(_drag["index"]), c)
 		else:
 			moved = board.move(_drag["cell"], c)
 	elif _drag["from"] == "cell" and (ti >= 0 or p.y >= TRAY_Y - 10.0):
-		moved = board.to_tray(_drag["cell"])
+		if board.tray.size() >= TRAY_MAX:
+			b._show_msg("보관함이 가득 찼습니다", 1.2)
+			b.audio.play("denied", 0.03)
+		else:
+			moved = board.to_tray(_drag["cell"])
 	if moved:
 		b.audio.play("place")
 	_drag = {}
@@ -458,16 +565,24 @@ func _update_tip(p: Vector2) -> void:
 		_show_tip(VDRelicData.def(id)["name"], body, _hover_cell)
 	elif _hover_tray >= 0 and _hover_tray < board.tray.size():
 		var id := board.tray[_hover_tray]
-		_show_tip(VDRelicData.def(id)["name"], _relic_body(id), Vector2i(-99, -99), tray_rect(_hover_tray))
+		_show_tip(VDRelicData.name_of(id), _relic_body(id), Vector2i(-99, -99), tray_rect(_hover_tray))
 	elif cell_ok and board.state_of(_hover_cell) == VDRelicBoard.Cell.CORRUPT:
 		_show_tip("공허 침식", "인접한 유물의 효과 −%d%%.\n우클릭: 정수 %d 로 정화" % [int(VDRelicData.CORRUPT_PENALTY * 100), VDRelicData.PURIFY_COST], _hover_cell)
 	elif cell_ok and board.state_of(_hover_cell) == VDRelicBoard.Cell.LOCKED:
-		_show_tip("잠긴 칸", "구역을 클리어하면 위에서부터 하나씩 열립니다.", _hover_cell)
+		var body := "보관함의 슬롯을 끌어다 놓으면 열립니다."
+		if board.slot_count() > 0:
+			body += "\n보관함에 슬롯 %d개" % board.slot_count()
+		else:
+			body += "\n슬롯은 유물 보상 카드에서 뽑습니다."
+		_show_tip("잠긴 칸", body, _hover_cell)
 	else:
 		_tip_root.visible = false
 
 
 func _relic_body(id: String) -> String:
+	if VDRelicData.is_slot(id):
+		var left := board.locked_count()
+		return "%s\n%s" % [VDRelicData.SLOT_DESC, ("잠긴 칸 %d개 남음" % left) if left > 0 else "열 수 있는 잠긴 칸이 없습니다 — 다음 보상 때 정수로 바뀝니다."]
 	var d := VDRelicData.def(id)
 	return "[%s] %s\n배치: %s" % [d["tag"], d["desc"], d["grammar"]]
 
@@ -513,7 +628,31 @@ func has_offer() -> bool:
 	return _offer_open or not _offers.is_empty()
 
 
-## 보상 카드: 화면 가운데에 3장이 차례로 뒤집히며(가로 0 → 1, 탄성) 떨어져 앉는다.
+## 새 런: 떠 있는 보상 카드·대기 보상·드래그·칸 연출을 모두 거둔다 (이전 런의 보상이 새 런 보관함으로 들어가지 않게).
+func reset_run() -> void:
+	if _offer_layer:
+		_offer_layer.queue_free()
+		_offer_layer = null
+	_offers.clear()
+	_cur_offer = []
+	_offer_open = false
+	_cards.clear()
+	_drag = {}
+	_pulses.clear()
+	_floats.clear()
+	_hint = {}
+	_cell_fx.clear()
+	_tray_pop.clear()
+	_rot_anim.clear()
+
+
+## 지금 떠 있는 보상 카드의 id 들 (없으면 빈 배열).
+func offer_ids() -> Array:
+	return _cur_offer if _offer_open else []
+
+
+## 보상 카드: 화면 가운데에 3장이 차례로 글리치되며 물질화한다 (shaders/ui_glitch_in.gdshader 를 건 CanvasGroup 으로 한 장씩 감싼다:
+## 흰 섬광 실루엣 → 청록/자홍 띠 → 가로 띠가 좌우로 튀며 난수 순서로 켜짐 → 또렷해짐. 2026-11-09 사이파이 UI 연출). 제목도 같은 식으로.
 ## 마우스를 올리면 떠오르며 커지고, 고르면 번쩍 → 보관함으로 빨려 들어가고 나머지는 떨어져 사라진다.
 func _show_next_offer() -> void:
 	if _offers.is_empty():
@@ -523,6 +662,7 @@ func _show_next_offer() -> void:
 			_offer_layer = null
 		return
 	var ids: Array = _offers.pop_front()
+	_cur_offer = ids.duplicate()
 	_offer_open = true
 	if _offer_layer:
 		_offer_layer.queue_free()
@@ -540,23 +680,26 @@ func _show_next_offer() -> void:
 	var scr := _offer_layer.size
 	var head := Label.new()
 	head.text = "유물 발견!"
+	if ids.has(VDRelicData.SLOT_ID):
+		head.text = "유물 발견!  슬롯도 하나 보입니다"
 	head.add_theme_font_size_override("font_size", 52)
 	head.add_theme_color_override("font_color", Color(1.0, 0.88, 0.5))
 	head.add_theme_color_override("font_outline_color", Color(0.12, 0.03, 0.22))
 	head.add_theme_constant_override("outline_size", 14)
 	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_offer_layer.add_child(head)
+	var head_group := _glitch_group()
+	head_group.add_child(head)
 	head.reset_size()
 	head.position = Vector2((scr.x - head.size.x) * 0.5, scr.y * 0.5 - CARD.y * 0.5 - 150.0)
-	VDJuice.bump(head, 1.4)
 	var sub := Label.new()
 	sub.text = "하나를 골라 보관함에 넣으세요"
 	sub.add_theme_font_size_override("font_size", 22)
 	sub.add_theme_color_override("font_color", Color(0.85, 0.8, 1.0))
 	sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_offer_layer.add_child(sub)
+	head_group.add_child(sub)
 	sub.reset_size()
 	sub.position = Vector2((scr.x - sub.size.x) * 0.5, head.position.y + 74.0)
+	_glitch_in(head_group, 0.0, 0.45, func() -> void: VDJuice.bump(head, 1.2))
 	b.audio.play("chime", 0.0, -3.0, 1.0)
 	_cards.clear()
 	var total := ids.size() * CARD.x + (ids.size() - 1) * CARD_GAP
@@ -564,25 +707,54 @@ func _show_next_offer() -> void:
 		var card := _make_card(String(ids[i]))
 		var base := Vector2((scr.x - total) * 0.5 + i * (CARD.x + CARD_GAP), scr.y * 0.5 - CARD.y * 0.5 + 10.0)
 		card.set_meta("base", base)
-		card.position = base + Vector2(0, 90)
-		card.scale = Vector2(0.0, 1.0)
-		card.modulate = Color(2.0, 2.0, 2.0, 0.0)
-		card.rotation = randf_range(-0.12, 0.12)
-		_offer_layer.add_child(card)
+		card.position = base + Vector2(0, 28)
+		card.visible = false
+		var group := _glitch_group()
+		group.add_child(card)
 		_cards.append(card)
+		var delay := 0.12 + 0.14 * i
+		_glitch_in(group, delay, GLITCH_IN_SEC, Callable())
 		var tw := card.create_tween().set_ignore_time_scale(true)
-		tw.tween_interval(0.15 + 0.13 * i)
-		tw.tween_callback(func() -> void: b.audio.play("tick", 0.02, -3.0, 1.2 + 0.15 * i))
-		tw.tween_property(card, "modulate:a", 1.0, 0.08)
-		tw.parallel().tween_property(card, "position", base, 0.32).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.parallel().tween_property(card, "scale", Vector2.ONE, 0.32).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.parallel().tween_property(card, "rotation", 0.0, 0.32).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.tween_property(card, "modulate", Color.WHITE, 0.2)
+		tw.tween_interval(delay)
+		tw.tween_callback(func() -> void:
+			card.visible = true
+			b.audio.play("tick", 0.02, -3.0, 1.2 + 0.15 * i)
+			b.audio.play("frost", 0.0, -14.0, 1.6 + 0.1 * i))
+		tw.tween_property(card, "position", base, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+
+## 글리치 등장용 CanvasGroup (보상 층에 붙인다). 띠가 좌우로 튀어도 잘리지 않게 여유를 둔다.
+func _glitch_group() -> CanvasGroup:
+	var g := CanvasGroup.new()
+	g.fit_margin = 64.0
+	g.clear_margin = 64.0
+	var mat := ShaderMaterial.new()
+	mat.shader = GLITCH_IN
+	mat.set_shader_parameter("progress", 0.0)
+	g.material = mat
+	_offer_layer.add_child(g)
+	return g
+
+
+## delay 뒤 sec 동안 progress 0 → 1. 끝나면 머티리얼을 떼어 평소대로 그린다 (done 콜백).
+func _glitch_in(g: CanvasGroup, delay: float, sec: float, done: Callable) -> void:
+	var mat := g.material as ShaderMaterial
+	var tw := g.create_tween().set_ignore_time_scale(true)
+	if delay > 0.0:
+		tw.tween_interval(delay)
+	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("progress", v), 0.0, 1.0, sec)
+	tw.tween_callback(func() -> void:
+		g.material = null
+		if done.is_valid():
+			done.call())
 
 
 func _make_card(id: String) -> Button:
+	var slot := VDRelicData.is_slot(id)
 	var d := VDRelicData.def(id)
-	var col := VDRelicData.color_of(id)
+	if slot:
+		d = {"name": VDRelicData.SLOT_NAME, "tag": "슬롯", "desc": VDRelicData.SLOT_DESC, "grammar": VDRelicData.SLOT_GRAMMAR}
+	var col := VDRelicData.SLOT_COLOR if slot else VDRelicData.color_of(id)
 	var btn := Button.new()
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.size = CARD
@@ -612,11 +784,20 @@ func _make_card(id: String) -> Button:
 	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon_box.custom_minimum_size = Vector2(0, 120)
 	vb.add_child(icon_box)
-	var ic := TextureRect.new()
-	ic.texture = _tex.get(Layout.RELIC_ICON.get(id, ""))
-	ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	ic.custom_minimum_size = Vector2(110, 110)
+	var ic: Control
+	if slot:
+		# 빈 육각 칸: 보드 칸 텍스처(hex_base + hex_edge)를 그대로 줄여 그린다
+		ic = Control.new()
+		ic.custom_minimum_size = Vector2(110, 110)
+		ic.draw.connect(func() -> void:
+			_slot_icon_on(ic, ic.size * 0.5, 0.72, Color.WHITE))
+	else:
+		var tr := TextureRect.new()
+		tr.texture = _tex.get(Layout.RELIC_ICON.get(id, ""))
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tr.custom_minimum_size = Vector2(110, 110)
+		ic = tr
 	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon_box.add_child(ic)
 	# 아이콘이 둥실둥실
@@ -640,7 +821,7 @@ func _make_card(id: String) -> Button:
 	add_label.call(d["name"], 28, col.lightened(0.25), 8)
 	add_label.call("[%s]" % d["tag"], 16, Color(0.75, 0.7, 0.9))
 	add_label.call(d["desc"], 17, Color(0.95, 0.93, 1.0))
-	add_label.call("배치: %s" % d["grammar"], 14, Color(0.7, 0.66, 0.85))
+	add_label.call(("위치: %s" if slot else "배치: %s") % d["grammar"], 14, Color(0.7, 0.66, 0.85))
 	btn.mouse_entered.connect(func() -> void:
 		if btn.disabled:
 			return
@@ -675,6 +856,9 @@ func pick(id: String) -> void:
 	board.add_to_tray(id)
 	b.audio.play("essence", 0.05)
 	_offer_open = false
+	_cur_offer = []
+	if VDRelicData.is_slot(id):
+		b._show_msg("슬롯을 얻었습니다 — 보관함에서 잠긴 칸으로 끌어다 놓으세요", 2.2)
 	_fly_cards(id, slot)
 	var layer := _offer_layer
 	_offer_layer = null
@@ -725,13 +909,27 @@ static func _back_out(x: float) -> float:
 	return 1.0 + c3 * pow(x - 1.0, 3.0) + c1 * pow(x - 1.0, 2.0)
 
 
-## 칸 연출 덧그림: 해금(흰 섬광 + 퍼지는 고리 + 별가루) / 침식(보라 균열이 뻗고 번쩍) / 정화(금빛 고리 + 별가루) / 놓기(고리).
+## 칸 연출 덧그림: 해금(흰 섬광 + 퍼지는 고리 + 별가루) / 침식(셰이더가 그림, 여기선 없음) / 정화(청록 육각 스캔 링 + 사각 파편) / 놓기(고리).
 func _draw_cell_fx(center: Vector2, cfx: Dictionary) -> void:
 	var k: float = cfx["t"] / CELL_FX_SEC[cfx["kind"]]
 	var r := Layout.HEX_R
 	match cfx["kind"]:
-		"unlock", "purify":
-			var col := Color(1.0, 0.95, 0.8) if cfx["kind"] == "unlock" else Color(1.0, 0.85, 0.45)
+		"purify":
+			# 2026-11-09 사이파이: 예전 금빛 고리 + 별가루 대신, 침식이 걷히는 동안 육각 스캔 링이 퍼지고 사각 파편이 흩어진다
+			var col := Color(0.55, 1.0, 0.95)
+			if k < 0.3:
+				_hex("hex_burst", center, Color(0.6, 1.0, 1.0, 0.8 * (1.0 - k / 0.3)))
+			draw_polyline(_closed_hex(center, r * (0.75 + 0.6 * k)), Color(col, 1.0 - k), 3.0 * (1.0 - k) + 1.0)
+			draw_polyline(_closed_hex(center, r * (0.55 + 0.9 * k)), Color(col, 0.5 * (1.0 - k)), 1.5)
+			for i in 10:
+				var a := TAU * i / 10.0 + 0.2
+				var p := center + Vector2(cos(a), sin(a)) * r * (0.5 + 1.0 * k)
+				var sr := 3.5 * (1.0 - k)
+				if sr < 0.4:
+					continue
+				draw_rect(Rect2(p - Vector2(sr, sr), Vector2(sr, sr) * 2.0), Color(col if i % 3 else Color.WHITE, 1.0 - k))
+		"unlock":
+			var col := Color(1.0, 0.95, 0.8)
 			if k < 0.4:
 				_hex("hex_burst", center, Color(1, 1, 1, 1.0 - k / 0.4))
 			draw_arc(center, r * (0.6 + 0.9 * k), 0.0, TAU, 40, Color(col, 1.0 - k), 4.0 * (1.0 - k) + 1.0, true)
@@ -743,18 +941,7 @@ func _draw_cell_fx(center: Vector2, cfx: Dictionary) -> void:
 					continue   # 퇴화 폴리곤 방지 (triangulation failed)
 				draw_colored_polygon(PackedVector2Array([p + Vector2(0, -sr * 1.6), p + Vector2(sr * 0.4, 0), p + Vector2(0, sr * 1.6), p + Vector2(-sr * 0.4, 0)]), Color(col, 1.0 - k))
 		"corrupt":
-			_hex("hex_burst", center, Color(0.8, 0.3, 1.0, (1.0 - k) * 0.8))
-			var rng := RandomNumberGenerator.new()
-			rng.seed = hash(center)
-			var grow := minf(k / 0.5, 1.0)
-			for i in 5:
-				var a := TAU * i / 5.0 + rng.randf_range(-0.3, 0.3)
-				var p := center
-				var pts := PackedVector2Array([p])
-				for s in 4:
-					p += Vector2(cos(a), sin(a)) * r * 0.22 * grow + Vector2(rng.randf_range(-5, 5), rng.randf_range(-5, 5))
-					pts.append(p)
-				draw_polyline(pts, Color(0.85, 0.35, 1.0, 1.0 - k * 0.5), 3.0)
+			pass   # 2026-11-09: 예전 보라 번쩍 + 폴리라인 균열 대신 침식 셰이더가 퍼짐(spawn)·튐(jolt)으로 그린다
 		"place":
 			draw_arc(center, r * (0.7 + 0.5 * k), 0.0, TAU, 36, Color(1, 1, 1, 0.8 * (1.0 - k)), 3.0, true)
 
@@ -995,6 +1182,9 @@ func _hex(name: String, center: Vector2, mod := Color.WHITE) -> void:
 
 
 func _icon(id: String, center: Vector2, scl := 1.0, mod := Color.WHITE) -> void:
+	if VDRelicData.is_slot(id):
+		_slot_icon_on(self, center, 0.5 * scl, mod)
+		return
 	var name: String = Layout.RELIC_ICON.get(id, "")
 	if name == "":
 		# 아직 전용 아이콘이 없는 유물: 태그 색 글리프 (임시)
@@ -1008,6 +1198,18 @@ func _icon(id: String, center: Vector2, scl := 1.0, mod := Color.WHITE) -> void:
 		return
 	var sz: Vector2 = Layout.ICON_SIZE[name] * scl
 	draw_texture_rect(_tex[name], Rect2(center - sz * 0.5, sz), false, mod)
+
+
+## 슬롯 아이콘: 보드 칸과 같은 hex_base + hex_edge 를 scl 배로 줄여 그리고, 가운데 작은 + 를 둔다 (빈 육각 칸). on 에 그린다.
+func _slot_icon_on(on: CanvasItem, center: Vector2, scl: float, mod: Color) -> void:
+	var sz: Vector2 = Layout.HEX_TEX_SIZE * scl
+	var rc := Rect2(center - sz * 0.5, sz)
+	on.draw_texture_rect(_tex["hex_base"], rc, false, Color(mod * 1.35, mod.a * 0.95))
+	on.draw_texture_rect(_tex["hex_edge"], rc, false, Color(VDRelicData.SLOT_COLOR * mod * 1.4, mod.a))
+	var arm := Layout.HEX_R * scl * 0.34
+	var pc := Color(VDRelicData.SLOT_COLOR, mod.a * 0.85)
+	on.draw_line(center + Vector2(-arm, 0), center + Vector2(arm, 0), pc, maxf(2.0, 5.0 * scl))
+	on.draw_line(center + Vector2(0, -arm), center + Vector2(0, arm), pc, maxf(2.0, 5.0 * scl))
 
 
 ## 충전 게이지: 보라 채움을 아래에서부터 ratio 만큼만 (시안의 마스크 처리).
@@ -1027,8 +1229,8 @@ func _draw() -> void:
 	var pulse_of := {}
 	for p in _pulses:
 		pulse_of[p["cell"]] = minf(pulse_of.get(p["cell"], 1.0), p["t"] / PULSE_SEC)
-	var next := _next_locked()
-	var drop_ok := not _drag.is_empty() and board.can_place(_hover_cell)
+	var slot_drag := dragging_slot()
+	var drop_ok := not _drag.is_empty() and (board.can_unlock(_hover_cell) if slot_drag else board.can_place(_hover_cell))
 	# 유물을 가리키면 영향을 주고받는 칸을 색 링·화살표·값으로 강조하고 나머지는 어둡게 누른다
 	var rel := {}
 	var hover_relic := _drag.is_empty() and board.relic_at(_hover_cell) != "" and editable()
@@ -1067,7 +1269,7 @@ func _draw() -> void:
 					cs = 1.0 + 0.12 * (1.0 - k)
 		# 호버: 뒤에 보라 빛 번짐 + 칸이 살짝 커진다
 		var hk: float = _hov_k.get(c, 0.0)
-		if hk > 0.01:
+		if hk > 0.01 and not _corrupt_nodes.has(c):   # 침식 칸은 셰이더가 hover 로 직접 밝아진다 (번짐이 위를 덮지 않게)
 			var gs := 1.3 + 0.05 * sin(t * 5.0)
 			draw_set_transform(center * (1.0 - gs), 0.0, Vector2(gs, gs))
 			_hex("hex_burst", center, Color(0.72, 0.5, 1.0, 0.55 * hk))
@@ -1079,16 +1281,23 @@ func _draw() -> void:
 		draw_set_transform_matrix(Transform2D(rot, Vector2(cs, cs), 0.0, center + shake) * Transform2D(0.0, -center))
 		match st:
 			VDRelicBoard.Cell.LOCKED:
-				var a := Layout.OPACITY_NEXT if c == next else Layout.OPACITY_LOCKED
+				# 잠긴 칸은 전부 같은 정도로 흐리게: "슬롯을 놓을 수 있는 자리". 슬롯을 끄는 동안은 숨쉬듯 빛난다
+				var a := Layout.OPACITY_LOCKED
+				if slot_drag:
+					var glow := 0.55 + 0.45 * sin(t * 5.0 + center.y * 0.02)
+					var gs := 1.25 + 0.06 * glow
+					draw_set_transform_matrix(Transform2D(rot, Vector2(cs * gs, cs * gs), 0.0, center + shake) * Transform2D(0.0, -center))
+					_hex("hex_burst", center, Color(VDRelicData.SLOT_COLOR, 0.35 + 0.3 * glow))
+					draw_set_transform_matrix(Transform2D(rot, Vector2(cs, cs), 0.0, center + shake) * Transform2D(0.0, -center))
+					a = lerpf(Layout.OPACITY_NEXT, Layout.OPACITY_OPEN, glow * 0.6)
 				_hex("hex_base", center, Color(1, 1, 1, a))
 				_hex("hex_edge", center, Color(1, 1, 1, EDGE_OPACITY * a / Layout.OPACITY_OPEN))
+				if slot_drag:
+					draw_polyline(_closed_hex(center, Layout.HEX_R - 4.0), Color(VDRelicData.SLOT_COLOR, 0.9 if c == _hover_cell else 0.5), 2.0)
 			VDRelicBoard.Cell.CORRUPT:
-				_hex("hex_base", center, Color(1, 1, 1, Layout.OPACITY_OPEN))
-				_hex("hex_ring_gauge", center, Color(0.75, 0.3, 1.0, 0.85))
-				var tt := t * 3.0
-				for i in 3:
-					var a := tt + TAU * i / 3.0
-					draw_line(center, center + Vector2(cos(a), sin(a)) * (Layout.HEX_R * 0.7), Color(0.8, 0.3, 1.0, 0.7), 2.0)
+				pass   # 칸 전체를 침식 셰이더(_sync_corrupt 의 ColorRect, 이 그림 뒤)가 그린다
+			_ when _corrupt_nodes.has(c):
+				pass   # 정화로 걷히는 중: 셰이더가 평소 칸 모습으로 되돌아가며 그린다
 			_:
 				_hex("hex_base", center, Color(1, 1, 1, Layout.OPACITY_OPEN))
 				_hex("hex_edge", center, Color(1, 1, 1, EDGE_OPACITY))
@@ -1160,7 +1369,10 @@ func _draw() -> void:
 	if not editable():
 		return
 	var font := VDData.font()
-	draw_string(font, Vector2(TRAY_X, TRAY_Y - 12), "보관함 — 드래그해 올리기 / 내리기", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(0.85, 0.8, 1.0, 0.9))
+	var tray_label := "보관함 — 드래그해 올리기 / 내리기"
+	if board.slot_count() > 0 and board.locked_count() > 0:
+		tray_label = "보관함 — 슬롯을 잠긴 칸에 끌어다 놓으면 열립니다"
+	draw_string(font, Vector2(TRAY_X, TRAY_Y - 12), tray_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(0.85, 0.8, 1.0, 0.9))
 	for i in TRAY_MAX:
 		var rc := tray_rect(i)
 		var has := i < board.tray.size()
@@ -1176,4 +1388,4 @@ func _draw() -> void:
 			_icon(board.tray[i], rc.get_center(), TRAY_ICON_SCALE * (1.0 + pop))
 	# 드래그 고스트
 	if not _drag.is_empty() and (_drag.get("moved", false) or _drag["from"] == "tray"):
-		_icon(_drag["id"], get_local_mouse_position(), 1.0, Color(1, 1, 1, 0.85))
+		_icon(_drag["id"], _mouse_pos, 1.0, Color(1, 1, 1, 0.85))

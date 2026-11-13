@@ -1,0 +1,160 @@
+[gd_resource type="VisualShader" format=3]
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_da3kr"]
+parameter_name = "alpha_k"
+hint = 1
+default_value_enabled = true
+default_value = 1.0
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_syxrb"]
+parameter_name = "col_core"
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_5p2so"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_g7t87"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_neqrx"]
+parameter_name = "col_glow"
+default_value_enabled = true
+default_value = Color(1, 0.188, 0, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_1sg2b"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_g0yxi"]
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_anfic"]
+input_name = "uv"
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_sgpa1"]
+input_name = "time"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_h5h26"]
+size = Vector2(700, 502)
+expression = "vec2 p = uv - 0.5;
+float d = length(p) * 2.0;
+float core = 1.0 - smoothstep(core_r - 0.015, core_r + 0.015, d);
+float g = exp(-pow(max(d - core_r, 0.0) / max(glow_r, 0.001), 1.35) * 2.4);
+float ring = (1.0 - smoothstep(0.0, ring_w, abs(d - ring_r))) * ring_a;
+float ang = atan(p.y, p.x) + spin + time * 0.6;
+float ray = pow(abs(cos(ang * rays * 0.5)), 28.0) * smoothstep(1.0, 0.15, d) * smoothstep(core_r, core_r + 0.12, d) * ray_a;
+float edge = 1.0 - smoothstep(0.86, 1.0, d);
+vec3 c = col_core * core + col_glow * (g * (1.0 - core) + ray) + mix(col_glow, vec3(1.0), 0.65) * ring;
+rgb_out = c * edge * alpha_k;
+a_out = 1.0;"
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_4kxsk"]
+parameter_name = "core_r"
+hint = 1
+default_value_enabled = true
+default_value = 0.16
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_2urs7"]
+parameter_name = "glow_r"
+hint = 1
+min = 0.01
+max = 2.0
+default_value_enabled = true
+default_value = 0.42
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_5hdnx"]
+parameter_name = "ring_r"
+hint = 1
+max = 1.2
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_2n3ej"]
+parameter_name = "ring_w"
+hint = 1
+min = 0.001
+max = 0.5
+default_value_enabled = true
+default_value = 0.05
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_hev03"]
+parameter_name = "ring_a"
+hint = 1
+max = 2.0
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_2tlbu"]
+parameter_name = "rays"
+hint = 1
+min = 2.0
+max = 24.0
+default_value_enabled = true
+default_value = 8.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_jne5f"]
+parameter_name = "ray_a"
+hint = 1
+max = 2.0
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_ovwsa"]
+parameter_name = "spin"
+hint = 1
+min = -10.0
+max = 10.0
+default_value_enabled = true
+
+[resource]
+mode = 1
+modes/blend = 1
+flags/unshaded = true
+flags/light_only = false
+nodes/fragment/2/node = SubResource("VisualShaderNodeFloatParameter_4kxsk")
+nodes/fragment/2/position = Vector2(-1200, -500)
+nodes/fragment/3/node = SubResource("VisualShaderNodeFloatParameter_2urs7")
+nodes/fragment/3/position = Vector2(-1200, -350)
+nodes/fragment/4/node = SubResource("VisualShaderNodeFloatParameter_5hdnx")
+nodes/fragment/4/position = Vector2(-1200, -200)
+nodes/fragment/5/node = SubResource("VisualShaderNodeFloatParameter_2n3ej")
+nodes/fragment/5/position = Vector2(-1200, -50)
+nodes/fragment/6/node = SubResource("VisualShaderNodeFloatParameter_hev03")
+nodes/fragment/6/position = Vector2(-1200, 100)
+nodes/fragment/7/node = SubResource("VisualShaderNodeFloatParameter_2tlbu")
+nodes/fragment/7/position = Vector2(-1200, 250)
+nodes/fragment/8/node = SubResource("VisualShaderNodeFloatParameter_jne5f")
+nodes/fragment/8/position = Vector2(-1200, 400)
+nodes/fragment/9/node = SubResource("VisualShaderNodeFloatParameter_ovwsa")
+nodes/fragment/9/position = Vector2(-1200, 550)
+nodes/fragment/10/node = SubResource("VisualShaderNodeFloatParameter_da3kr")
+nodes/fragment/10/position = Vector2(-1200, 700)
+nodes/fragment/11/node = SubResource("VisualShaderNodeColorParameter_syxrb")
+nodes/fragment/11/position = Vector2(-860, -500)
+nodes/fragment/12/node = SubResource("VisualShaderNodeVectorDecompose_5p2so")
+nodes/fragment/12/position = Vector2(-860, -350)
+nodes/fragment/13/node = SubResource("VisualShaderNodeVectorCompose_g7t87")
+nodes/fragment/13/position = Vector2(-860, -200)
+nodes/fragment/14/node = SubResource("VisualShaderNodeColorParameter_neqrx")
+nodes/fragment/14/position = Vector2(-860, -50)
+nodes/fragment/15/node = SubResource("VisualShaderNodeVectorDecompose_1sg2b")
+nodes/fragment/15/position = Vector2(-860, 100)
+nodes/fragment/16/node = SubResource("VisualShaderNodeVectorCompose_g0yxi")
+nodes/fragment/16/position = Vector2(-860, 250)
+nodes/fragment/17/node = SubResource("VisualShaderNodeInput_anfic")
+nodes/fragment/17/position = Vector2(-520, -500)
+nodes/fragment/18/node = SubResource("VisualShaderNodeInput_sgpa1")
+nodes/fragment/18/position = Vector2(-520, -350)
+nodes/fragment/19/node = SubResource("VisualShaderNodeExpression_h5h26")
+nodes/fragment/19/position = Vector2(-520, -200)
+nodes/fragment/19/size = Vector2(700, 502)
+nodes/fragment/19/input_ports = "0,3,uv;1,0,time;2,0,core_r;3,0,glow_r;4,0,ring_r;5,0,ring_w;6,0,ring_a;7,0,rays;8,0,ray_a;9,0,spin;10,0,alpha_k;11,4,col_core;12,4,col_glow;"
+nodes/fragment/19/output_ports = "0,4,rgb_out;1,0,a_out;"
+nodes/fragment/19/expression = "vec2 p = uv - 0.5;
+float d = length(p) * 2.0;
+float core = 1.0 - smoothstep(core_r - 0.015, core_r + 0.015, d);
+float g = exp(-pow(max(d - core_r, 0.0) / max(glow_r, 0.001), 1.35) * 2.4);
+float ring = (1.0 - smoothstep(0.0, ring_w, abs(d - ring_r))) * ring_a;
+float ang = atan(p.y, p.x) + spin + time * 0.6;
+float ray = pow(abs(cos(ang * rays * 0.5)), 28.0) * smoothstep(1.0, 0.15, d) * smoothstep(core_r, core_r + 0.12, d) * ray_a;
+float edge = 1.0 - smoothstep(0.86, 1.0, d);
+vec3 c = col_core * core + col_glow * (g * (1.0 - core) + ray) + mix(col_glow, vec3(1.0), 0.65) * ring;
+rgb_out = c * edge * alpha_k;
+a_out = 1.0;"
+nodes/fragment/connections = PackedInt32Array(11, 0, 12, 0, 12, 0, 13, 0, 12, 1, 13, 1, 12, 2, 13, 2, 14, 0, 15, 0, 15, 0, 16, 0, 15, 1, 16, 1, 15, 2, 16, 2, 17, 0, 19, 0, 18, 0, 19, 1, 2, 0, 19, 2, 3, 0, 19, 3, 4, 0, 19, 4, 5, 0, 19, 5, 6, 0, 19, 6, 7, 0, 19, 7, 8, 0, 19, 8, 9, 0, 19, 9, 10, 0, 19, 10, 13, 0, 19, 11, 16, 0, 19, 12, 19, 0, 0, 0, 19, 1, 0, 1)

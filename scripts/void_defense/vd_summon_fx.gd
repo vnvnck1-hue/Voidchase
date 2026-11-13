@@ -11,7 +11,8 @@ const TRANS := [Tween.TRANS_LINEAR, Tween.TRANS_SINE, Tween.TRANS_QUAD, Tween.TR
 	Tween.TRANS_EXPO, Tween.TRANS_BACK, Tween.TRANS_ELASTIC, Tween.TRANS_BOUNCE, Tween.TRANS_SPRING, Tween.TRANS_CIRC]
 
 ## [키, 그룹, 이름, 최소, 최대, 단계, 기본값] — 단계가 0 이면 TRANS_NAMES 중 고르는 옵션
-const PARAMS := [
+## 색은 아래 COLORS 를 FxColors.rows(vd_fx_colors.gd) 로 "키_r/_g/_b" 세 줄씩 붙인다 (연구실에선 컬러 피커 한 줄).
+const BASE_PARAMS := [
 	["drop_height",    "1 낙하", "낙하 높이(px)",          0.0, 600.0, 5.0,   260.0],
 	["boss_height",    "1 낙하", "보스 높이 배율",          0.5, 3.0,   0.05,  1.4],
 	["drop_sec",       "1 낙하", "낙하 시간(초)",           0.03, 0.6,  0.01,  0.13],
@@ -52,6 +53,21 @@ const PARAMS := [
 	["champ_shake",    "강적",   "강적 착지 흔들림",        0.0, 1.0,   0.01,  0.9],
 	["champ_hitstop",  "강적",   "강적 히트스탑(초)",       0.0, 0.25,  0.005, 0.09],
 ]
+
+const FxColors := preload("res://scripts/void_defense/vd_fx_colors.gd")
+## [키, 이름, 기본 색] — 알파는 코드에 둔다
+const COLORS := [
+	["portal_col", "균열 색", Color(1.0, 0.8, 1.0)],
+	["shockwave_col", "충격파 색", Color(0.8, 0.5, 1.0)],
+	["dust_col", "먼지 색", Color(0.85, 0.75, 1.0)],
+	["burst_col", "바닥 섬광 색", Color(1.0, 0.8, 1.0)],
+	["slam_col", "보스 내려찍기 색", Color(0.8, 0.6, 1.0)],
+	["champ_portal_col", "강적 균열 색", Color(1.0, 0.55, 0.85)],
+	["champ_circle_col", "강적 표지 링 색", Color(0.9, 0.35, 0.8)],
+	["champ_wave_col", "강적 충격파 색", Color(1.0, 0.45, 0.8)],
+	["champ_bolt_col", "강적 번개 색", Color(1.0, 0.6, 0.95)],
+]
+static var PARAMS: Array = BASE_PARAMS + FxColors.rows("색", COLORS)
 
 static var values := {}
 static var _loaded := false
@@ -127,27 +143,26 @@ static func play_portal(vfx: VDVfx, ground: Node, foot: Vector2, boss: bool) -> 
 	if g("portal") <= 0.0:
 		return
 	vfx.loop("portal", ground, foot, maxf(g("portal_sec"), 0.01) * (1.6 if boss else 1.0), g("portal") * (1.5 if boss else 1.0), 0.0,
-		Color(1.0, 0.8, 1.0), Vector2(1.0, 0.5), 0.3, 2.5)
+		col("portal_col"), Vector2(1.0, 0.5), 0.3, 2.5)
 
 
-## 강적 예고: 크고 오래 소용돌이치는 붉은 기 도는 균열 + 바닥 마법진. 괴성과 함께 화면이 낮게 웅웅 떨린다.
+## 강적 예고: 크고 오래 도는 붉은 텔레포트 패드 + 바닥 홀로그램 표지 링 (2026-11-09 사이파이 시트). 괴성과 함께 화면이 낮게 웅웅 떨린다.
 static func play_champion_warn(vfx: VDVfx, ground: Node, camera: VDCamera, foot: Vector2) -> void:
 	var k := g("champ_portal")
 	var sec := maxf(g("portal_sec"), 0.01) * 1.6 + g("champ_lead")
-	vfx.loop("portal", ground, foot, sec, g("portal") * 1.5 * k, 0.0, Color(1.0, 0.55, 0.85), Vector2(1.0, 0.5), 0.3, 3.5)
-	vfx.loop("magic_circle", ground, foot, sec, 0.2 * k, 0.0, Color(0.9, 0.35, 0.8, 0.7), Vector2(1.0, 0.5), 0.35, -0.8)
+	vfx.loop("portal", ground, foot, sec, g("portal") * 1.5 * k, 0.0, col("champ_portal_col"), Vector2(1.0, 0.5), 0.3, 3.5)
+	vfx.loop("magic_circle", ground, foot, sec, 0.2 * k, 0.0, col("champ_circle_col", 0.7), Vector2(1.0, 0.5), 0.35, -0.8)
 	if camera:
 		camera.shake(g("champ_rumble"))
 
 
-## 강적 착지: 보스 타격 + 두 겹 충격파·위로 솟는 번개·처치급 폭발광, 더 센 흔들림과 히트스탑.
+## 강적 착지: 보스 타격 + 두 겹 충격파·위로 솟는 번개, 더 센 흔들림과 히트스탑. (폭발 시트 kill_burst 는 2026-11-09 사용자 요청으로 뺐다)
 static func play_champion_impact(vfx: VDVfx, ground: Node, fx: Node, camera: VDCamera, foot: Vector2, top: float) -> void:
 	play_impact(vfx, ground, fx, null, foot, true)
 	var k := g("champ_impact")
-	vfx.spawn("shockwave", ground, foot, g("shockwave") * g("boss_impact") * k * 1.5, 0.0, Color(1.0, 0.45, 0.8, 0.85), Vector2(1.0, 0.42), false, 1.0)
-	vfx.spawn("kill_burst", fx, foot + Vector2(0, top * 0.5), 1.4 * k, randf() * TAU, Color(0.95, 0.6, 1.0))
-	vfx.spawn("lightning", fx, foot + Vector2(0, top * 0.9), 0.55 * k, 0.0, Color(1.0, 0.6, 0.95))
-	vfx.spawn("dust", ground, foot, g("dust") * g("boss_impact") * k, 0.0, Color(0.85, 0.75, 1.0, 0.9), Vector2.ONE, true)
+	vfx.spawn("shockwave", ground, foot, g("shockwave") * g("boss_impact") * k * 1.5, 0.0, col("champ_wave_col", 0.85), Vector2(1.0, 0.42), false, 1.0)
+	vfx.spawn("lightning", fx, foot + Vector2(0, top * 0.9), 0.55 * k, 0.0, col("champ_bolt_col"))
+	vfx.spawn("dust", ground, foot, g("dust") * g("boss_impact") * k, 0.0, col("dust_col", 0.9), Vector2.ONE, true)
 	if camera:
 		camera.shake(g("champ_shake"))
 		if g("champ_hitstop") > 0.0:
@@ -158,14 +173,18 @@ static func play_champion_impact(vfx: VDVfx, ground: Node, fx: Node, camera: VDC
 static func play_impact(vfx: VDVfx, ground: Node, fx: Node, camera: VDCamera, foot: Vector2, boss: bool) -> void:
 	var big := g("boss_impact") if boss else 1.0
 	if g("shockwave") > 0.0:
-		vfx.spawn("shockwave", ground, foot, g("shockwave") * big, 0.0, Color(0.8, 0.5, 1.0, 0.8), Vector2(1.0, 0.42), false, 1.4)
+		vfx.spawn("shockwave", ground, foot, g("shockwave") * big, 0.0, col("shockwave_col", 0.8), Vector2(1.0, 0.42), false, 1.4)
 	if g("dust") > 0.0:
-		vfx.spawn("dust", ground, foot, g("dust") * big, 0.0, Color(0.85, 0.75, 1.0, 0.9))
+		vfx.spawn("dust", ground, foot, g("dust") * big, 0.0, col("dust_col", 0.9))
 	if g("burst") > 0.0:
-		vfx.spawn("burst", ground, foot, g("burst") * big, 0.0, Color(1.0, 0.8, 1.0, 0.85), Vector2(1.6, 0.5), false, 1.6)
+		vfx.spawn("burst", ground, foot, g("burst") * big, 0.0, col("burst_col", 0.85), Vector2(1.6, 0.5), false, 1.6)
 	if boss:
-		vfx.spawn("slam", fx, foot, 1.6, 0.0, Color(0.8, 0.6, 1.0))
+		vfx.spawn("slam", fx, foot, 1.6, 0.0, col("slam_col"))
 	if camera:
 		camera.shake(minf(g("shake") * big, 1.0))
 		if g("hitstop") > 0.0:
 			camera.hitstop(g("hitstop") * big)
+
+
+static func col(key: String, alpha := 1.0) -> Color:
+	return Color(g(key + "_r"), g(key + "_g"), g(key + "_b"), alpha)
