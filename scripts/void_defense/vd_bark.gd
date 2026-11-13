@@ -31,6 +31,10 @@ var _place_title := ""
 var _place_sub := ""
 var _place_no := ""
 var said: Array[String] = []       # 테스트용: 지금까지 띄운 대사
+var _voice: VoiceBabble            # 옹알이 음성 (대화창보다 작게)
+var _voice_ci := -1
+var _ending := ""
+var _shout_ci := -1
 
 
 func _ready() -> void:
@@ -78,6 +82,9 @@ func _ready() -> void:
 	_place.draw.connect(_draw_place)
 	_place.visible = false
 	add_child(_place)
+	_voice = VoiceBabble.new()
+	_voice.volume_db = -17.0
+	add_child(_voice)
 	_clock_us = Time.get_ticks_usec()
 
 
@@ -101,6 +108,8 @@ func shout(text: String, col := UiKit.GOLD, hold := 2.4) -> void:
 	_shout.add_theme_color_override("font_color", col)
 	_shout_t = 0.0
 	_shout_hold = hold
+	_shout_ci = -1
+	VoiceBabble.warm("boss")
 	said.append(text)
 	print("[bark] shout: %s" % text)
 
@@ -125,6 +134,9 @@ func _start(line: Dictionary) -> void:
 	_name.add_theme_color_override("font_color", c["color"])
 	_text.text = String(line["text"])
 	_text.visible_characters = 0
+	_voice_ci = -1
+	_ending = VoiceBabble.ending_of(_text.text)
+	VoiceBabble.warm(String(line["who"]))
 
 
 func _process(_dt: float) -> void:
@@ -143,6 +155,10 @@ func _process(_dt: float) -> void:
 		_box.modulate.a = k_in * (1.0 - k_out)
 		_box.position.x = BARK_RECT.position.x - 50.0 * (1.0 - UIIntro.back_out(k_in)) - 30.0 * k_out
 		_text.visible_characters = int(maxf(_t - IN * 0.5, 0.0) * CPS)
+		var ci := mini(_text.visible_characters, _text.text.length()) - 1
+		if ci >= 0 and ci != _voice_ci and k_out <= 0.0:
+			_voice_ci = ci
+			_voice.say(String(_cur["who"]), _text.text.substr(ci, 1), float(ci) / maxf(_text.text.length() - 1, 1.0), _ending)
 		if k_out >= 1.0 or (not _queue.is_empty() and _t > IN + minf(hold, 1.6)):
 			_cur = {}
 			_box.modulate.a = 0.0
@@ -154,6 +170,11 @@ func _process(_dt: float) -> void:
 		var s := 1.0 + 0.5 * maxf(0.0, 1.0 - _shout_t / 0.22)
 		_shout.scale = Vector2(s, s)
 		_shout.rotation = 0.012 * sin(_shout_t * 23.0) * maxf(0.0, 1.0 - _shout_t / 0.8)
+		# 보스 외침: 낮은 목소리로 글자를 따라 읊는다
+		var sci := int(_shout_t / 0.075)
+		if sci != _shout_ci and sci < _shout.text.length():
+			_shout_ci = sci
+			_voice.say("boss", _shout.text.substr(sci, 1), float(sci) / maxf(_shout.text.length() - 1, 1.0), "!")
 		if _shout_t > _shout_hold + 0.4:
 			_shout_t = -1.0
 	# 장소 카드

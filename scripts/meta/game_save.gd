@@ -217,3 +217,12 @@ static func ambience_on() -> bool:
 
 static func set_ambience_on(on: bool) -> void:
 	_store("profile", "ambience_on", on)
+
+
+## 대사 옹알이 음성 (scripts/story/voice_babble.gd).
+static func voice_on() -> bool:
+	return bool(_val("profile", "voice_on", true))
+
+
+static func set_voice_on(on: bool) -> void:
+	_store("profile", "voice_on", on)

@@ -67,6 +67,7 @@ func _ready() -> void:
 	ambience = Ambience.new("dive")
 	add_child(ambience)
 	SceneSwitcher.add_setting(b, "배경음", func() -> void: ambience.set_on(not ambience.is_on()), ambience.is_on)
+	SceneSwitcher.add_setting(b, "대사 음성", func() -> void: GameSave.set_voice_on(not GameSave.voice_on()), GameSave.voice_on)
 
 
 func _exit_tree() -> void:

@@ -51,6 +51,8 @@ var _hint: Label
 var _dive: VDMainButton
 var _audio: VDAudio
 var _ambience: Ambience
+var _voice: VoiceBabble
+var _speak_id := 0
 var _title: Control
 var _dialog: StoryDialog
 var _clock_us := 0
@@ -73,7 +75,11 @@ func _ready() -> void:
 	add_child(_audio)
 	_ambience = Ambience.new("hub")
 	add_child(_ambience)
+	_voice = VoiceBabble.new()
+	_voice.volume_db = -15.0
+	add_child(_voice)
 	SceneSwitcher.add_setting(self, "배경음", func() -> void: _ambience.set_on(not _ambience.is_on()), _ambience.is_on)
+	SceneSwitcher.add_setting(self, "대사 음성", func() -> void: GameSave.set_voice_on(not GameSave.voice_on()), GameSave.voice_on)
 	_build_background()
 	_ui = Control.new()
 	_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -271,6 +277,7 @@ func _build_chief() -> void:
 ## 반장이 한마디 한다 (말풍선이 톡 튀며 뜬다).
 func say(text: String) -> void:
 	_bubble_text.text = text
+	_speak(text)
 	_bubble.reset_size()
 	_bubble.modulate.a = 1.0
 	_bubble.scale = Vector2(0.6, 0.6)
@@ -279,6 +286,20 @@ func say(text: String) -> void:
 	if _chief:
 		_chief.scale = Vector2(1.04, 0.96)
 		_chief.create_tween().set_ignore_time_scale().tween_property(_chief, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+## 말풍선 글을 따라 반장이 옹알거린다 (글은 한 번에 뜨므로 소리만 글자 박자로 흘린다).
+func _speak(text: String) -> void:
+	_speak_id += 1
+	var id := _speak_id
+	VoiceBabble.warm("chief")
+	var ending := VoiceBabble.ending_of(text)
+	var n := mini(text.length(), 34)
+	for i in n:
+		if id != _speak_id or not is_inside_tree():
+			return
+		_voice.say("chief", text.substr(i, 1), float(i) / maxf(n - 1, 1.0), ending)
+		await get_tree().create_timer(0.068, true, false, true).timeout
 
 
 ## 허브에 들어왔을 때의 첫 마디: 지난 다이브 결과와 새로 열린 탭에 따라.

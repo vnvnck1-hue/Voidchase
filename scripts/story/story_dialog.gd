@@ -42,6 +42,9 @@ var _done := false
 var _t := 0.0
 var _blip: AudioStreamPlayer      # 글자가 찍히는 소리 (화자마다 높낮이가 다르다)
 var _blip_at := 0
+var _voice: VoiceBabble           # 옹알이 음성 (목소리가 있는 화자). 쪽지·단말은 타자 소리만
+var _voice_ci := -1
+var _ending := ""
 const BLIP_PITCH := {"chief": 1.0, "knight": 0.84, "gunner": 1.22, "mage": 0.72, "healer": 1.1, "client": 1.36, "note": 0.6}
 
 
@@ -60,6 +63,8 @@ func _ready() -> void:
 	_blip.stream = VDAudio._make(0.045, func(t: float) -> float: return sin(TAU * 720.0 * t) * exp(-t * 70.0) * 0.5)
 	_blip.volume_db = -19.0
 	add_child(_blip)
+	_voice = VoiceBabble.new()
+	add_child(_voice)
 	_build()
 	_clock_us = Time.get_ticks_usec()
 	_advance()
@@ -196,6 +201,9 @@ func _advance() -> void:
 	_typing = true
 	_next.visible = false
 	_blip_at = 0
+	_voice_ci = -1
+	_ending = VoiceBabble.ending_of(text)
+	VoiceBabble.warm(who)
 	if who != _who:
 		_who = who
 		_swap_portrait(c)
@@ -234,6 +242,7 @@ func _show_note(text: String, sign_: String) -> void:
 	_note_sign.modulate.a = 0.0
 	_shown = 0.0
 	_blip_at = 0
+	_voice_ci = -1
 	_typing = true
 	_note.scale = Vector2(0.7, 0.7)
 	_note.rotation = -0.12
@@ -260,10 +269,15 @@ func _process(_dt: float) -> void:
 		_shown += CPS * dt * (0.7 if _note.visible else 1.0)
 		var total := l.get_total_character_count()
 		l.visible_characters = mini(int(_shown), total)
-		if int(_shown) >= _blip_at + 3 and int(_shown) < total:
-			_blip_at = int(_shown)
-			_blip.pitch_scale = float(BLIP_PITCH.get("note" if _note.visible else _who, 1.0)) * randf_range(0.96, 1.05)
-			_blip.play()
+		var ci := mini(int(_shown), total) - 1
+		if ci >= 0 and ci != _voice_ci and ci < l.text.length():
+			_voice_ci = ci
+			if not _note.visible and VoiceBabble.VOICES.has(_who) and GameSave.voice_on():
+				_voice.say(_who, l.text.substr(ci, 1), float(ci) / maxf(total - 1, 1.0), _ending)
+			elif ci >= _blip_at + 3:
+				_blip_at = ci
+				_blip.pitch_scale = float(BLIP_PITCH.get("note" if _note.visible else _who, 1.0)) * randf_range(0.96, 1.05)
+				_blip.play()
 		if int(_shown) >= total:
 			_end_typing()
 	else:
