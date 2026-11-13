@@ -250,5 +250,6 @@ Godot --headless --path . res://tools/test/LobbyProbe.tscn
 ```
 Godot --headless --path . res://tools/test/FtueProbe.tscn          # 흐름 전체 점검 (임시 세이브)
 Godot --headless --path . res://tools/test/FtueSim.tscn -- --runs=3   # 자동 플레이로 난이도 가늠 (--upgrades=N)
+Godot --path . --screen 1 --position 4380,80 --resolution 1280x720 res://tools/test/FtuePlaythrough.tscn   # 1배속 실제 박자 플레이스루 (약 5분) → docs/ftue/playthrough/
 Godot --path . --screen 1 --position 4380,80 --resolution 1280x720 res://tools/test/FtueCapture.tscn   # 화면 캡처 → docs/ftue/
 ```

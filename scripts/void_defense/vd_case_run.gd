@@ -31,6 +31,7 @@ var _busy_story := false          # 마지막 문 대화·기억 로그가 도�
 var _announced := 0               # 장소 카드를 띄운 마지막 방
 var _seen_types := {}
 var _boss_mark := 0
+var _shout_at := 0                # 마지막 보스 외침 시각 (ms): 외침이 몰리지 않게 간격을 둔다
 var _known_relics := {}
 var _offer_hinted := false
 var _await_pick := false          # 유물 3택1 이 떠 있었다: 다음에 들어오는 새 유물만 기억 한 줄로 소개한다
@@ -241,6 +242,22 @@ func on_wave_types(types: Array) -> void:
 		return
 
 
+## 적 유닛이 만들어졌다 (VDBattle._make_unit): 의뢰 안에서는 엉킨 생각의 별명으로 부르고, 보스는 의뢰 데이터의 체력 배율을 받는다
+## (기억 조각을 방마다 받아 분대가 강해지므로 기본 체력으로는 보스전이 십여 초에 끝난다).
+func on_enemy_made(u: VDUnit) -> void:
+	if not is_case():
+		return
+	var tangles: Dictionary = data.get("tangles", {})
+	if u.is_boss and data.has("boss"):
+		u.display_name = String(data["boss"]["name"])
+		var k := float(data["boss"].get("hp_mult", 1.0))
+		u.max_hp = floorf(u.max_hp * k)
+		u.hp = u.max_hp
+	elif tangles.has(u.id):
+		u.display_name = String(tangles[u.id][0])
+	u._redraw()
+
+
 ## 보스가 내려앉았다: 이름표를 의뢰의 이름으로 바꾸고 패링 안내.
 func on_boss_spawn(e: VDUnit) -> void:
 	if finished:
@@ -301,13 +318,13 @@ func _process(_dt: float) -> void:
 	# 유물 3택1 이 처음 떴을 때
 	if not _offer_hinted and b.relic_hud.has_offer():
 		_offer_hinted = true
-		coach.show_hint("relic_pick", "되찾은 기억 조각이에요. 셋 중 하나를 고르면 보관함으로 들어갑니다.", Callable(),
-			func() -> bool: return not b.relic_hud.has_offer(), 30.0)
+		pass   # 보상 화면이 스스로 "하나를 골라 보관함에 넣으세요" 라고 안내한다 (코치 카드는 유물 카드 설명을 가려서 뺐다)
 	# 보스 외침: 체력 75 / 50 / 25%
 	if is_case() and b.state == VDBattle.State.BATTLE and _boss_mark < BOSS_HP_MARKS.size() and data.has("boss"):
 		for e in b.enemies:
 			if is_instance_valid(e) and e.is_boss and e.alive:
-				if e.hp / e.max_hp <= float(BOSS_HP_MARKS[_boss_mark]):
+				if e.hp / e.max_hp <= float(BOSS_HP_MARKS[_boss_mark]) and Time.get_ticks_msec() - _shout_at > 3200:
+					_shout_at = Time.get_ticks_msec()
 					var shouts: Array = data["boss"]["shouts"]
 					bark.shout(String(shouts[mini(_boss_mark, shouts.size() - 1)]), UiKit.GOLD if _boss_mark < 2 else Color(0.8, 0.85, 1.0))
 					_boss_mark += 1

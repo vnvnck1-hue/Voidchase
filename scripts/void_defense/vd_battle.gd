@@ -722,6 +722,8 @@ func _make_unit(def: Dictionary, id: String, team: int, cell: Vector2i, hp_mult 
 		u.stepped.connect(func(_x: VDUnit) -> void:
 			if state == State.TRAVEL:   # 스테이지(방) 사이 이동 때만 발소리
 				audio.play("step", 0.08))
+	elif case_run:
+		case_run.on_enemy_made(u)   # 의뢰: 엉킨 생각 별명 · 보스 체력 배율
 	return u
 
 
