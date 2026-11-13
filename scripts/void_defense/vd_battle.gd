@@ -102,6 +102,9 @@ var goo: VDGoo                     # 몬스터 체액: 처치 자리 바닥에 �
 var ult: VDUltCinematic          # 궁극기 시전 연출 (TrioChess Cinematic)
 var sandbox: VDSandbox = null       # 전투 연습장 (연출 연구실에서 열면): 고른 영웅만, 웨이브·보상·게임 오버 없이 반복
 static var sandbox_request: Array = []   # 연출 연구실이 씬을 바꾸기 전에 넣는 영웅 목록 (비어 있으면 보통 전투)
+## 허브가 다이브 직전에 넣는다: {"mode": "case" | "endless", "case": id}. 있으면 VDCaseRun 이 붙는다 (의뢰 진행·코치·일시정지·결과). 비어 있으면 예전 그대로.
+static var mode_request := {}
+var case_run: VDCaseRun = null
 var bg_rect: ColorRect          # 선택한 테마의 배경 (궁극기 연출이 어둡게 한다)
 var hud_root: Control           # HUD 최상위 (날아가는 정수 아이콘이 붙는다)
 var _essence_icon: TextureRect  # 정수 표시 옆 아이콘 = 흡수 목표
@@ -207,6 +210,13 @@ func _ready() -> void:
 		sandbox = VDSandbox.new(self, sandbox_request.duplicate())
 		sandbox_request.clear()   # 한 번만: 로비에서 다시 들어오면 보통 전투
 		add_child(sandbox)
+	for arg in OS.get_cmdline_user_args():   # --case=harin · --case=endless : 허브 없이 바로 의뢰 런 (테스트·캡처용)
+		if arg.begins_with("--case=") and mode_request.is_empty():
+			mode_request = {"mode": "endless"} if arg.substr(7) == "endless" else {"mode": "case", "case": arg.substr(7)}
+	if sandbox == null and not mode_request.is_empty():
+		case_run = VDCaseRun.new(self, mode_request)
+		add_child(case_run)
+	mode_request = {}
 	_new_run()
 	if get_tree().current_scene == self:
 		play_intro()   # 로비·연구실에서 들어왔을 때만. 테스트 러너(자식으로 붙임)는 필요하면 직접 부른다
@@ -691,6 +701,8 @@ func _new_run() -> void:
 	if sandbox:
 		sandbox.begin(_run_id)   # 전투 연습장: 배치 단계 없이 고른 적을 세우고 바로 전투
 		return
+	if case_run:
+		case_run.begin_run()
 	_set_state(State.PLACEMENT)
 	_spawn_wave(_run_id)   # 분대가 자리 잡은 뒤 적이 먼저 등장: 배치 단계에서 위치가 보인다
 
@@ -955,6 +967,8 @@ func _spawn_wave(run: int, mid := false) -> void:
 		_show_msg("기믹 무리 — %s: %s" % [gd["name"], gd["hint"]], 3.2)
 	elif not mid:
 		_show_msg("공허의 잔재가 균열에서 나타난다...", 1.4)
+	if case_run:
+		case_run.on_wave_types(types)
 	var spots: Array = VDMap.local_cells(room, "E")
 	spots.shuffle()
 	var used := {}
@@ -1031,6 +1045,8 @@ func _spawn_wave(run: int, mid := false) -> void:
 			_boss_bar.visible = true
 			nebula_tuner.set_boss(true)   # 배경이 더 강렬하고 빠르게: 위험 연출
 			_show_msg("보스 등장: " + e.display_name, 1.6)
+			if case_run:
+				case_run.on_boss_spawn(e)
 		await get_tree().create_timer(maxf(VDSummonFx.g("interval"), 0.01)).timeout
 	await get_tree().create_timer(VDUnit.appear_duration() + 0.1).timeout   # 마지막 적의 출렁임이 끝날 때까지
 	if run != _run_id:
@@ -1129,6 +1145,8 @@ func _on_unit_died(u: VDUnit) -> void:
 			print("[VD] enemy down (temporary): %s" % u.display_name)
 			return
 		juice.on_kill(at)
+		if case_run:
+			case_run.on_unit_died(u)
 		# 정수는 바로 들어오지 않고 바닥에 흩뿌려진다 (클리어 때 HUD 로 흡수)
 		# 파편처럼 여러 조각으로 흩뿌린다: 보통 2 · 정수가 많으면 3 · 보스 5 (2026-11-10 개수 절반으로)
 		essence_drops.spawn(u.position, u._top, u.essence, 5 if u.is_boss else clampi(u.essence / 4, 2, 3))
@@ -1210,7 +1228,8 @@ func _finish_wave(run: int, last_at: Vector2) -> void:
 	audio.play("wave_clear", 0.0)
 	vfx.spawn("shockwave", ground_fx, VDData.to_screen(VDMap.center_f(room)), 1.6, 0.0, Color(1.0, 0.9, 0.5), Vector2(1.0, 0.5))
 	var sub := "스테이지 %d 정화 완료 (웨이브 %d)  ·  공허 정수 +%d" % [stage, VDData.waves_in_stage(stage), essence - _essence_at_start + essence_drops.pending()]
-	var banner_sec := banner.play("치료 성공", sub, Color(1.0, 0.45, 0.35) if boss_room else Color(1.0, 0.78, 0.3), CLEAR_BANNER_HOLD)
+	var final_room := case_run != null and case_run.is_final_room()
+	var banner_sec := banner.play("의뢰 완료" if final_room else "치료 성공", sub, Color(1.0, 0.45, 0.35) if boss_room else Color(1.0, 0.78, 0.3), CLEAR_BANNER_HOLD)
 	await _wait_real(CLEAR_COLLECT_AT)
 	if run != _run_id:
 		return
@@ -1226,7 +1245,7 @@ func _finish_wave(run: int, last_at: Vector2) -> void:
 		if not a.alive:
 			continue
 		var before := a.hp
-		a.heal(WAVE_HEAL)
+		a.heal(WAVE_HEAL * (case_run.heal_mult if case_run else 1.0))
 		var gain := int(a.hp - before)
 		if gain > 0:
 			audio.play("heal", 0.05, -4.0)
@@ -1239,6 +1258,9 @@ func _finish_wave(run: int, last_at: Vector2) -> void:
 	# 5) 배너가 다 빠진 뒤 유물 보상 (화면에 하나씩만)
 	await _wait_real(maxf(banner_sec - CLEAR_HEAL_AT - healed, 0.0) + CLEAR_REWARD_GAP)
 	if run != _run_id:
+		return
+	if final_room:
+		case_run.finish(true)   # 의뢰의 마지막 방: 보상·갈림길 대신 엔딩과 결과로
 		return
 	_relic_rewards()
 	await _wait_real(CLEAR_EXITS_AT)
@@ -1384,9 +1406,12 @@ func _do_game_over() -> void:
 	if run != _run_id:
 		return
 	screen_glitch.burst_rect(Rect2(0, 540 - 170, 1920, 340), 0.6)
-	var hold := banner.play("거점 함락", "분대가 모두 쓰러졌습니다", Color(1.0, 0.35, 0.45), 1.0)
+	var hold := banner.play("오늘 상담은 여기까지", "분대가 모두 지쳤습니다 — 다음 회기에 이어서", Color(0.5, 0.85, 1.0), 1.0) if case_run else banner.play("거점 함락", "분대가 모두 쓰러졌습니다", Color(1.0, 0.35, 0.45), 1.0)
 	await _wait_real(hold * 0.75)
 	if run != _run_id:
+		return
+	if case_run:
+		case_run.finish(false)   # 결과 화면 (결정 정산 → 상담소로)
 		return
 	_show_over_panel()
 
@@ -1507,7 +1532,7 @@ func _set_state(s: State) -> void:
 			_btn_main.text = "이동 중..."
 			_btn_main.disabled = true
 		State.GAMEOVER:
-			_btn_main.text = "게임 오버"
+			_btn_main.text = "상담 종료" if case_run else "게임 오버"
 			_btn_main.disabled = true
 	if _btn_main.text != old_text:
 		_btn_main.bump()
@@ -1998,7 +2023,7 @@ func _relic_rewards() -> void:
 		var n := relic_board.take_slots()
 		_on_essence_arrive(n * VDRelicData.SLOT_REFUND)
 		_show_msg("성좌판이 가득 차 남은 슬롯 %d개를 정수 %d 로 바꿨습니다" % [n, n * VDRelicData.SLOT_REFUND], 2.0)
-	var ids := VDRelicData.roll_offer(relic_board.rng, locked, stage == VDRelicData.RELIC_EVERY, relic_board.open_count() == 0)
+	var ids := VDRelicData.roll_offer(relic_board.rng, locked, stage == (1 if case_run and case_run.is_case() else VDRelicData.RELIC_EVERY), relic_board.open_count() == 0)
 	relic_hud.offer(ids)
 	print("[VD] relic offer: %s  open=%d locked=%d fired=%s" % [str(ids), relic_board.open_count(), locked, str(relics.fire_count)])
 
@@ -2010,6 +2035,8 @@ func _wait_real(sec: float) -> void:
 
 ## 이번 구역 클리어에 유물 보상이 있는가 (RELIC_EVERY 번째 구역마다).
 func relic_reward_due() -> bool:
+	if case_run and case_run.is_case():
+		return not VDData.is_boss_stage(stage)   # 의뢰: 보스 방을 뺀 모든 방에서 기억 조각
 	return stage % VDRelicData.RELIC_EVERY == 0
 
 
@@ -2272,6 +2299,8 @@ func _refresh_wave_label() -> void:
 	var text := "스테이지 %d  ·  WAVE %d/%d" % [stage, wave_in_stage, VDData.waves_in_stage(stage)]
 	if VDData.is_boss_stage(stage):
 		text += "  ·  보스"
+	if case_run and case_run.is_case():
+		text = case_run.wave_label(stage, wave_in_stage, VDData.waves_in_stage(stage)) + ("  ·  보스" if VDData.is_boss_stage(stage) else "")
 	if gimmick != "" and gimmick_wave >= wave_in_stage and state != State.PLACEMENT:
 		text += "  ·  기믹: " + String(VDData.GIMMICKS[gimmick]["name"]) + ("" if is_gimmick_wave() else " (%d차)" % gimmick_wave)
 	_lbl_wave.text = text

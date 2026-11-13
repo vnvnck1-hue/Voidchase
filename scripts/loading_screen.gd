@@ -50,6 +50,9 @@ var _t0 := 0
 var _shown := 0.0            # 굳기 전 마지막으로 그린 시각 (굳은 동안 이 시각의 모습을 유지)
 var _covered := false
 var _duration := DURATION_MAX
+## 접속 문구(NOW LOADING 위)와 팁(왼쪽 아래). SceneSwitcher 가 start() 전에 넣는다. 비어 있으면 그리지 않는다.
+var caption := ""
+var tip := ""
 
 
 func _ready() -> void:
@@ -116,6 +119,29 @@ func _build() -> void:
 	_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_text.draw.connect(_draw_text)
 	_pin(_text, TEXT_RECT)
+	if caption != "":
+		var cap := Label.new()
+		cap.text = caption + " …"
+		cap.add_theme_font_override("font", VDData.font())
+		cap.add_theme_font_size_override("font_size", 28)
+		cap.add_theme_color_override("font_color", Color(0.62, 0.95, 0.93))
+		cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_pin(cap, Rect2(700, 846, 970, 40))
+	if tip != "":
+		var tl := Label.new()
+		tl.text = "TIP   " + tip
+		tl.add_theme_font_override("font", VDData.font())
+		tl.add_theme_font_size_override("font_size", 22)
+		tl.add_theme_color_override("font_color", Color(1, 1, 1, 0.72))
+		tl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		tl.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		tl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_pin(tl, Rect2(60, 950, 900, 80))
+		tl.anchor_left = 0.0
+		tl.anchor_right = 0.0
+		tl.offset_left = 60
+		tl.offset_right = 960
 
 
 ## 직접 그리는 글자에는 FontVariation.variation_transform 기울임이 안 먹어서, 글자마다 기울인 변환을 걸어 그린다.

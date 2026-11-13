@@ -219,3 +219,36 @@ VOID DEFENSE 전투 화면에서 오른쪽 위 **설정 → 배경 테마**로 �
 ```
 Godot --headless --path . res://tools/test/LobbyProbe.tscn
 ```
+
+## 게임 흐름 — 타이틀 · 상담소 허브 · 의뢰 런 (FTUE)
+
+설계와 진단은 `docs/FTUE_분석_및_구조설계.md`. 처음 켜서 의뢰 한 건을 마치고 돌아올 때까지의 바깥 고리다.
+
+```
+타이틀 ─(첫 실행)─▶ 프롤로그(쪽지 · 분대 한 마디씩) ─▶ 첫 다이브
+   └─(재방문)─▶ 상담소 허브 ─[다이브]─▶ 로딩(접속 문구 · 팁) ─▶ 의뢰 런(방 5개, 마지막은 보스)
+                    ▲                                             │ 완료: 마지막 문 → 기억 로그 3장
+                    └──────── 결과(시간의 결정 · 엽서) ◀──────────┘ 전멸·중단: "오늘 상담은 여기까지"
+```
+
+| 파일 | 역할 |
+|---|---|
+| `scripts/lobby.gd` | 상담소 허브. 탭: 의뢰 · 분대 · 강화 · 엽서 벽 · 연구실(개발 도구). 타이틀·프롤로그를 띄우고 다이브를 시작한다 |
+| `scripts/hub/hub_title.gd` · `ui_kit.gd` | 타이틀 화면 · 허브/대화/결과가 같이 쓰는 UI 조각 |
+| `scripts/story/story_dialog.gd` | 대화 연출 (프롤로그 · 마지막 문). 탭으로 넘기고 길게 누르면 건너뛴다 |
+| `scripts/meta/game_save.gd` | `user://save.cfg`: 첫 실행 · 의뢰 기록 · 시간의 결정 · 강화 · 엽서 · 본 안내 |
+| `scripts/meta/case_data.gd` | 의뢰 데이터 (방 이름 · 대사 · 엉킨 생각 별명 · 보스 외침 · 엔딩) 와 등장인물 |
+| `scripts/void_defense/vd_case_run.gd` | 전투 위에 얹는 의뢰 진행: 장소 카드 · 말풍선 · 코치 · 일시정지 · 정산 · 엔딩 · 결과 |
+| `vd_bark.gd` · `vd_coach.gd` · `vd_pause_menu.gd` · `vd_memory_log.gd` · `vd_result_screen.gd` | 말풍선/장소 카드 · 튜토리얼 안내 · 일시정지 · 엔딩 카드 · 결과 화면 |
+
+- 허브가 `VDBattle.mode_request = {"mode": "case" | "endless", "case": id}` 를 넣고 들어갈 때만 `VDCaseRun` 이 붙는다. 연구실·테스트가 여는 전투는 예전 그대로다 (끝없는 전투, 유물 3구역마다).
+- 의뢰 모드: 방 = 기존 스테이지 1~5 규칙, 보스 방을 뺀 모든 방에서 유물 3택1, 마지막 방을 정리하면 의뢰 완료.
+- 숫자키 `1` = 다이브, `2~` = 연구실 도구. 전투 중 `Esc` 는 일시정지 메뉴 (계속 · 처음부터 · 중단하고 상담소로).
+- 명령줄: `-- --skip-title` · `--no-prologue` · `--save=<경로>` · `--case=harin|endless` (허브 없이 전투 씬을 바로 의뢰 런으로).
+- 새 의뢰인은 `CaseData.CASES` 에 항목을 추가한다 (방 수는 `rooms` 길이). 강화는 `GameSave.UPGRADES`.
+
+```
+Godot --headless --path . res://tools/test/FtueProbe.tscn          # 흐름 전체 점검 (임시 세이브)
+Godot --headless --path . res://tools/test/FtueSim.tscn -- --runs=3   # 자동 플레이로 난이도 가늠 (--upgrades=N)
+Godot --path . --screen 1 --position 4380,80 --resolution 1280x720 res://tools/test/FtueCapture.tscn   # 화면 캡처 → docs/ftue/
+```

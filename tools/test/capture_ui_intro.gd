@@ -113,20 +113,21 @@ func _sequence(prefix: String, root: Node, times: Array) -> void:
 
 
 func _run() -> void:
-	# ---- 로비: 카드·머리글이 밀려난 채 투명으로 시작해 제자리로
+	# ---- 로비(상담소 허브): 탭 패널·반장이 밀려난 채 투명으로 시작해 제자리로 (2026-11-13 허브 개편에 맞춤)
 	var lobby: Control = load("res://scenes/Lobby.tscn").instantiate()
 	add_child(lobby)
-	var card: Control = lobby._cards[0]
+	var card: Control = lobby._cards[0]   # 탭 패널 (오른쪽에 붙는다: offset_left = 1010 - 1920)
+	var home := lobby.PANEL_RECT.position.x - 1920.0
 	var card_before := _offsets(card)
-	_check(card.modulate.a < 0.01 and card_before[0] < 100.0 - 50.0, "lobby card starts offset left and transparent (x=%.0f)" % card_before[0])
-	_check(lobby._moon_slot.scale.x < 0.5, "lobby moon starts small")
+	_check(card.modulate.a < 0.01 and card_before[0] > home + 50.0, "hub panel starts offset right and transparent (x=%.0f)" % card_before[0])
+	_check(lobby._chief.modulate.a < 0.01, "hub chief starts transparent")
 	await _sequence("lobby", lobby, LOBBY_TIMES)
 	var took := await _settle(lobby)
 	_check(took < SETTLE_TIMEOUT, "lobby intro runners finish (+%.2fs)" % took)
 	var card_after := _offsets(card)
-	_check(absf(card_after[0] - 100.0) < 0.01 and card.modulate.a > 0.99, "lobby card settles at x=100 opaque (x=%.2f a=%.2f)" % [card_after[0], card.modulate.a])
-	_check(lobby._moon_slot.scale.is_equal_approx(Vector2.ONE), "lobby moon settles at scale 1")
-	_check(lobby._quit.modulate.a > 0.99 and absf(lobby._quit.offset_top - 912.0) < 0.01, "lobby quit button settles")
+	_check(absf(card_after[0] - home) < 0.01 and card.modulate.a > 0.99, "hub panel settles at its pinned x opaque (x=%.2f a=%.2f)" % [card_after[0], card.modulate.a])
+	_check(lobby._chief.modulate.a > 0.99, "hub chief settles opaque")
+	_check(lobby._dive != null and lobby._tab_bar.modulate.a > 0.99, "hub dive button and tabs are up")
 	lobby.queue_free()
 	await get_tree().process_frame
 

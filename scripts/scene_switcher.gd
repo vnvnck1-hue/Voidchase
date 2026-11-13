@@ -62,6 +62,11 @@ var _crt_tuner: Control
 var _font_tuner: Control
 ## 화면 녹화 (F12, scripts/screen_recorder.gd)
 var recorder: ScreenRecorder
+## 다음 로딩 화면에 띄울 접속 문구·팁 (허브가 다이브 직전에 넣는다. 한 번 쓰고 비운다)
+var loading_caption := ""
+var loading_tip := ""
+## Esc·[상담소로] 를 가로채는 곳 (의뢰 런의 일시정지 메뉴). 유효하고 true 를 돌려주면 여기서는 아무것도 하지 않는다.
+var esc_guard := Callable()
 
 
 func _ready() -> void:
@@ -211,7 +216,7 @@ func _rebuild_menu() -> void:
 		_menu_box.add_child(HSeparator.new())
 	_menu_box.add_child(_item_control("전체화면  (F11)", toggle_fullscreen, is_fullscreen))
 	if current_index() != LOBBY:
-		_menu_box.add_child(_item_control("로비로  (Esc)", go_lobby))
+		_menu_box.add_child(_item_control("상담소로  (Esc)", request_lobby))
 	_menu_box.add_child(_item_control("게임 종료", func() -> void: get_tree().quit()))
 	pin(_menu, Vector2(1, 0), MENU_RECT)   # 항목 수가 줄면 높이도 다시 줄도록 rect 를 다시 잡는다
 
@@ -311,6 +316,10 @@ func _reset_globals() -> void:
 ## → 다 덮이면 로딩 화면을 치우고 → 바로 걷는다 (새 씬은 이미 그려져 있어 기다릴 프레임이 없다).
 func _load_into(i: int) -> void:
 	_loading = LoadingScreen.new()
+	_loading.caption = loading_caption
+	_loading.tip = loading_tip
+	loading_caption = ""
+	loading_tip = ""
 	add_child(_loading)
 	_loading.start()
 	await _loading.covered
@@ -360,6 +369,13 @@ func go_lobby() -> void:
 	switch_to(LOBBY)
 
 
+## Esc · 설정 메뉴 [상담소로]: 씬이 가로채지 않으면(esc_guard) 바로 허브로 나간다.
+func request_lobby() -> void:
+	if esc_guard.is_valid() and esc_guard.call():
+		return
+	go_lobby()
+
+
 func _input(event: InputEvent) -> void:
 	if is_loading() and event is InputEventKey and event.keycode != KEY_F11:
 		get_viewport().set_input_as_handled()   # 로딩 중 키 입력은 삼킨다 (F11 만 통과)
@@ -370,7 +386,7 @@ func _input(event: InputEvent) -> void:
 				if _menu.visible:
 					set_menu_open(false)
 				else:
-					go_lobby()
+					request_lobby()
 				get_viewport().set_input_as_handled()
 			KEY_F11:
 				toggle_fullscreen()
