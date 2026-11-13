@@ -92,7 +92,7 @@ func _ready() -> void:
 	else:
 		_booted = _booted or main
 		_play_intro(SceneSwitcher.intro_lead())
-		_greet()
+		_greet(SceneSwitcher.intro_lead())
 
 
 # ---------------------------------------------------------------- 부팅 흐름
@@ -277,7 +277,7 @@ func say(text: String) -> void:
 
 
 ## 허브에 들어왔을 때의 첫 마디: 지난 다이브 결과와 새로 열린 탭에 따라.
-func _greet() -> void:
+func _greet(lead := 0.0) -> void:
 	var fresh := GameSave.take_new_tabs()
 	var line := ""
 	if not fresh.is_empty():
@@ -292,7 +292,7 @@ func _greet() -> void:
 	else:
 		line = IDLE_LINES[randi() % IDLE_LINES.size()]
 	_hint.text = "AM 02:14 · 영업 중 · " + ("다음 쪽지를 기다리는 중" if GameSave.is_cleared(case_id) else "의뢰 1건 접수")
-	get_tree().create_timer(0.9, true, false, true).timeout.connect(func() -> void:
+	get_tree().create_timer(lead + 1.5, true, false, true).timeout.connect(func() -> void:   # 반장·패널이 다 들어온 뒤에
 		if is_inside_tree() and not _busy:
 			say(line))
 
