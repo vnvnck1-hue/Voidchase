@@ -50,6 +50,7 @@ var _crystal: Label
 var _hint: Label
 var _dive: VDMainButton
 var _audio: VDAudio
+var _ambience: Ambience
 var _title: Control
 var _dialog: StoryDialog
 var _clock_us := 0
@@ -70,6 +71,9 @@ func _ready() -> void:
 	theme = th
 	_audio = VDAudio.new()
 	add_child(_audio)
+	_ambience = Ambience.new("hub")
+	add_child(_ambience)
+	SceneSwitcher.add_setting(self, "배경음", func() -> void: _ambience.set_on(not _ambience.is_on()), _ambience.is_on)
 	_build_background()
 	_ui = Control.new()
 	_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -140,6 +144,7 @@ func dive(mode := "case") -> void:
 		return
 	_busy = true
 	_audio.play("wave_start", 0.0, -4.0)
+	_ambience.fade_out(0.8)
 	var c := CaseData.get_case(case_id)
 	VDBattle.mode_request = {"mode": mode, "case": case_id}
 	SceneSwitcher.loading_caption = String(c["loading"]) if mode == "case" else "야근 구역에 접속하는 중"

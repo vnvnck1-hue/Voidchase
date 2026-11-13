@@ -40,6 +40,9 @@ var _pressing := false
 var _who := ""
 var _done := false
 var _t := 0.0
+var _blip: AudioStreamPlayer      # 글자가 찍히는 소리 (화자마다 높낮이가 다르다)
+var _blip_at := 0
+const BLIP_PITCH := {"chief": 1.0, "knight": 0.84, "gunner": 1.22, "mage": 0.72, "healer": 1.1, "client": 1.36, "note": 0.6}
 
 
 static func play(parent: Node, lines_: Array, dim_ := 0.62, layer_ := 60) -> StoryDialog:
@@ -53,6 +56,10 @@ static func play(parent: Node, lines_: Array, dim_ := 0.62, layer_ := 60) -> Sto
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_blip = AudioStreamPlayer.new()
+	_blip.stream = VDAudio._make(0.045, func(t: float) -> float: return sin(TAU * 720.0 * t) * exp(-t * 70.0) * 0.5)
+	_blip.volume_db = -19.0
+	add_child(_blip)
 	_build()
 	_clock_us = Time.get_ticks_usec()
 	_advance()
@@ -188,6 +195,7 @@ func _advance() -> void:
 	_shown = 0.0
 	_typing = true
 	_next.visible = false
+	_blip_at = 0
 	if who != _who:
 		_who = who
 		_swap_portrait(c)
@@ -225,6 +233,7 @@ func _show_note(text: String, sign_: String) -> void:
 	_note_sign.text = sign_
 	_note_sign.modulate.a = 0.0
 	_shown = 0.0
+	_blip_at = 0
 	_typing = true
 	_note.scale = Vector2(0.7, 0.7)
 	_note.rotation = -0.12
@@ -251,6 +260,10 @@ func _process(_dt: float) -> void:
 		_shown += CPS * dt * (0.7 if _note.visible else 1.0)
 		var total := l.get_total_character_count()
 		l.visible_characters = mini(int(_shown), total)
+		if int(_shown) >= _blip_at + 3 and int(_shown) < total:
+			_blip_at = int(_shown)
+			_blip.pitch_scale = float(BLIP_PITCH.get("note" if _note.visible else _who, 1.0)) * randf_range(0.96, 1.05)
+			_blip.play()
 		if int(_shown) >= total:
 			_end_typing()
 	else:

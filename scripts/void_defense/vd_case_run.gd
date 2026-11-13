@@ -25,6 +25,7 @@ var finished := false
 var heal_mult := 1.0
 var result: VDResultScreen
 var _layer: CanvasLayer           # 말풍선·코치 (HUD 위)
+var ambience: Ambience            # 다이브 중의 낮은 드론 (절차 생성)
 var _top: CanvasLayer             # 일시정지·기억 로그·결과
 var _pause: VDPauseMenu
 var _busy_story := false          # 마지막 문 대화·기억 로그가 도는 중
@@ -63,6 +64,9 @@ func _ready() -> void:
 	b.subwave_cleared.connect(_on_subwave_cleared)
 	b.relic_board.changed.connect(_on_relics_changed)
 	SceneSwitcher.esc_guard = _on_esc
+	ambience = Ambience.new("dive")
+	add_child(ambience)
+	SceneSwitcher.add_setting(b, "배경음", func() -> void: ambience.set_on(not ambience.is_on()), ambience.is_on)
 
 
 func _exit_tree() -> void:

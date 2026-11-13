@@ -206,3 +206,14 @@ static func add_crystals(n: int) -> void:
 	_cfg.set_value("profile", "crystals", crystals() + n)
 	_cfg.set_value("profile", "last_result", "retreat")
 	_cfg.save(_path)
+
+
+# ---------------------------------------------------------------- 설정
+
+## 절차 생성 배경음 (scripts/hub/ambience.gd).
+static func ambience_on() -> bool:
+	return bool(_val("profile", "ambience_on", true))
+
+
+static func set_ambience_on(on: bool) -> void:
+	_store("profile", "ambience_on", on)
