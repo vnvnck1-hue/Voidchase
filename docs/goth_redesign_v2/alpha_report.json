@@ -1,0 +1,48 @@
+[
+  {
+    "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\goth_redesign_v2\\png\\01_punk_rose.png",
+    "width": 1073,
+    "height": 1466,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 751693,
+    "partial_alpha_pixels": 818599,
+    "opaque_pixels": 2726,
+    "content_bounds": [
+      31,
+      0,
+      1072,
+      1465
+    ],
+    "edge_nontransparent_pixels": 126,
+    "strong_alpha_bounds": [
+      77,
+      6,
+      1063,
+      1459
+    ],
+    "has_transparency": true
+  },
+  {
+    "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\goth_redesign_v2\\png\\02_goth_silver.png",
+    "width": 1061,
+    "height": 1482,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 508755,
+    "partial_alpha_pixels": 1061820,
+    "opaque_pixels": 1827,
+    "content_bounds": [
+      0,
+      0,
+      1060,
+      1481
+    ],
+    "edge_nontransparent_pixels": 368,
+    "strong_alpha_bounds": [
+      2,
+      1,
+      1059,
+      1478
+    ],
+    "has_transparency": true
+  }
+]

@@ -5,6 +5,7 @@
 //   - 아래쪽일수록 기체가 짙고, 위쪽은 맑은 하늘
 //   - parallax 는 카메라 움직임을 아주 조금 따라가 깊이감을 준다 (vd_camera.gd 가 매 프레임 넣는다)
 shader_type canvas_item;
+#include "res://shaders/field_look.gdshaderinc"   // 필드 연구실 색 보정 (fl_*)
 
 uniform vec4 col_deep : source_color = vec4(0.054, 0.033, 0.096, 1.0);    // 하늘 위쪽
 uniform vec4 col_night : source_color = vec4(0.099, 0.065, 0.192, 1.0);   // 하늘 아래쪽
@@ -114,5 +115,5 @@ void fragment() {
 	float d2 = dots(p + vec2(3.3, 1.1) + parallax, t * 3.5, 1.3, 0.07);
 	col += col_glow.rgb * (d1 * 0.55 + d2 * 0.8) * dot_amount;
 
-	COLOR = vec4(col, 1.0);
+	COLOR = fl_apply(vec4(col, 1.0));
 }

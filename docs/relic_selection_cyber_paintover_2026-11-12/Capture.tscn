@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://docs/relic_selection_cyber_paintover_2026-11-12/capture.gd" id="1"]
+
+[node name="CyberPaintoverCapture" type="Node"]
+script = ExtResource("1")

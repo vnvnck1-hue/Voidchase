@@ -1,0 +1,353 @@
+[gd_resource type="VisualShader" format=3]
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_hteqf"]
+parameter_name = "ppx"
+hint = 1
+min = 0.01
+max = 64.0
+default_value_enabled = true
+default_value = 1.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_5omhu"]
+parameter_name = "t"
+hint = 1
+max = 100000.0
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_3ud5r"]
+parameter_name = "strength"
+hint = 1
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_nrf3q"]
+parameter_name = "premult"
+hint = 1
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_ole0h"]
+parameter_name = "outline_px"
+hint = 1
+max = 12.0
+default_value_enabled = true
+default_value = 3.5
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_v6cf5"]
+parameter_name = "glow_px"
+hint = 1
+max = 30.0
+default_value_enabled = true
+default_value = 9.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_f6ubp"]
+parameter_name = "pulse_speed"
+hint = 1
+max = 20.0
+default_value_enabled = true
+default_value = 4.6
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_oc8eb"]
+parameter_name = "sweep_speed"
+hint = 1
+max = 4.0
+default_value_enabled = true
+default_value = 0.55
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_m8e8g"]
+parameter_name = "sweep_width"
+hint = 1
+min = 0.005
+max = 0.5
+default_value_enabled = true
+default_value = 0.07
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_jf5po"]
+parameter_name = "sweep_gain"
+hint = 1
+max = 2.0
+default_value_enabled = true
+default_value = 0.5
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_tlcpi"]
+parameter_name = "line_color"
+default_value_enabled = true
+default_value = Color(1, 0.82, 0.25, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_y2adj"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_3a0v4"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_q56l2"]
+parameter_name = "core_color"
+default_value_enabled = true
+default_value = Color(1, 0.98, 0.9, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_b2e5m"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_wpwn6"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_5k7qw"]
+parameter_name = "body_tint"
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_vgxds"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_fsjq4"]
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_wxixn"]
+input_name = "uv"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_e8jb2"]
+size = Vector2(560, 604)
+expression = "
+vec2 m = step(frame_rect.xy, uv) * step(uv, frame_rect.zw);
+vec4 c = texture(TEXTURE, uv) * (m.x * m.y);
+if (premult > 0.5 && c.a > 0.0001) {
+	c.rgb /= c.a;
+}
+float k = clamp(strength, 0.0, 1.0);
+vec2 px = tex_px * ppx;
+float pulse = 0.5 + 0.5 * sin(t * pulse_speed);
+// 네온 선: 실루엣 밖 line_r 안 (두 반지름으로 채워 두껍게), 코어: 실루엣에 붙은 안쪽 40%, 글로우: 그 바깥 두 고리
+float line_r = (outline_px + 1.5 * pulse) * k;
+float glow_w = glow_px * k * (0.8 + 0.4 * pulse);
+float a_line = 0.0;
+float a_core = 0.0;
+float a_g1 = 0.0;
+float a_g2 = 0.0;
+if (k > 0.001) {
+	// 반지름마다 둘레 여러 방향의 알파 최댓값 (프레임 사각형 밖은 0). 내장 TEXTURE 는 함수 인자로 못 넘겨 여기서 바로 돈다
+	for (int i = 0; i < 16; i++) {
+		float fi = float(i);
+		vec2 d16 = vec2(cos(fi * 0.3926991), sin(fi * 0.3926991));
+		vec2 u = uv + d16 * px * line_r;
+		vec2 mm = step(frame_rect.xy, u) * step(u, frame_rect.zw);
+		a_line = max(a_line, textureLod(TEXTURE, u, 0.0).a * mm.x * mm.y);
+		if (i < 12) {
+			vec2 d12 = vec2(cos((fi + 0.3) * 0.5235988), sin((fi + 0.3) * 0.5235988));
+			u = uv + d12 * px * (line_r + glow_w * 0.45);
+			mm = step(frame_rect.xy, u) * step(u, frame_rect.zw);
+			a_g1 = max(a_g1, textureLod(TEXTURE, u, 0.0).a * mm.x * mm.y);
+			d12 = vec2(cos((fi + 0.7) * 0.5235988), sin((fi + 0.7) * 0.5235988));
+			u = uv + d12 * px * (line_r + glow_w);
+			mm = step(frame_rect.xy, u) * step(u, frame_rect.zw);
+			a_g2 = max(a_g2, textureLod(TEXTURE, u, 0.0).a * mm.x * mm.y);
+		}
+		if (i < 8) {
+			vec2 d8 = vec2(cos((fi + 0.5) * 0.7853982), sin((fi + 0.5) * 0.7853982));
+			u = uv + d8 * px * line_r * 0.5;
+			mm = step(frame_rect.xy, u) * step(u, frame_rect.zw);
+			a_line = max(a_line, textureLod(TEXTURE, u, 0.0).a * mm.x * mm.y);
+			d8 = vec2(cos((fi + 0.25) * 0.7853982), sin((fi + 0.25) * 0.7853982));
+			u = uv + d8 * px * line_r * 0.4;
+			mm = step(frame_rect.xy, u) * step(u, frame_rect.zw);
+			a_core = max(a_core, textureLod(TEXTURE, u, 0.0).a * mm.x * mm.y);
+		}
+	}
+}
+float outside = 1.0 - c.a;
+float line = clamp(a_line - c.a, 0.0, 1.0) * k;
+float core = clamp(a_core - c.a, 0.0, 1.0);
+float glow = max(clamp(a_g1 - a_line, 0.0, 1.0) * (0.55 + 0.25 * pulse), clamp(a_g2 - a_g1, 0.0, 1.0) * (0.25 + 0.15 * pulse)) * k;
+// 스캔 띠: 프레임 아래에서 위로 훑는다 (v 0 위 → 1 아래). 띠가 지나는 자리의 선은 하얗게, 몸은 선 색으로 번쩍
+float v = (uv.y - frame_rect.y) / max(frame_rect.w - frame_rect.y, 0.00001);
+float band_y = 1.2 - fract(t * sweep_speed) * 1.5;
+float band = (1.0 - smoothstep(0.0, sweep_width, abs(v - band_y))) * k;
+float tail = (1.0 - smoothstep(0.0, sweep_width * 4.0, v - band_y)) * step(band_y, v) * 0.35 * k;
+vec3 line_rgb = mix(line_color, core_color, clamp(core * 0.75 + band, 0.0, 1.0));
+vec3 body = c.rgb * body_tint;
+body += line_color * (band + tail) * sweep_gain;
+body += line_color * 0.08 * pulse * k;
+// 합성: 몸 위에 선, 그 바깥에 글로우 (출력은 스트레이트 알파)
+float edge_a = line;
+float glow_a = glow * (1.0 - line);
+float out_a = c.a + (edge_a + glow_a) * outside;
+color = (body * c.a + line_rgb * edge_a * outside + line_color * glow_a * outside) / max(out_a, 0.0001);
+alpha = out_a;
+"
+
+[sub_resource type="VisualShaderNodeVec4Parameter" id="VisualShaderNodeVec4Parameter_see5e"]
+parameter_name = "frame_rect"
+default_value_enabled = true
+default_value = Vector4(0, 0, 1, 1)
+
+[sub_resource type="VisualShaderNodeVec2Parameter" id="VisualShaderNodeVec2Parameter_qv3bx"]
+parameter_name = "tex_px"
+default_value_enabled = true
+default_value = Vector2(0.001, 0.001)
+
+[sub_resource type="VisualShaderNodeVec4Parameter" id="VisualShaderNodeVec4Parameter_suw3k"]
+parameter_name = "quad_rect"
+default_value_enabled = true
+default_value = Vector4(0, 0, 1, 1)
+
+[sub_resource type="VisualShaderNodeVec2Parameter" id="VisualShaderNodeVec2Parameter_kdcje"]
+parameter_name = "quad_tex_px"
+default_value_enabled = true
+default_value = Vector2(0.001, 0.001)
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_spmgl"]
+parameter_name = "quad_pad"
+hint = 1
+max = 256.0
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_5ylc7"]
+input_name = "vertex"
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_ibgj7"]
+input_name = "uv"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_16v5x"]
+size = Vector2(560, 230)
+expression = "
+vec2 sgn = sign(uv - (rect.xy + rect.zw) * 0.5);
+out_vertex = vertex + sgn * pad;
+out_uv = uv + sgn * pad * tex_px;
+"
+
+[resource]
+mode = 1
+flags/light_only = false
+nodes/vertex/2/node = SubResource("VisualShaderNodeVec4Parameter_suw3k")
+nodes/vertex/2/position = Vector2(-1600, -400)
+nodes/vertex/3/node = SubResource("VisualShaderNodeVec2Parameter_kdcje")
+nodes/vertex/3/position = Vector2(-1600, -250)
+nodes/vertex/4/node = SubResource("VisualShaderNodeFloatParameter_spmgl")
+nodes/vertex/4/position = Vector2(-1600, -100)
+nodes/vertex/5/node = SubResource("VisualShaderNodeInput_5ylc7")
+nodes/vertex/5/position = Vector2(-1600, 50)
+nodes/vertex/6/node = SubResource("VisualShaderNodeInput_ibgj7")
+nodes/vertex/6/position = Vector2(-1600, 200)
+nodes/vertex/7/node = SubResource("VisualShaderNodeExpression_16v5x")
+nodes/vertex/7/position = Vector2(-1000, -400)
+nodes/vertex/7/size = Vector2(560, 230)
+nodes/vertex/7/input_ports = "0,3,vertex;1,3,uv;2,5,rect;3,3,tex_px;4,0,pad;"
+nodes/vertex/7/output_ports = "0,3,out_vertex;1,3,out_uv;"
+nodes/vertex/7/expression = "
+vec2 sgn = sign(uv - (rect.xy + rect.zw) * 0.5);
+out_vertex = vertex + sgn * pad;
+out_uv = uv + sgn * pad * tex_px;
+"
+nodes/vertex/connections = PackedInt32Array(5, 0, 7, 0, 6, 0, 7, 1, 2, 0, 7, 2, 3, 0, 7, 3, 4, 0, 7, 4, 7, 0, 0, 0, 7, 1, 0, 1)
+nodes/fragment/8/node = SubResource("VisualShaderNodeVec4Parameter_see5e")
+nodes/fragment/8/position = Vector2(-1600, -400)
+nodes/fragment/9/node = SubResource("VisualShaderNodeVec2Parameter_qv3bx")
+nodes/fragment/9/position = Vector2(-1600, -250)
+nodes/fragment/10/node = SubResource("VisualShaderNodeFloatParameter_hteqf")
+nodes/fragment/10/position = Vector2(-1600, -100)
+nodes/fragment/11/node = SubResource("VisualShaderNodeFloatParameter_5omhu")
+nodes/fragment/11/position = Vector2(-1600, 50)
+nodes/fragment/12/node = SubResource("VisualShaderNodeFloatParameter_3ud5r")
+nodes/fragment/12/position = Vector2(-1600, 200)
+nodes/fragment/13/node = SubResource("VisualShaderNodeFloatParameter_nrf3q")
+nodes/fragment/13/position = Vector2(-1600, 350)
+nodes/fragment/14/node = SubResource("VisualShaderNodeFloatParameter_ole0h")
+nodes/fragment/14/position = Vector2(-1600, 500)
+nodes/fragment/15/node = SubResource("VisualShaderNodeFloatParameter_v6cf5")
+nodes/fragment/15/position = Vector2(-1600, 650)
+nodes/fragment/16/node = SubResource("VisualShaderNodeFloatParameter_f6ubp")
+nodes/fragment/16/position = Vector2(-1600, 800)
+nodes/fragment/17/node = SubResource("VisualShaderNodeFloatParameter_oc8eb")
+nodes/fragment/17/position = Vector2(-1600, 950)
+nodes/fragment/18/node = SubResource("VisualShaderNodeFloatParameter_m8e8g")
+nodes/fragment/18/position = Vector2(-1600, 1100)
+nodes/fragment/19/node = SubResource("VisualShaderNodeFloatParameter_jf5po")
+nodes/fragment/19/position = Vector2(-1600, 1250)
+nodes/fragment/20/node = SubResource("VisualShaderNodeColorParameter_tlcpi")
+nodes/fragment/20/position = Vector2(-1600, 1400)
+nodes/fragment/21/node = SubResource("VisualShaderNodeVectorDecompose_y2adj")
+nodes/fragment/21/position = Vector2(-1600, 1550)
+nodes/fragment/22/node = SubResource("VisualShaderNodeVectorCompose_3a0v4")
+nodes/fragment/22/position = Vector2(-1600, 1700)
+nodes/fragment/23/node = SubResource("VisualShaderNodeColorParameter_q56l2")
+nodes/fragment/23/position = Vector2(-1600, 1850)
+nodes/fragment/24/node = SubResource("VisualShaderNodeVectorDecompose_b2e5m")
+nodes/fragment/24/position = Vector2(-1600, 2000)
+nodes/fragment/25/node = SubResource("VisualShaderNodeVectorCompose_wpwn6")
+nodes/fragment/25/position = Vector2(-1600, 2150)
+nodes/fragment/26/node = SubResource("VisualShaderNodeColorParameter_5k7qw")
+nodes/fragment/26/position = Vector2(-1600, 2300)
+nodes/fragment/27/node = SubResource("VisualShaderNodeVectorDecompose_vgxds")
+nodes/fragment/27/position = Vector2(-1600, 2450)
+nodes/fragment/28/node = SubResource("VisualShaderNodeVectorCompose_fsjq4")
+nodes/fragment/28/position = Vector2(-1600, 2600)
+nodes/fragment/29/node = SubResource("VisualShaderNodeInput_wxixn")
+nodes/fragment/29/position = Vector2(-1600, 2750)
+nodes/fragment/30/node = SubResource("VisualShaderNodeExpression_e8jb2")
+nodes/fragment/30/position = Vector2(-1000, -400)
+nodes/fragment/30/size = Vector2(560, 604)
+nodes/fragment/30/input_ports = "0,3,uv;1,5,frame_rect;2,3,tex_px;3,0,ppx;4,0,t;5,0,strength;6,0,premult;7,0,outline_px;8,0,glow_px;9,0,pulse_speed;10,0,sweep_speed;11,0,sweep_width;12,0,sweep_gain;13,4,line_color;14,4,core_color;15,4,body_tint;"
+nodes/fragment/30/output_ports = "0,4,color;1,0,alpha;"
+nodes/fragment/30/expression = "
+vec2 m = step(frame_rect.xy, uv) * step(uv, frame_rect.zw);
+vec4 c = texture(TEXTURE, uv) * (m.x * m.y);
+if (premult > 0.5 && c.a > 0.0001) {
+	c.rgb /= c.a;
+}
+float k = clamp(strength, 0.0, 1.0);
+vec2 px = tex_px * ppx;
+float pulse = 0.5 + 0.5 * sin(t * pulse_speed);
+// 네온 선: 실루엣 밖 line_r 안 (두 반지름으로 채워 두껍게), 코어: 실루엣에 붙은 안쪽 40%, 글로우: 그 바깥 두 고리
+float line_r = (outline_px + 1.5 * pulse) * k;
+float glow_w = glow_px * k * (0.8 + 0.4 * pulse);
+float a_line = 0.0;
+float a_core = 0.0;
+float a_g1 = 0.0;
+float a_g2 = 0.0;
+if (k > 0.001) {
+	// 반지름마다 둘레 여러 방향의 알파 최댓값 (프레임 사각형 밖은 0). 내장 TEXTURE 는 함수 인자로 못 넘겨 여기서 바로 돈다
+	for (int i = 0; i < 16; i++) {
+		float fi = float(i);
+		vec2 d16 = vec2(cos(fi * 0.3926991), sin(fi * 0.3926991));
+		vec2 u = uv + d16 * px * line_r;
+		vec2 mm = step(frame_rect.xy, u) * step(u, frame_rect.zw);
+		a_line = max(a_line, textureLod(TEXTURE, u, 0.0).a * mm.x * mm.y);
+		if (i < 12) {
+			vec2 d12 = vec2(cos((fi + 0.3) * 0.5235988), sin((fi + 0.3) * 0.5235988));
+			u = uv + d12 * px * (line_r + glow_w * 0.45);
+			mm = step(frame_rect.xy, u) * step(u, frame_rect.zw);
+			a_g1 = max(a_g1, textureLod(TEXTURE, u, 0.0).a * mm.x * mm.y);
+			d12 = vec2(cos((fi + 0.7) * 0.5235988), sin((fi + 0.7) * 0.5235988));
+			u = uv + d12 * px * (line_r + glow_w);
+			mm = step(frame_rect.xy, u) * step(u, frame_rect.zw);
+			a_g2 = max(a_g2, textureLod(TEXTURE, u, 0.0).a * mm.x * mm.y);
+		}
+		if (i < 8) {
+			vec2 d8 = vec2(cos((fi + 0.5) * 0.7853982), sin((fi + 0.5) * 0.7853982));
+			u = uv + d8 * px * line_r * 0.5;
+			mm = step(frame_rect.xy, u) * step(u, frame_rect.zw);
+			a_line = max(a_line, textureLod(TEXTURE, u, 0.0).a * mm.x * mm.y);
+			d8 = vec2(cos((fi + 0.25) * 0.7853982), sin((fi + 0.25) * 0.7853982));
+			u = uv + d8 * px * line_r * 0.4;
+			mm = step(frame_rect.xy, u) * step(u, frame_rect.zw);
+			a_core = max(a_core, textureLod(TEXTURE, u, 0.0).a * mm.x * mm.y);
+		}
+	}
+}
+float outside = 1.0 - c.a;
+float line = clamp(a_line - c.a, 0.0, 1.0) * k;
+float core = clamp(a_core - c.a, 0.0, 1.0);
+float glow = max(clamp(a_g1 - a_line, 0.0, 1.0) * (0.55 + 0.25 * pulse), clamp(a_g2 - a_g1, 0.0, 1.0) * (0.25 + 0.15 * pulse)) * k;
+// 스캔 띠: 프레임 아래에서 위로 훑는다 (v 0 위 → 1 아래). 띠가 지나는 자리의 선은 하얗게, 몸은 선 색으로 번쩍
+float v = (uv.y - frame_rect.y) / max(frame_rect.w - frame_rect.y, 0.00001);
+float band_y = 1.2 - fract(t * sweep_speed) * 1.5;
+float band = (1.0 - smoothstep(0.0, sweep_width, abs(v - band_y))) * k;
+float tail = (1.0 - smoothstep(0.0, sweep_width * 4.0, v - band_y)) * step(band_y, v) * 0.35 * k;
+vec3 line_rgb = mix(line_color, core_color, clamp(core * 0.75 + band, 0.0, 1.0));
+vec3 body = c.rgb * body_tint;
+body += line_color * (band + tail) * sweep_gain;
+body += line_color * 0.08 * pulse * k;
+// 합성: 몸 위에 선, 그 바깥에 글로우 (출력은 스트레이트 알파)
+float edge_a = line;
+float glow_a = glow * (1.0 - line);
+float out_a = c.a + (edge_a + glow_a) * outside;
+color = (body * c.a + line_rgb * edge_a * outside + line_color * glow_a * outside) / max(out_a, 0.0001);
+alpha = out_a;
+"
+nodes/fragment/connections = PackedInt32Array(20, 0, 21, 0, 21, 0, 22, 0, 21, 1, 22, 1, 21, 2, 22, 2, 23, 0, 24, 0, 24, 0, 25, 0, 24, 1, 25, 1, 24, 2, 25, 2, 26, 0, 27, 0, 27, 0, 28, 0, 27, 1, 28, 1, 27, 2, 28, 2, 29, 0, 30, 0, 8, 0, 30, 1, 9, 0, 30, 2, 10, 0, 30, 3, 11, 0, 30, 4, 12, 0, 30, 5, 13, 0, 30, 6, 14, 0, 30, 7, 15, 0, 30, 8, 16, 0, 30, 9, 17, 0, 30, 10, 18, 0, 30, 11, 19, 0, 30, 12, 22, 0, 30, 13, 25, 0, 30, 14, 28, 0, 30, 15, 30, 0, 0, 0, 30, 1, 0, 1)

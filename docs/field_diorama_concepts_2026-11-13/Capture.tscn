@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://docs/field_diorama_concepts_2026-11-13/capture.gd" id="1"]
+
+[node name="CyberPaintoverCapture" type="Node"]
+script = ExtResource("1")
+

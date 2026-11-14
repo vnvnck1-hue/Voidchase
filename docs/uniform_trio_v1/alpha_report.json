@@ -1,0 +1,71 @@
+[
+  {
+    "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\uniform_trio_v1\\png\\01_energetic_leader.png",
+    "width": 1063,
+    "height": 1480,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 840638,
+    "partial_alpha_pixels": 730911,
+    "opaque_pixels": 1691,
+    "content_bounds": [
+      73,
+      22,
+      1019,
+      1479
+    ],
+    "edge_nontransparent_pixels": 212,
+    "strong_alpha_bounds": [
+      97,
+      25,
+      1016,
+      1476
+    ],
+    "has_transparency": true
+  },
+  {
+    "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\uniform_trio_v1\\png\\02_shy_bookworm.png",
+    "width": 1041,
+    "height": 1511,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 901141,
+    "partial_alpha_pixels": 670825,
+    "opaque_pixels": 985,
+    "content_bounds": [
+      0,
+      0,
+      972,
+      1510
+    ],
+    "edge_nontransparent_pixels": 228,
+    "strong_alpha_bounds": [
+      122,
+      7,
+      894,
+      1508
+    ],
+    "has_transparency": true
+  },
+  {
+    "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\uniform_trio_v1\\png\\03_cool_rebel.png",
+    "width": 1051,
+    "height": 1496,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 985851,
+    "partial_alpha_pixels": 585016,
+    "opaque_pixels": 1429,
+    "content_bounds": [
+      131,
+      27,
+      977,
+      1471
+    ],
+    "edge_nontransparent_pixels": 0,
+    "strong_alpha_bounds": [
+      134,
+      30,
+      913,
+      1465
+    ],
+    "has_transparency": true
+  }
+]

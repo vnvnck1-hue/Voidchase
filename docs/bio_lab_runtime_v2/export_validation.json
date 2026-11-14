@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-13",
+  "executable": "build/windows/KSC_Touch_Game.exe",
+  "bytes": 235556736,
+  "sha256": "4717A1C072E43B7C70CDC0DBF9E98EF29E48760F983326774F43686CC9EFE3D6",
+  "export_exit_code": 0,
+  "export_errors": 0,
+  "included": {
+    "atlas": true,
+    "definition": true,
+    "adapter": true,
+    "theme_selector": true,
+    "board": true
+  },
+  "exported_game_smoke_exit_code": 0,
+  "exported_game_smoke_errors": 0,
+  "atlas_sha256": "7E338C4E41B0B6B01457E27D77DEDE6E271DAE9CD1D102F52904A87B87FA24CA",
+  "adapter_sha256": "FEC7913E3A3DE2AB5C8457FFDFB05CE2B6788E5E94DB6C31F0C772605A8D017C",
+  "gameplay_validation": "Project Vulkan rendering: face occlusion, 189 edge samples, settled render pixel equality, combat and room transition 2 cycles."
+}

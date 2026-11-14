@@ -69,9 +69,9 @@ func on_ally_attack(u: VDUnit, target: VDUnit) -> void:
 			"counter":
 				if tr["event"] == "ally_attack":
 					it["count"] = int(it["count"]) + 1
-					if it["count"] >= count_needed(c, it["id"]):
+					# 내부 쿨다운·대상 없음으로 못 쏘면 카운트를 유지해 다음 공격에 쏜다
+					if it["count"] >= count_needed(c, it["id"]) and _fire(c, {"attacker": u, "target": target}):
 						it["count"] = 0
-						_fire(c, {"attacker": u, "target": target})
 			"event":
 				if tr["event"] == "hero_attack" and tr.get("hero", u.id) == u.id:
 					_fire(c, {"attacker": u, "target": target})

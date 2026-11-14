@@ -1,0 +1,34 @@
+Generated with built-in image_gen, 2026-11-09.
+Edit target: lobby_monitor_room_bg_v3_sanctuary.png.
+Style references: actual gameplay screenshot and user's existing showroom layout, specified in prompt below.
+Concept background only; no runtime or scene changes.
+
+Use case: stylized-concept.
+Asset: revised 16:9 GAME LOBBY BACKGROUND ONLY, clearly cartoon art matching this project's existing actual game UI.
+
+INPUT ROLES:
+Image 1: EDIT TARGET. The previous secret midnight memory-therapy CRT room background. Preserve this room's centered one-point perspective, inward arch of monitors, human care props and foreground framing.
+Image 2: STYLE REFERENCE ONLY: actual in-game battle screenshot. Analyze its dark eggplant-purple foundation, lavender thick rounded card frames, bold uncomplicated cartoon silhouettes, dark purple offset shadows, selective beveled corner highlights, graphic tilted panels, and clean cel-shaded art.
+Image 3: STYLE REFERENCE ONLY: user-authored existing character-showroom layout. Observe the chunky rounded lavender portrait cards, deep purple outline/shadow, flat purple planes, purposeful diagonal shape language and bold simplified character art.
+Do NOT copy any UI, people, characters, text, tiles or gameplay board from images 2-3 into the output. Apply their shape, palette and shading language to the room's actual furniture and equipment.
+
+PRIMARY CORRECTION: previous room still looks like a softly textured painted realistic anime environment. Make it substantially more CARTOON, with deliberately designed chunky shapes and clear flat cel-shaded color masses, so its material language belongs to the same game as the UI. This must be a major visible change in drawing style, NOT merely recoloring or adding an overall purple filter.
+
+STYLE:
+- Strong simplified outer silhouettes, softly angular oversized retro CRT housings with thick rounded corners and substantial lavender-gray bezels, deliberately exaggerated chunky buttons, chair arms and console handles.
+- Controlled dark-plum contour lines on major object silhouettes, thinner/more subdued than the reference character outlines; no black contour around every small detail. Rear wall seams are nearly lineless.
+- Each object uses a base fill, one large crisp purple shadow plane and at most one short muted highlight shape. Clear 2-3 tone cartoon shading. Simple dark-plum offset shadows beneath console tops and CRT bezels echo the UI's offset card shadows.
+- Flat broad color shapes and selective tiny bevel highlights at monitor casing corners. No brushed plaster texture, no grain veil, no realistic material noise, no mottled tile surface, no upholstery weave, no tiny scratches or painterly rendering.
+- Slight playful asymmetry in monitor angles and casing proportions, friendly stylized furniture rather than photorealistic construction. Not extreme toy or chibi-room proportions. Mature cool secret-hideout atmosphere remains.
+- Background contrast and saturation stay visibly below the reference foreground characters/UI. Match the art family without making all background outlines heavy or every object glow.
+
+PALETTE:
+Move from gray navy to a deliberate deep EGGPLANT / INK VIOLET base matching the game: near-black purple #171126, background wall plum #27203E, midtone muted violet #46365E, subdued lavender casing edges #75638F. Selective dusty mauve-pink and muted cyan screen contents; one tiny warm peach counseling lamp. Use colors as a family, not literal flat swatches. Screens are medium brightness, nowhere white, not electric UI saturated purple. Rich deep shadows remain; no all-over fog or washed-out overlay.
+
+ROOM / NARRATIVE TO PRESERVE:
+A clandestine cyberpunk mind-healing agency operating after midnight. About seven chunky CRT screens mounted in one centered shallow horseshoe along the back wall, with a small dark central area behind a future heroine's head and torso. The largest monitor high above center, smaller slanted monitors beside it. A continuous low console with simplified broad drawers and one chunky keyboard at center. No giant blank middle gap. A few large rounded cable conduits tie the arrangement into one designed central hub. Screens display flat stylized symbols of good memories: seaside horizon, tree blossom, carnival wheel, postcard constellation, calm waveform. Reduce each to bold iconic shapes without text.
+Foreground chairs at both lower corners frame the central open floor. Left counseling recliner is simple rounded cartoon purple upholstery, ONE broad cushion and a folded blanket with large plain stripe shapes. Beside it, one compact round table, two simplified cups, a tissue box and sealed envelope, warm little lamp. Far left a modest folded privacy divider with plain panels; REMOVE decorative floral patterns. Far right staff apron simplified into a few clean folds, and a parked non-contact memory-link headband. Right end of console: only 4 transparent memory cartridge boxes, clean simple keepsake silhouettes. Narrow dim pink light leak behind right shutter and a small soft cyan upper-left vent glow suggest city nightlife. No additional complex props.
+
+COMPOSITION / DENSITY:
+Preserve centered perspective, open center-bottom character placement floor, subdued usable side margins for later lobby UI. Central arrangement is cohesive and inward-leading. Floor is a few LARGE clean perspective tile shapes with sparse seams and one broad shadow, not a dense tile grid. Ceiling reduced to broad structural bands, no clutter. Simplify details across the whole image, especially hardware, drawers, cables, blanket and walls. Depth expressed by large value planes and overlap, not atmospheric blur.
+No people, no drawn character silhouettes, no UI/HUD/buttons/labels, no typography, no text, no logos, no watermark, no panel borders, no collage, no photorealism, no 3D render, no pixel art. Output a finished confidently CARTOON-stylized production background for the same game as the UI references.

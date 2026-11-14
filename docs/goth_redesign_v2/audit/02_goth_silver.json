@@ -1,0 +1,16 @@
+{
+  "name": "Silver goth redesign",
+  "crown": 20,
+  "chin": 563,
+  "shoulder": 605,
+  "waist": 800,
+  "crotch": 1040,
+  "knee": 1210,
+  "sole": 1478,
+  "cx": 520,
+  "head_left": 159,
+  "head_right": 800,
+  "width_notes": "At y~319 the right main hair contour is obscured by the large bow; x800 is a visual estimate, not a directly visible skull boundary. Approx +/-35px. Do not force head width to fit costume ornament silhouette.",
+  "file": "docs/goth_redesign_v2/png/02_goth_silver.png",
+  "notes": "Manual projected measurements, crown/chin approx +/-5px. Concealed body joints estimated +/-20-30px. Head silhouette width is not skull width."
+}

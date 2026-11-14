@@ -1,0 +1,107 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[   0% ] first_scan_filesystem | Started 프로젝트 초기화 (5 steps)
+[   0% ] first_scan_filesystem | 파일 구조 스캔 중...
+[  16% ] first_scan_filesystem | 전역 클래스 이름을 불러오는 중...
+[  33% ] first_scan_filesystem | GDExtensions 검증 중...
+[  50% ] first_scan_filesystem | 오토로드 스크립트를 만드는 중...
+SCRIPT ERROR: Parse Error: Cannot infer the type of "neighbor" variable because the value doesn't have a set type.
+   at: GDScript::reload (res://scripts/void_defense/vd_bio_props.gd:97)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+   at: GDScript::reload (res://scripts/void_defense/vd_battle.gd:0)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+   at: GDScript::reload (res://scripts/void_defense/vd_float_move.gd:0)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+   at: GDScript::reload (res://scripts/void_defense/vd_unit.gd:0)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+   at: GDScript::reload (res://scripts/void_defense/vd_damage_log.gd:0)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+   at: GDScript::reload (res://scripts/loading_screen.gd:0)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+   at: GDScript::reload (res://scripts/scene_switcher.gd:0)
+ERROR: Failed to load script "res://scripts/scene_switcher.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+[  66% ] first_scan_filesystem | 플러그인을 초기화 중...
+[  83% ] first_scan_filesystem | 파일 스캔 시작 중...
+[ DONE ] first_scan_filesystem
+
+[   0% ] update_scripts_classes | Started 전역 클래스를 등록하는 중... (3 steps)
+[   0% ] update_scripts_classes | 
+[  25% ] update_scripts_classes | VDBattle
+[  50% ] update_scripts_classes | 
+[ DONE ] update_scripts_classes
+
+[   0% ] _update_scan_actions | Started 액션 스캔 중... (19 steps)
+[   0% ] _update_scan_actions | prop_01_cultivation_chamber.png
+[   5% ] _update_scan_actions | prop_02_hydroponic_rack.png
+[  10% ] _update_scan_actions | prop_03_sample_cooler.png
+[  15% ] _update_scan_actions | bio-lab-atlas.png
+[  20% ] _update_scan_actions | block_01_game.png
+[  25% ] _update_scan_actions | block_02_game.png
+[  30% ] _update_scan_actions | block_03_game.png
+[  35% ] _update_scan_actions | side_left_01.png
+[  40% ] _update_scan_actions | side_left_02.png
+[  45% ] _update_scan_actions | side_left_03.png
+[  50% ] _update_scan_actions | side_right_01.png
+[  55% ] _update_scan_actions | side_right_02.png
+[  60% ] _update_scan_actions | side_right_03.png
+[  65% ] _update_scan_actions | top_01.png
+[  70% ] _update_scan_actions | top_02.png
+[  75% ] _update_scan_actions | top_03.png
+[  80% ] _update_scan_actions | actual_battle.png
+[  85% ] _update_scan_actions | joined_board.png
+[  90% ] _update_scan_actions | rising_board.png
+[ DONE ] _update_scan_actions
+
+[   0% ] reimport | Started 애셋 (다시) 가져오는 중 (19 steps)
+[   0% ] reimport | 다시 가져올 파일을 준비 중...
+[   5% ] reimport | 다시 가져올 파일을 준비 중...
+[  10% ] reimport | 다시 가져올 파일을 준비 중...
+[  15% ] reimport | 다시 가져올 파일을 준비 중...
+[  20% ] reimport | 다시 가져올 파일을 준비 중...
+[  25% ] reimport | 다시 가져올 파일을 준비 중...
+[  30% ] reimport | 다시 가져올 파일을 준비 중...
+[  35% ] reimport | 다시 가져올 파일을 준비 중...
+[  40% ] reimport | 다시 가져올 파일을 준비 중...
+[  45% ] reimport | 다시 가져올 파일을 준비 중...
+[  50% ] reimport | 다시 가져올 파일을 준비 중...
+[  55% ] reimport | 다시 가져올 파일을 준비 중...
+[  60% ] reimport | 다시 가져올 파일을 준비 중...
+[  65% ] reimport | 다시 가져올 파일을 준비 중...
+[  70% ] reimport | 다시 가져올 파일을 준비 중...
+[  75% ] reimport | 다시 가져올 파일을 준비 중...
+[  80% ] reimport | 다시 가져올 파일을 준비 중...
+[  85% ] reimport | 다시 가져올 파일을 준비 중...
+[  90% ] reimport | 다시 가져올 파일을 준비 중...
+[   0% ] reimport | 다시 가져오기 전 작업을 수행 중...
+[   0% ] reimport | rising_board.png
+[   5% ] reimport | joined_board.png
+[  10% ] reimport | actual_battle.png
+[  15% ] reimport | top_03.png
+[  20% ] reimport | top_02.png
+[  25% ] reimport | top_01.png
+[  30% ] reimport | side_right_03.png
+[  35% ] reimport | side_right_02.png
+[  40% ] reimport | side_right_01.png
+[  45% ] reimport | side_left_03.png
+[  50% ] reimport | side_left_02.png
+[  55% ] reimport | side_left_01.png
+[  60% ] reimport | block_03_game.png
+[  65% ] reimport | block_02_game.png
+[  70% ] reimport | block_01_game.png
+[  75% ] reimport | bio-lab-atlas.png
+[  80% ] reimport | prop_03_sample_cooler.png
+[  85% ] reimport | prop_02_hydroponic_rack.png
+[  90% ] reimport | prop_01_cultivation_chamber.png
+[  95% ] reimport | 애셋 가져오기 마무리 중...
+[ DONE ] reimport
+
+[   0% ] reimport | Started 애셋 (다시) 가져오는 중 (19 steps)
+[   0% ] reimport | 다시 가져오기 후 작업을 수행 중...
+[ DONE ] reimport
+
+[   0% ] loading_editor_layout | Started 편집기를 불러오는 중 (5 steps)
+[   0% ] loading_editor_layout | 편집기 레이아웃을 불러오는 중...
+[  16% ] loading_editor_layout | 독을 불러오는 중...
+[ DONE ] loading_editor_layout
+

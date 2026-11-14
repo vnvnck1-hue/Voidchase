@@ -1,5 +1,6 @@
 ## 피격 글리치 실시간 조정 패널(디버그 창). F9 나 오른쪽 위 설정 버튼 → [글리치 조정] 으로 연다. 배경 조정 패널 오른쪽에 뜬다.
 ## VDHurtGlitch.PARAMS 표 하나로 슬라이더·저장·복사가 정해진다. 값은 바뀔 때마다 user://vd_glitch.cfg 에 저장된다.
+## 아래 칸은 화면 전체 글리치(VDScreenGlitch.PARAMS, 키 앞에 "sg:") — 피격·침식 때 화면이 찢어지는 효과. user://vd_screen_glitch.cfg.
 ## [약하게]/[세게] 버튼으로 바로 발동해 볼 수 있다 (쿨다운 무시).
 ## class_name 없음: vd_battle.gd 가 preload 해서 쓴다.
 extends Control
@@ -9,6 +10,7 @@ const ROW_LABEL_W := 210.0
 const ROW_SLIDER_W := 170.0
 
 var glitch: Node                 # VDHurtGlitch
+var screen: Node                 # VDScreenGlitch (없으면 화면 글리치 칸을 만들지 않는다)
 
 var _panel: PanelContainer
 var _sliders := {}               # 키 -> HSlider
@@ -16,15 +18,16 @@ var _values := {}                # 키 -> Label
 var _loading := false
 
 
-func setup(g: Node) -> void:
+func setup(g: Node, sg: Node = null) -> void:
 	glitch = g
+	screen = sg
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel = PanelContainer.new()
-	SceneSwitcher.pin(_panel, Vector2(0, 0), Rect2(500, 150, 470, 0))   # 배경 조정 패널(40~480) 오른쪽
+	SceneSwitcher.pin(_panel, Vector2(0, 0), Rect2(500, 40, 470, 0))   # 배경 조정 패널(40~480) 오른쪽
 	_panel.custom_minimum_size = Vector2(470, 0)
 	_panel.visible = false
 	var sb := StyleBoxFlat.new()
@@ -36,7 +39,7 @@ func _ready() -> void:
 	_panel.add_theme_stylebox_override("panel", sb)
 	add_child(_panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 3)
+	box.add_theme_constant_override("separation", 2)
 	_panel.add_child(box)
 	box.add_child(_label("피격 글리치 조정  (F9)", 18, Color(1.0, 0.75, 0.92)))
 	box.add_child(_label("아군 피격 때 맞은 영웅 카드가 흔들리며 테두리가 가로로 튀는 카툰 글리치", 12, Color(0.75, 0.68, 0.9)))
@@ -65,18 +68,57 @@ func _ready() -> void:
 		_sliders[key] = s
 		_values[key] = val_l
 
+	if screen != null:
+		box.add_child(HSeparator.new())
+		box.add_child(_label("화면 글리치  (피격 · 침식)", 16, Color(0.6, 0.95, 0.95)))
+		box.add_child(_label("아군 피격·성좌판 침식 때 화면 전체가 가로 띠로 찢어지며 청록/자홍으로 갈라진다", 12, Color(0.75, 0.68, 0.9)))
+		for p in screen.PARAMS:
+			var key: String = "sg:" + p[0]
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 6)
+			var name_l := _label(p[1], 14)
+			name_l.custom_minimum_size = Vector2(ROW_LABEL_W, 0)
+			row.add_child(name_l)
+			var s := HSlider.new()
+			s.min_value = p[2]
+			s.max_value = p[3]
+			s.step = p[4]
+			s.custom_minimum_size = Vector2(ROW_SLIDER_W, 20)
+			s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			s.focus_mode = Control.FOCUS_NONE
+			s.value_changed.connect(_on_value.bind(key))
+			row.add_child(s)
+			var val_l := _label("", 14, Color(1.0, 0.9, 0.6))
+			val_l.custom_minimum_size = Vector2(52, 0)
+			val_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			row.add_child(val_l)
+			box.add_child(row)
+			_sliders[key] = s
+			_values[key] = val_l
+
 	box.add_child(HSeparator.new())
 	var btns := HBoxContainer.new()
 	btns.add_theme_constant_override("separation", 8)
 	btns.add_child(_button("약하게 발동", func() -> void: _test(0.35)))
 	btns.add_child(_button("세게 발동", func() -> void: _test(1.0)))
+	if screen != null:
+		btns.add_child(_button("화면 침식", func() -> void:
+			screen.reset_timer()
+			screen.kick(1.0, "corrupt")))
 	btns.add_child(_button("기본값", func() -> void:
 		glitch.reset_values()
 		glitch.save_values()
+		if screen != null:
+			screen.reset_values()
+			screen.save_values()
 		_sync()))
 	btns.add_child(_button("값 복사", func() -> void:
-		DisplayServer.clipboard_set(glitch.values_text())
-		print("[glitch] ", glitch.values_text())))
+		var txt: String = glitch.values_text()
+		if screen != null:
+			txt += "
+screen: " + screen.values_text()
+		DisplayServer.clipboard_set(txt)
+		print("[glitch] ", txt)))
 	box.add_child(btns)
 	_sync()
 
@@ -106,8 +148,13 @@ func _on_value(v: float, key: String) -> void:
 	(_values[key] as Label).text = _fmt(v, key)
 	if _loading:
 		return
-	glitch.P[key] = v
-	glitch.save_values()
+	if key.begins_with("sg:"):
+		screen.P[key.substr(3)] = v
+		_dirty_screen = true
+	else:
+		glitch.P[key] = v
+		_dirty_glitch = true
+	_save_soon()
 
 
 func _sync() -> void:
@@ -116,11 +163,18 @@ func _sync() -> void:
 		var key: String = p[0]
 		(_sliders[key] as HSlider).value = float(glitch.P[key])
 		(_values[key] as Label).text = _fmt(float(glitch.P[key]), key)
+	if screen != null:
+		for p in screen.PARAMS:
+			var key: String = "sg:" + p[0]
+			(_sliders[key] as HSlider).value = float(screen.P[p[0]])
+			(_values[key] as Label).text = _fmt(float(screen.P[p[0]]), key)
 	_loading = false
 
 
 func _fmt(v: float, key: String) -> String:
-	for p in Glitch.PARAMS:
+	var table: Array = screen.PARAMS if key.begins_with("sg:") else Glitch.PARAMS
+	key = key.trim_prefix("sg:")
+	for p in table:
 		if p[0] == key:
 			return "%d" % roundi(v) if float(p[4]) >= 1.0 else "%.2f" % v
 	return str(v)
@@ -141,3 +195,35 @@ func _button(text: String, cb: Callable) -> Button:
 	b.focus_mode = Control.FOCUS_NONE
 	b.pressed.connect(cb)
 	return b
+
+
+## 슬라이더를 끄는 동안 값이 바뀔 때마다 파일을 쓰지 않고, 멈춘 뒤 한 번 쓴다 (씬을 떠날 때 남은 것도 쓴다).
+const SAVE_DELAY := 0.4
+var _save_queued := false
+var _dirty_glitch := false
+var _dirty_screen := false
+
+
+func _save_soon() -> void:
+	if not is_inside_tree():
+		_flush_save()
+		return
+	if _save_queued:
+		return
+	_save_queued = true
+	get_tree().create_timer(SAVE_DELAY, true, false, true).timeout.connect(_flush_save)
+
+
+func _flush_save() -> void:
+	_save_queued = false
+	if _dirty_glitch and is_instance_valid(glitch):
+		glitch.save_values()
+	if _dirty_screen and is_instance_valid(screen):
+		screen.save_values()
+	_dirty_glitch = false
+	_dirty_screen = false
+
+
+func _exit_tree() -> void:
+	if _save_queued:
+		_flush_save()

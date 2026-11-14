@@ -1,0 +1,4 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://docs/bio_lab_props_runtime/capture.gd" id="1"]
+[node name="BioPropsCapture" type="Node"]
+script = ExtResource("1")

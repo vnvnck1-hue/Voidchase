@@ -1,0 +1,16 @@
+{
+	"expected_exposed_faces": {
+		"left": 8,
+		"right": 5,
+		"top": 17
+	},
+	"failures": [],
+	"settled_different_pixels": 0,
+	"shared_edge_samples": 189,
+	"static_drawn_faces": {
+		"left": 8,
+		"right": 5,
+		"top": 17
+	},
+	"transparent_shared_edge_samples": 0
+}

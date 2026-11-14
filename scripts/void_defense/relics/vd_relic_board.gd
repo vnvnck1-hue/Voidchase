@@ -1,4 +1,5 @@
 ## 성좌판 상태: 10칸의 잠김/열림/침식과 올려 둔 유물(+회전), 보관함(tray). 그림·입력은 VDRelicHud, 발동은 VDRelicRuntime.
+## 보관함에는 유물 id 와 "슬롯"(VDRelicData.SLOT_ID)이 섞여 들어간다. 슬롯은 잠긴 칸에 놓아 그 칸을 여는 데만 쓰고(unlock_from_tray), 열린 칸에는 못 놓는다.
 ## 전투 중에는 VDBattle 이 편집을 막는다 (여기서는 규칙만 검사한다).
 ## 소켓: 유물의 ports(변 0..5)를 회전만큼 돌린 것이 실제 소켓. 소켓이 이웃 유물에 닿으면 그 이웃이 port_effect 를 받고,
 ##       chain 유물은 소켓으로 이어진 유물의 발동을 받는다 (어느 쪽 소켓이든 닿으면 "연결").
@@ -45,6 +46,32 @@ func relic_at(c: Vector2i) -> String:
 
 func can_place(c: Vector2i) -> bool:
 	return is_open(c)
+
+
+## 슬롯을 놓아 열 수 있는 칸인가 (잠긴 칸).
+func can_unlock(c: Vector2i) -> bool:
+	return cells.has(c) and cells[c] == Cell.LOCKED
+
+
+func is_slot(i: int) -> bool:
+	return i >= 0 and i < tray.size() and VDRelicData.is_slot(tray[i])
+
+
+## 보관함의 슬롯 수.
+func slot_count() -> int:
+	var n := 0
+	for id in tray:
+		if VDRelicData.is_slot(id):
+			n += 1
+	return n
+
+
+func locked_count() -> int:
+	var n := 0
+	for c in cells:
+		if cells[c] == Cell.LOCKED:
+			n += 1
+	return n
 
 
 func open_count() -> int:
@@ -144,9 +171,9 @@ func socket_bonus(c: Vector2i) -> Dictionary:
 
 # ---------------------------------------------------------------- edits
 
-## 보관함 i번째 유물을 c 에 놓는다. 칸에 유물이 있으면 자리를 바꾼다. 새로 놓인 유물은 회전 0.
+## 보관함 i번째 유물을 c 에 놓는다. 칸에 유물이 있으면 자리를 바꾼다. 새로 놓인 유물은 회전 0. 슬롯은 여기로 못 놓는다 (unlock_from_tray).
 func place_from_tray(i: int, c: Vector2i) -> bool:
-	if i < 0 or i >= tray.size() or not can_place(c):
+	if i < 0 or i >= tray.size() or not can_place(c) or is_slot(i):
 		return false
 	var id := tray[i]
 	tray.remove_at(i)
@@ -203,19 +230,40 @@ func add_to_tray(id: String) -> void:
 	changed.emit()
 
 
-## 잠긴 칸을 위에서부터 n개 연다. 실제로 연 수를 돌려준다.
-func unlock(n: int) -> int:
-	var opened := 0
-	for c in VDRelicData.BOARD_CELLS:
-		if opened >= n:
-			break
-		if cells[c] == Cell.LOCKED:
-			cells[c] = Cell.OPEN
-			opened += 1
-			cell_fx.emit(c, "unlock")
-	if opened > 0:
+## 보관함 i번째 슬롯을 잠긴 칸 c 에 놓아 연다 (유저 드래그). 슬롯이 아니거나 잠긴 칸이 아니면 거절.
+func unlock_from_tray(i: int, c: Vector2i) -> bool:
+	if not is_slot(i) or not can_unlock(c):
+		return false
+	tray.remove_at(i)
+	cells[c] = Cell.OPEN
+	cell_fx.emit(c, "unlock")
+	changed.emit()
+	return true
+
+
+## 잠긴 칸 c 를 그냥 연다 (테스트·디버그용. 게임 흐름에서는 unlock_from_tray 만 쓴다).
+func unlock_cell(c: Vector2i) -> bool:
+	if not can_unlock(c):
+		return false
+	cells[c] = Cell.OPEN
+	cell_fx.emit(c, "unlock")
+	changed.emit()
+	return true
+
+
+## 보관함의 슬롯을 전부 뺀다 (더 열 칸이 없을 때 정수로 바꿔 주기 위해). 뺀 수를 돌려준다.
+func take_slots() -> int:
+	var n := 0
+	var i := 0
+	while i < tray.size():
+		if VDRelicData.is_slot(tray[i]):
+			tray.remove_at(i)
+			n += 1
+		else:
+			i += 1
+	if n > 0:
 		changed.emit()
-	return opened
+	return n
 
 
 func corrupt_count() -> int:

@@ -1,0 +1,15 @@
+{
+  "name": "Quiet dreamer",
+  "crown": 14,
+  "chin": 568,
+  "shoulder": 620,
+  "waist": 795,
+  "crotch": 1000,
+  "knee": 1185,
+  "sole": 1505,
+  "cx": 520,
+  "head_left": 155,
+  "head_right": 853,
+  "file": "docs/goth_trio_v1/png/01_quiet_dreamer.png",
+  "notes": "Manual visible projected contour landmarks, approx +/-5px at crown/chin. Hidden body joints estimated +/-20-30px. Main head width excludes independent ponytails, ahoge and projecting isolated tips; hair silhouette, not skull width."
+}

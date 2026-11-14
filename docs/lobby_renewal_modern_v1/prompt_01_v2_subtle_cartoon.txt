@@ -1,0 +1,17 @@
+Generated with built-in image_gen, 2026-11-11.
+Edit target: 01_cinematic_lobby.png. User selected cinematic layout and requested only slightly more cartoon-like rendering.
+
+Edit the supplied approved cinematic game lobby screenshot concept.
+User request: keep THIS composition and make it ONLY SLIGHTLY more cartoon-like. A subtle shift of the ENVIRONMENT art, not a redesign.
+
+LOCK AND PRESERVE:
+- Same 16:9 framing, camera, exact architecture and prop positions: rain-blue window and dark sofa on the left, slim lamp and shelves near the middle, diagonal dark reception counter in right foreground, headphones + closed folder + water glass on that counter, three small cobalt CRTs on right wall, magenta-lit curtained private doorway at far right, dark foreground plant framing.
+- Same sophisticated restrained atmosphere of a secret after-hours mind-healing clinic. Deep petrol-black / navy, selective cobalt light and fine magenta accent. No people, no characters, no portraits.
+- ALL existing UI content, layout, margins, scale, alignment and typography remain intact. Title "VOID DEFENSE", subtitle "심야 상담소", five left menu rows "01 메인전투" with small "VOID DEFENSE" and "입장 →", "02 터치 게임 · 캐릭터 선택", "03 원화 조립 테스트", "04 연출 연구실", "05 VFX 쇼룸", lower left "설정" and "게임 종료", lower right "1–5 모드 선택 · F11 전체화면". Thin magenta selected-row rule and understated cursor. Preserve crisp correct Korean. Do not move or redraw interface into a different design.
+
+ONLY CHANGE THE ENVIRONMENT'S DRAWING TREATMENT:
+One small step, roughly 15-20 percent more hand-drawn cartoon / premium animation-background illustration than the input's semi-realistic cinematic rendering. Preserve mature art direction.
+Simplify material textures into broad designed color planes: reduce gritty mottled counter, tiny rain droplets, upholstery creases, noisy tile reflections, book spines and foliage details. Render each major form with a base color, one large clear softly edged or crisp-edged cel shadow, and a small selective highlight. Slightly more stylized softly angular furniture silhouettes and chunky CRT housings, but retain original believable proportions and size. Add thin controlled dark-blue hand-drawn contour accents to major overlaps and selected object edges, with natural pressure variation and tapered ends; not thick uniform black outlines or vector-perfect tracing around everything. Keep distant contours subdued.
+Make foliage read as grouped leaf silhouettes rather than lots of individually rendered leaves, rain as a few selected graceful painted streaks, floor reflections as broad interrupted cobalt paint shapes instead of realistic glossy noise. Glass and headphones become a little simpler but remain elegant and recognizable. Preserve the depth and strong original shadow masses.
+Think restrained hand-painted film background with just a little graphic cel-shading, NOT a children's cartoon. NO bubbly purple frames, cute icons, oversized props, exaggerated toy geometry, chibi, cel-shading everywhere, flat vector treatment, saturated lavender architecture or glossy 3D. Don't make the whole room brighter or more colorful. Do not add any props, lamps, text, decorative particles or labels.
+The intended effect is: the SAME approved sophisticated cinematic PC game lobby, quietly more illustrated and slightly cartoon, with perfectly preserved clean flat UI. Output one polished full-bleed landscape screenshot concept. No border, watermark, extra text, person or device mockup.

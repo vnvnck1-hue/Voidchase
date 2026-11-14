@@ -71,3 +71,20 @@ whoosh·boom·rise·clash 는 TrioChess `scripts/sfx.gd` 합성식을 `vd_audio.
 | super_ult_04.wav | ult-b-1 (빠른 휙 → 유리 같은 핑) — "핑"이 0.32초 뒤라 앞 0.26초를 잘라 0.06초에 오게 함 |
 | super_ult_05.wav | ult-b-3 |
 | super_ult_06~08.wav | ult-c-1·c-2·c-3 (칼날 같은 칭 + 종소리 울림) |
+
+## 2026-11-12 — 화면 전환 소리 (ElevenLabs SFX v3) → assets/audio/transition/
+
+기록 `docs/sfx_transition_v1/`. 평균 음량 -20dB 로 맞춤. `scripts/screen_transition.gd` start() 에서 재생, 연출 연구실 "화면 전환" [5 소리] 에서 끔 / 1 / 2 / 3 / 무작위 와 크기(dB)를 고른다(`screen_transition_fx.gd` snd_pick·snd_db, user://transition_fx.json).
+
+| 파일 | 원본 |
+|---|---|
+| transition/transition_1~3.wav | tr-b-2·b-3·b-4 (전기 지직 + 휙 → 단단한 탁) |
+
+## 2026-11-13 — 전투 필드 기본 엠비언트 → assets/audio/void_defense/ambience/
+
+사용자가 준 **Ultra Sci-Fi Game Audio Ambience Pack** (Eric Berzins, 원본 `E:\Downloads\UltraSciFiGameAudioAmbiencePack\`). 이음매 없는 루프라 그대로 복사하고 임포트에서 반복(Forward)·QOA 압축. `scripts/void_defense/vd_ambience.gd` 가 두 층을 겹쳐 재생, 설정 메뉴 "전투 엠비언트 소리" 로 끄고 켠다.
+
+| 파일 | 원본 | 역할 · 음량 |
+|---|---|---|
+| ambience/amb_scifi_loop02.wav | AMBSci_Sci-Fi Ambience Loop 2 (20.2초) | 바탕 드론 · -12dB (A 가중 -43.5dB) |
+| ambience/amb_scifi_loop15.wav | AMBSci_Sci-Fi Ambience Loop 15 (29.0초) | 초저역 너울 · -11dB (A 가중 -50.8dB) |

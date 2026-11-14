@@ -1,0 +1,145 @@
+[gd_resource type="VisualShader" format=3]
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_ktxhv"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_4otje"]
+parameter_name = "col_hot"
+default_value_enabled = true
+default_value = Color(1, 0.33, 0.05, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_fts4p"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_12xml"]
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_n02sq"]
+input_name = "uv"
+
+[sub_resource type="VisualShaderNodeTexture" id="VisualShaderNodeTexture_xictb"]
+source = 2
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_b37i6"]
+input_name = "time"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_n2tkf"]
+size = Vector2(700, 400)
+expression = "float grow = max(fat, 0.0);
+float shrink = max(-fat, 0.0);
+// 몸통: 그린 모양 그대로. 부풀 때는 좁은 빛(G)까지 몸통이 된다
+float puff = smoothstep(1.0 - grow * 0.93, 1.06 - grow * 0.93, tex.g) * step(0.001, grow);
+float body = max(tex.r, puff);
+// 오그라들 때: 넓은 빛(B)은 가운데가 가장 밝다 → 문턱을 올리면 바늘 끝부터 사라진다
+float keep = mix(1.0, smoothstep(shrink * 0.9, shrink * 0.9 + 0.14, tex.b), step(0.001, shrink));
+body *= keep;
+float glow = tex.g * keep;
+float bloom = tex.b * mix(1.0, keep, 0.6);
+vec3 gcol = mix(col_glow, col_hot, danger);
+float glint = 0.86 + 0.14 * sin(time * 21.0);
+vec3 light = gcol * (glow * glow_gain * (1.0 - body) + bloom * bloom_gain) * glint;
+light += vec3(1.0, 0.98, 0.9) * flash * (glow * 1.1 + bloom * 0.8);
+rgb_out = (vec3(1.0) * body + light) * alpha_k;
+a_out = body * alpha_k;"
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_cd81b"]
+parameter_name = "fat"
+hint = 1
+min = -1.0
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_avff8"]
+parameter_name = "flash"
+hint = 1
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_oudcl"]
+parameter_name = "danger"
+hint = 1
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_05rja"]
+parameter_name = "glow_gain"
+hint = 1
+max = 4.0
+default_value_enabled = true
+default_value = 1.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_jy77d"]
+parameter_name = "bloom_gain"
+hint = 1
+max = 4.0
+default_value_enabled = true
+default_value = 0.45
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_jfh77"]
+parameter_name = "alpha_k"
+hint = 1
+default_value_enabled = true
+default_value = 1.0
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_plote"]
+parameter_name = "col_glow"
+default_value_enabled = true
+default_value = Color(1, 0.965, 0, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_4ml37"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[resource]
+mode = 1
+modes/blend = 4
+flags/unshaded = true
+flags/light_only = false
+nodes/fragment/2/node = SubResource("VisualShaderNodeFloatParameter_cd81b")
+nodes/fragment/2/position = Vector2(-1200, -500)
+nodes/fragment/3/node = SubResource("VisualShaderNodeFloatParameter_avff8")
+nodes/fragment/3/position = Vector2(-1200, -350)
+nodes/fragment/4/node = SubResource("VisualShaderNodeFloatParameter_oudcl")
+nodes/fragment/4/position = Vector2(-1200, -200)
+nodes/fragment/5/node = SubResource("VisualShaderNodeFloatParameter_05rja")
+nodes/fragment/5/position = Vector2(-1200, -50)
+nodes/fragment/6/node = SubResource("VisualShaderNodeFloatParameter_jy77d")
+nodes/fragment/6/position = Vector2(-1200, 100)
+nodes/fragment/7/node = SubResource("VisualShaderNodeFloatParameter_jfh77")
+nodes/fragment/7/position = Vector2(-1200, 250)
+nodes/fragment/8/node = SubResource("VisualShaderNodeColorParameter_plote")
+nodes/fragment/8/position = Vector2(-860, -500)
+nodes/fragment/9/node = SubResource("VisualShaderNodeVectorDecompose_4ml37")
+nodes/fragment/9/position = Vector2(-860, -350)
+nodes/fragment/10/node = SubResource("VisualShaderNodeVectorCompose_ktxhv")
+nodes/fragment/10/position = Vector2(-860, -200)
+nodes/fragment/11/node = SubResource("VisualShaderNodeColorParameter_4otje")
+nodes/fragment/11/position = Vector2(-860, -50)
+nodes/fragment/12/node = SubResource("VisualShaderNodeVectorDecompose_fts4p")
+nodes/fragment/12/position = Vector2(-860, 100)
+nodes/fragment/13/node = SubResource("VisualShaderNodeVectorCompose_12xml")
+nodes/fragment/13/position = Vector2(-860, 250)
+nodes/fragment/14/node = SubResource("VisualShaderNodeInput_n02sq")
+nodes/fragment/14/position = Vector2(-520, -500)
+nodes/fragment/15/node = SubResource("VisualShaderNodeTexture_xictb")
+nodes/fragment/15/position = Vector2(-520, -350)
+nodes/fragment/16/node = SubResource("VisualShaderNodeInput_b37i6")
+nodes/fragment/16/position = Vector2(-520, -200)
+nodes/fragment/17/node = SubResource("VisualShaderNodeExpression_n2tkf")
+nodes/fragment/17/position = Vector2(-520, -50)
+nodes/fragment/17/size = Vector2(700, 400)
+nodes/fragment/17/input_ports = "0,5,tex;1,0,time;2,0,fat;3,0,flash;4,0,danger;5,0,glow_gain;6,0,bloom_gain;7,0,alpha_k;8,4,col_glow;9,4,col_hot;"
+nodes/fragment/17/output_ports = "0,4,rgb_out;1,0,a_out;"
+nodes/fragment/17/expression = "float grow = max(fat, 0.0);
+float shrink = max(-fat, 0.0);
+// 몸통: 그린 모양 그대로. 부풀 때는 좁은 빛(G)까지 몸통이 된다
+float puff = smoothstep(1.0 - grow * 0.93, 1.06 - grow * 0.93, tex.g) * step(0.001, grow);
+float body = max(tex.r, puff);
+// 오그라들 때: 넓은 빛(B)은 가운데가 가장 밝다 → 문턱을 올리면 바늘 끝부터 사라진다
+float keep = mix(1.0, smoothstep(shrink * 0.9, shrink * 0.9 + 0.14, tex.b), step(0.001, shrink));
+body *= keep;
+float glow = tex.g * keep;
+float bloom = tex.b * mix(1.0, keep, 0.6);
+vec3 gcol = mix(col_glow, col_hot, danger);
+float glint = 0.86 + 0.14 * sin(time * 21.0);
+vec3 light = gcol * (glow * glow_gain * (1.0 - body) + bloom * bloom_gain) * glint;
+light += vec3(1.0, 0.98, 0.9) * flash * (glow * 1.1 + bloom * 0.8);
+rgb_out = (vec3(1.0) * body + light) * alpha_k;
+a_out = body * alpha_k;"
+nodes/fragment/connections = PackedInt32Array(8, 0, 9, 0, 9, 0, 10, 0, 9, 1, 10, 1, 9, 2, 10, 2, 11, 0, 12, 0, 12, 0, 13, 0, 12, 1, 13, 1, 12, 2, 13, 2, 14, 0, 15, 0, 15, 0, 17, 0, 16, 0, 17, 1, 2, 0, 17, 2, 3, 0, 17, 3, 4, 0, 17, 4, 5, 0, 17, 5, 6, 0, 17, 6, 7, 0, 17, 7, 10, 0, 17, 8, 13, 0, 17, 9, 17, 0, 0, 0, 17, 1, 0, 1)

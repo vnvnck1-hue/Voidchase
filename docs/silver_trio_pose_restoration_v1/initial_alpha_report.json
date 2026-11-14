@@ -1,0 +1,71 @@
+[
+  {
+    "file": "C:\\Users\\vnvnc\\.codex\\generated_images\\01a1c3dd-410e-7820-8a83-14eb1d42f184\\exec-dbdf240b-cc07-416a-b0e6-de0414cd23c2.png",
+    "width": 1057,
+    "height": 1488,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 921166,
+    "partial_alpha_pixels": 651567,
+    "opaque_pixels": 83,
+    "content_bounds": [
+      0,
+      0,
+      1034,
+      1487
+    ],
+    "edge_nontransparent_pixels": 113,
+    "strong_alpha_bounds": [
+      176,
+      4,
+      881,
+      1475
+    ],
+    "has_transparency": true
+  },
+  {
+    "file": "C:\\Users\\vnvnc\\.codex\\generated_images\\01a1c3dd-410e-7820-8a83-14eb1d42f184\\exec-a7983206-6393-4528-acf6-a8dd72a9eb02.png",
+    "width": 1024,
+    "height": 1536,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 944234,
+    "partial_alpha_pixels": 628630,
+    "opaque_pixels": 0,
+    "content_bounds": [
+      0,
+      0,
+      1013,
+      1535
+    ],
+    "edge_nontransparent_pixels": 97,
+    "strong_alpha_bounds": [
+      152,
+      7,
+      842,
+      1507
+    ],
+    "has_transparency": true
+  },
+  {
+    "file": "C:\\Users\\vnvnc\\.codex\\generated_images\\01a1c3dd-410e-7820-8a83-14eb1d42f184\\exec-8dafc81a-a37b-4c06-bf37-e98ddf131313.png",
+    "width": 1019,
+    "height": 1543,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 822660,
+    "partial_alpha_pixels": 749428,
+    "opaque_pixels": 229,
+    "content_bounds": [
+      33,
+      5,
+      982,
+      1542
+    ],
+    "edge_nontransparent_pixels": 35,
+    "strong_alpha_bounds": [
+      122,
+      13,
+      919,
+      1529
+    ],
+    "has_transparency": true
+  }
+]

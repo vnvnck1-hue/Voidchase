@@ -9,10 +9,13 @@ func _ready() -> void:
 
 
 func _run() -> void:
-	# 로비 → 모드 1 (Touch_Game_demo)
+	# 로비 → 모드 1 (SceneSwitcher.SCENES[1])
 	var tree := get_tree()
 	var dir := out_dir
 	SceneSwitcher.go_lobby()
+	await tree.create_timer(0.1).timeout
+	while SceneSwitcher.is_loading():   # 테스트 씬 → 로비 전환이 끝나야 다음 전환을 받는다
+		await tree.process_frame
 	await tree.create_timer(0.5).timeout
 	var t0 := Time.get_ticks_usec()
 	SceneSwitcher.switch_to(1)

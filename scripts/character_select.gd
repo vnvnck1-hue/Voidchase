@@ -220,3 +220,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			select_next(-1)
 		elif event.keycode == KEY_RIGHT:
 			select_next(1)
+
+
+func _exit_tree() -> void:
+	# 기본 커서 모양은 프로세스 전역이라 씬을 떠나도 남는다
+	Input.set_default_cursor_shape(Input.CURSOR_ARROW)

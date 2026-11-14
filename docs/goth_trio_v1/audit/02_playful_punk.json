@@ -1,0 +1,15 @@
+{
+  "name": "Playful punk",
+  "crown": 94,
+  "chin": 602,
+  "shoulder": 645,
+  "waist": 815,
+  "crotch": 1010,
+  "knee": 1170,
+  "sole": 1458,
+  "cx": 540,
+  "head_left": 213,
+  "head_right": 880,
+  "file": "docs/goth_trio_v1/png/02_playful_punk.png",
+  "notes": "Manual visible projected contour landmarks, approx +/-5px at crown/chin. Hidden body joints estimated +/-20-30px. Main head width excludes independent ponytails, ahoge and projecting isolated tips; hair silhouette, not skull width."
+}

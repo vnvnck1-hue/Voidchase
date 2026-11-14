@@ -16,6 +16,13 @@ const UNITY_GRAVITY := -9.81
 @export var texture: Texture2D
 @export var trail_texture: Texture2D
 @export var renderer_enabled: bool = true
+## 전체 배율: 1 Unity 단위 = PX × size_mul 픽셀. 크기·속도·모양·궤적이 한꺼번에 같은 비율로 커진다 (VDTouchHit 가 쓴다)
+@export var size_mul: float = 1.0:
+	set(v):
+		size_mul = v
+		_px = PX * v
+## 재생 속도 배율 (simulationSpeed 에 곱한다)
+@export var speed_mul: float = 1.0
 
 var playing := false
 var emitting := false
@@ -39,6 +46,8 @@ var _shape: Dictionary
 var _vol: Dictionary
 var _lim: Dictionary
 var _fol: Dictionary
+var _fol_local := true          # forceOverLifetime.space == "Local" (파티클마다 문자열 비교하지 않게 로드 때 한 번)
+var _scaling_mode := "Local"    # main.scalingMode
 var _col: Dictionary
 var _sol: Dictionary
 var _rol: Dictionary
@@ -51,6 +60,7 @@ var _loop := true
 var _sim_world := false
 var _speed := 1.0
 var _loaded := false
+var _px := PX
 
 
 func _ready() -> void:
@@ -80,6 +90,8 @@ func _load_config() -> void:
 	_duration = float(_main.get("duration", 5.0))
 	_loop = bool(_main.get("loop", true))
 	_sim_world = String(_main.get("simulationSpace", "Local")) == "World"
+	_fol_local = String(_fol.get("space", "Local")) == "Local"
+	_scaling_mode = String(_main.get("scalingMode", "Local"))
 	_speed = float(_main.get("simulationSpeed", 1.0))
 	if _tsa.get("enabled", false):
 		_tile_x = max(1, int(_tsa.get("numTilesX", 1)))
@@ -171,12 +183,14 @@ func _prewarm() -> void:
 func _process(delta: float) -> void:
 	if not _loaded:
 		return
-	var dt := delta * _speed
+	var dt := delta * _speed * speed_mul
 	if _main.get("useUnscaledTime", false) and Engine.time_scale > 0.0:
-		dt = delta / Engine.time_scale * _speed
+		dt = delta / Engine.time_scale * _speed * speed_mul
 	if not playing and _particles.is_empty():
 		return
 	_step(dt)
+	if not emitting and _particles.is_empty():
+		playing = false   # stop() 했거나 한 번 도는 시스템이 다 사그라졌다: 다음 프레임부터 쉰다 (아래 redraw 가 마지막 프레임을 지운다)
 	queue_redraw()
 	if _trail_node != null:
 		_trail_node.queue_redraw()
@@ -259,14 +273,14 @@ func _reset_bursts() -> void:
 # Node's transform in Unity space (metres, y-up, CCW angle).
 func _unity_xform() -> Dictionary:
 	var g := global_transform
-	var pos := Vector2(g.origin.x / PX, -g.origin.y / PX)
+	var pos := Vector2(g.origin.x / _px, -g.origin.y / _px)
 	var rot := -g.get_rotation()
 	var scl := g.get_scale()
 	return {"pos": pos, "rot": rot, "scale": scl}
 
 
 func _size_scale() -> Vector2:
-	var mode := String(_main.get("scalingMode", "Local"))
+	var mode := _scaling_mode
 	if mode == "Hierarchy":
 		return global_transform.get_scale()
 	elif mode == "Shape":
@@ -275,7 +289,7 @@ func _size_scale() -> Vector2:
 
 
 func _shape_scale() -> Vector2:
-	var mode := String(_main.get("scalingMode", "Local"))
+	var mode := _scaling_mode
 	if mode == "Local":
 		return scale
 	return global_transform.get_scale()
@@ -421,7 +435,7 @@ func _update_particles(dt: float) -> void:
 		vel += gravity * dt
 		if fol_on:
 			var f := Vector2(_eval_mm(_fol.get("x", {}), u, p["seed_vel"]), _eval_mm(_fol.get("y", {}), u, p["seed_vel"]))
-			if String(_fol.get("space", "Local")) == "Local" and _sim_world:
+			if _fol_local and _sim_world:
 				f = f.rotated(xf["rot"])
 			vel += f * dt
 		var total_vel := vel
@@ -545,24 +559,22 @@ func _draw() -> void:
 		var pos_u: Vector2 = p["pos"]
 		var rot_u: float = p["rot"]
 		var xform: Transform2D
-		var quad_size := Vector2(sz.x, sz.y) * PX
+		var quad_size := Vector2(sz.x, sz.y) * _px
 		if render_mode == "Stretch":
 			var v: Vector2 = p.get("cur_vel", p["vel"])
 			var spd := v.length()
 			var len_m := sz.x * length_scale + spd * velocity_scale
-			quad_size = Vector2(len_m, sz.y) * PX
+			quad_size = Vector2(len_m, sz.y) * _px
 			if spd > 0.0001:
 				rot_u = v.angle()
 			# Unity stretched billboards point their +X along velocity and are centred behind the head
 		if _sim_world:
-			var gp := Vector2(pos_u.x * PX, -pos_u.y * PX)
+			var gp := Vector2(pos_u.x * _px, -pos_u.y * _px)
 			xform = inv * Transform2D(-rot_u, gp)
 		else:
-			xform = Transform2D(-rot_u, Vector2(pos_u.x * PX, -pos_u.y * PX))
+			xform = Transform2D(-rot_u, Vector2(pos_u.x * _px, -pos_u.y * _px))
 			# compensate node scale so particle size is in world pixels
 			quad_size = Vector2(quad_size.x / maxf(gscale.x, 0.0001), quad_size.y / maxf(gscale.y, 0.0001))
-			if _sim_world == false and String(_main.get("scalingMode", "Local")) != "Local":
-				pass
 		xform = xform.scaled_local(quad_size)
 		draw_set_transform_matrix(xform)
 		var rect := Rect2(-0.5 - pivot.x, -0.5 + pivot.y, 1.0, 1.0)
@@ -635,8 +647,8 @@ func _draw_trails() -> void:
 			var c := base_col * _eval_mmg(col_trail, t_along, p["seed_col"])
 			var a := pos_u + normal * w * 0.5
 			var b := pos_u - normal * w * 0.5
-			pts.append(inv * Vector2(a.x * PX, -a.y * PX))
-			pts.append(inv * Vector2(b.x * PX, -b.y * PX))
+			pts.append(inv * Vector2(a.x * _px, -a.y * _px))
+			pts.append(inv * Vector2(b.x * _px, -b.y * _px))
 			cols.append(c)
 			cols.append(c)
 			var uu := t_along if stretch else acc

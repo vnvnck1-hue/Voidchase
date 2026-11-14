@@ -41,8 +41,8 @@ func scatter_room(map: VDMap, room: Dictionary, delay := -1.0) -> void:
 			return
 	var small := _defs.filter(func(d: Dictionary) -> bool: return (d["texture"] as Texture2D).get_height() < SMALL_H)
 	var cands: Array[Vector2i] = []
-	for a in range(-RING, VDMap.ROOM_LEN + RING):
-		for c in range(-RING, VDMap.ROOM_WID + RING):
+	for a in range(-RING, int(room.get("len", VDMap.ROOM_LEN)) + RING):
+		for c in range(-RING, int(room.get("wid", VDMap.ROOM_WID)) + RING):
 			var cell := VDMap.to_world(room, a, c)
 			if not _near_tile(map, cell, 1):
 				cands.append(cell)
@@ -99,7 +99,7 @@ func _crowded(cell: Vector2i) -> bool:
 ## 바닥보다 뒤에 있는지: 가장 가까운 방 타일보다 깊이(x+y)가 작으면 뒤.
 func _is_behind(map: VDMap, room: Dictionary, cell: Vector2i) -> bool:
 	var l := VDMap.to_local(room, cell)
-	var near := VDMap.to_world(room, clampi(l.x, 0, VDMap.ROOM_LEN - 1), clampi(l.y, 0, VDMap.ROOM_WID - 1))
+	var near := VDMap.to_world(room, clampi(l.x, 0, int(room.get("len", VDMap.ROOM_LEN)) - 1), clampi(l.y, 0, int(room.get("wid", VDMap.ROOM_WID)) - 1))
 	return cell.x + cell.y < near.x + near.y
 
 
@@ -116,6 +116,8 @@ func _spawn(def: Dictionary, cell: Vector2i, behind: bool, delay: float) -> void
 	var s := randf_range(SCALE_MIN, SCALE_MAX)
 	sp.scale = Vector2(s * (-1.0 if randf() < 0.4 else 1.0), s)
 	sp.modulate = Color(0.92, 0.9, 1.0) if behind else Color(0.8, 0.76, 0.92)
+	holder.use_parent_material = true   # 필드 색 보정 재질은 back / front 에 입힌다 (VDBattle.apply_field_look)
+	sp.use_parent_material = true
 	holder.add_child(sp)
 	(back if behind else front).add_child(holder)
 	var pname: String = def["name"]

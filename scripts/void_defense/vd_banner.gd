@@ -5,7 +5,7 @@
 class_name VDBanner
 extends Control
 
-const TITLE_FONT := "res://assets/fonts/ARCO.otf"
+const GameFonts := preload("res://scripts/game_fonts.gd")
 
 var _band: Control
 var _bg: ColorRect
@@ -43,14 +43,9 @@ func _ready() -> void:
 	visible = false
 
 
-## 제목 글꼴: 영문은 ARCO, ARCO 에 없는 한글은 굵은 고딕으로 대신 그린다.
+## 제목 글꼴: 숫자·타이틀 역할 (scripts/game_fonts.gd). 기본은 영문 ARCO + 한글 굵은 고딕.
 func _title_font() -> Font:
-	var f := (load(TITLE_FONT) as FontFile).duplicate() as FontFile
-	var ko := SystemFont.new()
-	ko.font_names = PackedStringArray(["Malgun Gothic", "맑은 고딕", "Noto Sans KR", "Apple SD Gothic Neo", "sans-serif"])
-	ko.font_weight = 900
-	f.fallbacks = [ko]
-	return f
+	return GameFonts.display()
 
 
 func _rect(parent: Control, col: Color) -> ColorRect:

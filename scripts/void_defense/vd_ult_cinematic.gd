@@ -41,7 +41,7 @@ func _init(battle: VDBattle) -> void:
 # ---------------------------------------------------------------- 무대 어둡게
 
 func _dim_targets() -> Array:
-	var out: Array = [b.bg_rect, b.board, b.props.back, b.props.front]
+	var out: Array = [b.bg_rect, b.ambient_motes, b.ambient_motes_front, b.board, b.props.back, b.props.front]
 	for u in b.allies + b.enemies:
 		if is_instance_valid(u) and not _lit.has(u):
 			out.append(u)

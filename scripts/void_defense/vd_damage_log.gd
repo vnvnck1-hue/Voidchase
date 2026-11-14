@@ -13,11 +13,14 @@
 ##   줌인돼도 흐려지지 않게 그린다. 실제 시간(히트스탑·슬로모션에 멈추지 않게).
 class_name VDDamageLog
 extends Node2D
+const GameFonts := preload("res://scripts/game_fonts.gd")
 
 # ── 크기 · 색 (월드 px) ──
-const SIZE := 32.0
-const SIZE_BIG := 48.0
-const SIZE_STATUS := 27.0
+## 2026-11-09 전투 글자 60% 로 (원래 32 / 48 / 27)
+const SIZE := 19.2
+const SIZE_BIG := 28.8
+const SIZE_STATUS := 16.2
+const ABOVE_BAR := 4.0                # 대상이 VDUnit 이면 글자 아래 끝이 HP 바 위쪽 끝에서 이만큼 위
 const FLASH := Color("ffffff")
 const INK := Color("1b0b38")          # 외곽선
 const OUTLINE := 0.26                 # 외곽선 두께 = 글자 크기 × 이 값
@@ -111,10 +114,9 @@ static func _read_arg() -> void:
 
 
 static func font() -> Font:
+	# 숫자·타이틀 역할 (scripts/game_fonts.gd, 기본 ARCO). 설정 [글꼴 바꾸기] 로 실시간 교체된다.
 	if _font == null:
-		_font = load("res://assets/fonts/ARCO.otf") as Font
-		if _font == null:
-			_font = ThemeDB.fallback_font
+		_font = GameFonts.display()
 	return _font
 
 
@@ -137,21 +139,15 @@ func _heat(target: Object) -> float:
 	return clampf(float(n - 1) / float(CHAIN_FULL - 1), 0.0, 1.0)
 
 
-func chain_of(target: Object) -> int:
-	if target == null or not _chain.has(target.get_instance_id()):
-		return 0
-	var c: Array = _chain[target.get_instance_id()]
-	return int(c[0]) if Time.get_ticks_msec() * 0.001 - float(c[1]) < CHAIN_GAP else 0
-
-
 static func heat_color(h: float) -> Color:
 	var x := clampf(h, 0.0, 1.0) * (HEAT_RAMP.size() - 1)
 	var i := mini(int(x), HEAT_RAMP.size() - 2)
 	return (HEAT_RAMP[i] as Color).lerp(HEAT_RAMP[i + 1], x - i)
 
 
-## 새 숫자 하나. anchor 는 월드(캔버스) 좌표.
+## 새 숫자 하나. anchor 는 월드(캔버스) 좌표. 대상이 VDUnit 이면 anchor 대신 그 유닛의 HP 바 바로 위에서 생긴다.
 func spawn(anchor: Vector2, value: int, big: bool, target: Object = null) -> Dictionary:
+	anchor = _bar_anchor(anchor, target, SIZE_BIG if big else SIZE)
 	var h := _heat(target)
 	var bounce := preset == "bounce"
 	var half := deg_to_rad(B_SPREAD if bounce else ARC_SPREAD) * 0.5
@@ -204,22 +200,27 @@ func _stack(e: Dictionary) -> void:
 		o.t = maxf(float(o.t), float(o.life) * FADE_FROM)
 
 
-func bump(e: Dictionary) -> void:
-	e.t = minf(float(e.t), 0.03)
-
-
 ## 상태 글자 (포물선 없이 감속하며 떠오름). 회복 "+N", 정수 획득 등에 쓴다.
+## 대상이 VDUnit 이면 그 유닛의 HP 바 바로 위에서 생긴다 (먼저 떠 있는 숫자들 위로 쌓인다).
 func spawn_status(anchor: Vector2, text: String, col: Color, target: Object = null) -> void:
+	anchor = _bar_anchor(anchor, target, SIZE_STATUS)
 	var top := 0.0
 	for o: Dictionary in entries:
 		if not o.status and target != null and o.target != null and o.target.get_ref() == target:
 			top = maxf(top, float(o.lift_to) + (SIZE_BIG if o.big else SIZE) * 0.5)
 	_push({
-		"anchor": anchor, "off": Vector2(0, -36.0 - top), "vx": 0.0, "vy": -72.0,
+		"anchor": anchor, "off": Vector2(0, -top), "vx": 0.0, "vy": -72.0,
 		"rot": 0.0, "vr": 0.0, "t": 0.0, "life": LIFE_STATUS, "big": false, "value": 0, "text": text, "col": col,
 		"target": weakref(target) if target else null, "born": Time.get_ticks_msec() * 0.001, "status": true, "pop": POP,
 		"lift": 0.0, "lift_to": 0.0, "heat": 0.0, "mode": "status",
 	})
+
+
+## HP 바 위 (글자 가운데 기준): 글자 높이 절반 + ABOVE_BAR 만큼 바 위쪽 끝에서 올린다
+static func _bar_anchor(anchor: Vector2, target: Object, size: float) -> Vector2:
+	if target is VDUnit and is_instance_valid(target):
+		return (target as VDUnit).bar_top() - Vector2(0, size * 0.5 + ABOVE_BAR)
+	return anchor
 
 
 func _push(e: Dictionary) -> void:
@@ -265,7 +266,7 @@ func _draw() -> void:
 	if entries.is_empty():
 		return
 	# 월드에 그린다. 글자는 화면 배율(z)만큼 큰 크기로 래스터한 뒤 1/z 로 줄여 줌인돼도 선명하게
-	var z := maxf(get_canvas_transform().get_scale().x, 0.1)
+	var z := maxf(get_global_transform_with_canvas().get_scale().x, 0.1)   # 안개 위 레이어(follow_viewport)에서도 화면 배율
 	var f := font()
 	for e: Dictionary in entries:
 		var t := float(e.t)

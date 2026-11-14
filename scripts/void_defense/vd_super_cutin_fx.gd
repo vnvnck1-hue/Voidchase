@@ -8,7 +8,7 @@ const SAVE_PATH := "user://super_cutin_fx.json"
 const TRANS_NAMES := []          # 곡선 고르는 옵션 없음 (연구실 공용 인터페이스)
 
 ## [키, 그룹, 이름, 최소, 최대, 단계, 기본값]
-const PARAMS := [
+const BASE_PARAMS := [
 	["impact",         "1 박자",   "맞물림 시각(초)",          0.04, 0.6,  0.01,  0.23],
 	["glint",          "1 박자",   "눈 반짝·이름 시각(초)",    0.1,  1.2,  0.01,  0.39],
 	["exit",           "1 박자",   "접히기 시작(초)",          0.4,  3.0,  0.01,  0.78],
@@ -45,6 +45,22 @@ const PARAMS := [
 	["drift",          "6 창 안",  "성운·먼지 흐름 배율",      0.0,  3.0,  0.05,  2.7],
 	["line_sec",       "6 창 안",  "접힌 뒤 빛줄기(초)",       0.03, 0.8,  0.01,  0.18],
 ]
+
+const FxColors := preload("res://scripts/void_defense/vd_fx_colors.gd")
+## [키, 이름, 기본 색(, 최대)] — 영웅 색(띠·성운·고리)은 영웅마다 따로라 여기 없다. "창 안" 색은 영웅 색조로 돌려 쓴다 (_tint)
+const COLORS := [
+	["rgb_col_a", "색수차 A", Color(1.0, 0.1, 0.45)],
+	["rgb_col_b", "색수차 B", Color(0.1, 0.65, 1.0)],
+	["flash_col", "화면 섬광 색", Color(1.0, 1.0, 1.0)],
+	["glint_col", "눈 반짝 색 (HDR)", Color(1.4, 1.2, 1.5), 2.0],
+	["title_fill", "이름 도장 글씨", Color(1.0, 0.98, 1.0)],
+	["title_ink", "이름 도장 외곽선", Color(0.09, 0.03, 0.16)],
+	["hero_ink", "영웅 이름 외곽선", Color(0.05, 0.02, 0.1)],
+	["speed_col", "속도선 색", Color(1.0, 0.9, 1.0)],
+	["line_col", "접힌 뒤 빛줄기 색", Color(1.0, 0.85, 1.0)],
+	["window_bg", "창 바탕 색", Color(0.06, 0.03, 0.12)],
+]
+static var PARAMS: Array = BASE_PARAMS + FxColors.rows("7 색", COLORS)
 
 static var values := {}
 static var _loaded := false
@@ -111,3 +127,7 @@ static func summary() -> String:
 
 static func duration() -> float:
 	return g("exit") + g("close")
+
+
+static func col(key: String, alpha := 1.0) -> Color:
+	return Color(g(key + "_r"), g(key + "_g"), g(key + "_b"), alpha)

@@ -1,0 +1,15 @@
+{
+  "name": "Energetic leader",
+  "crown": 105,
+  "chin": 599,
+  "shoulder": 635,
+  "waist": 805,
+  "crotch": 1030,
+  "knee": 1210,
+  "sole": 1476,
+  "cx": 480,
+  "head_left": 150,
+  "head_right": 730,
+  "file": "docs/uniform_trio_v1/png/01_energetic_leader.png",
+  "notes": "Manual visual projection; concealed joints and head-width hair silhouette are estimates. Boundary uncertainty approx +/- 5px. Independent ponytail excluded from crown and head-width probe."
+}

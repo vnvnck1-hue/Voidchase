@@ -8,7 +8,7 @@ class_name VDRelicData
 extends RefCounted
 
 ## 성좌판 10칸: 평평한 윗변(flat-top) 육각형, odd-q 오프셋 좌표 (q 열, r 행). 홀수 열은 반 칸 아래로 처진다.
-## 시안대로 오른쪽에 세로로 두 줄(1열이 화면에서는 왼쪽). 위에서부터 차례로 해금한다.
+## 시안대로 오른쪽에 세로로 두 줄(1열이 화면에서는 왼쪽). 칸은 자동으로 열리지 않는다: 보상 카드로 뽑은 "슬롯"을 잠긴 칸에 끌어다 놓아 연다.
 const BOARD_CELLS: Array[Vector2i] = [
 	Vector2i(0, 0), Vector2i(1, 0),
 	Vector2i(0, 1), Vector2i(1, 1),
@@ -17,8 +17,16 @@ const BOARD_CELLS: Array[Vector2i] = [
 	Vector2i(0, 4), Vector2i(1, 4),
 ]
 const START_UNLOCKED := 4        # 첫 전투에서 열려 있는 칸
-const RELIC_EVERY := 3           # 구역을 이만큼 클리어할 때마다 유물 보상(칸 해금 + N택1) 한 번
-const UNLOCK_PER_CLEAR := 1      # 유물 보상마다 추가로 여는 칸
+const RELIC_EVERY := 3           # 구역을 이만큼 클리어할 때마다 유물 보상(N택1) 한 번
+## 슬롯 카드 (2026-11-09): 칸은 자동으로 열리지 않고, 보상 N택1 에 "슬롯" 카드가 섞여 나온다. 고르면 보관함에 SLOT_ID 항목으로 들어가고,
+## 잠긴 칸 아무 데나 끌어다 놓으면 그 칸이 열린다. 첫 유물 보상과 열린 칸이 하나도 없을 때는 슬롯 카드가 반드시 하나 들어간다.
+const SLOT_ID := "slot"          # 보관함·보상 카드에서 슬롯을 나타내는 id (RELICS 에는 없다)
+const SLOT_CHANCE := 0.5         # 첫 보상 이후, 보상 묶음에 슬롯 카드가 섞일 확률 (묶음당 최대 1장)
+const SLOT_REFUND := 15          # 더 열 잠긴 칸이 없을 때 남은 슬롯 하나를 정수로 바꿔 주는 양
+const SLOT_NAME := "성좌판 슬롯"
+const SLOT_DESC := "잠긴 칸에 끌어다 놓으면 그 칸이 열립니다."
+const SLOT_GRAMMAR := "어느 잠긴 칸이든 좋습니다. 유물 소켓이 닿을 자리를 생각해 성좌의 모양을 고르세요."
+const SLOT_COLOR := Color(0.82, 0.78, 1.0)
 const CORRUPT_CHANCE := 0.35     # 구역 클리어 시 빈 칸 하나가 침식될 확률 (보스 방은 확정)
 const CORRUPT_MAX := 2           # 동시에 존재할 수 있는 침식 칸
 const CORRUPT_PENALTY := 0.25    # 침식 칸 하나에 인접할 때마다 효과 −25%
@@ -117,6 +125,33 @@ const RELIC_ORDER: Array[String] = ["thunder_shard", "ember", "frost_crystal", "
 
 static func def(id: String) -> Dictionary:
 	return RELICS.get(id, {})
+
+
+static func is_slot(id: String) -> bool:
+	return id == SLOT_ID
+
+
+## 보관함·카드에 보이는 이름 (슬롯 포함).
+static func name_of(id: String) -> String:
+	return SLOT_NAME if is_slot(id) else String(def(id).get("name", id))
+
+
+## 유물 보상 묶음 N택1 을 뽑는다. locked = 아직 잠긴 칸 수, first = 이 런의 첫 유물 보상인가, no_open = 열린 칸이 하나도 없는가.
+## 잠긴 칸이 없으면 슬롯 카드를 넣지 않고, 첫 보상·열린 칸 없음이면 반드시 하나 넣고, 그 밖에는 SLOT_CHANCE 로 하나. 유물은 서로 다르게 뽑는다.
+static func roll_offer(rng: RandomNumberGenerator, locked: int, first: bool, no_open: bool) -> Array:
+	var ids := []
+	var want_slot := locked > 0 and (first or no_open or rng.randf() < SLOT_CHANCE)
+	var pool: Array[String] = RELIC_ORDER.duplicate()
+	var n_relics := PICK_COUNT - (1 if want_slot else 0)
+	for i in n_relics:
+		if pool.is_empty():
+			break
+		var k := rng.randi() % pool.size()
+		ids.append(pool[k])
+		pool.remove_at(k)
+	if want_slot:
+		ids.insert(rng.randi() % (ids.size() + 1), SLOT_ID)
+	return ids
 
 
 static func color_of(id: String) -> Color:

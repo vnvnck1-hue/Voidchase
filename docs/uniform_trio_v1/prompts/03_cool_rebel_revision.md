@@ -1,0 +1,5 @@
+# 비례 검수 후 수정
+
+Refine image 5; images 1–4 are the authoritative game drawing style. Preserve the silver-white asymmetrical bob and plum underlayer, black cross hairclip, lilac half-lidded eyes and crooked knowing smirk, crossed arms, charcoal blazer, loose plum tie, grey skirt, asymmetrically striped dark socks and dark loafers.
+Targeted correction: reduce the MAIN HEAD AND FACE by only about TWO PERCENT in width and height, naturally redrawing the jaw, hairline and neck connection. Keep body and leg lengths and stance unchanged. This very subtle change should bring main-crown-to-lowest-sole height to roughly 2.72 times main-crown-to-chin height, within 2.67–2.80. Do not make the head generally small or adult-anime proportioned. Do not stretch or squash the finished image.
+Maintain hand-inked bold black contours with visible controlled pressure variation, tapered fine lines, subtle dry-brush edge texture and simple flat cel shadows. One complete full-body character on true transparent background with extra clear margins around all hair, hands and entire soles. No glow, scene, labels, measurement lines, shadow or variants.

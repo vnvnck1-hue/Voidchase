@@ -1,0 +1,518 @@
+{
+  "version": 2,
+  "atlas": "bio-lab-atlas.png",
+  "atlas_size": [
+    1536,
+    1536
+  ],
+  "tile_size": [
+    166.4,
+    83.2
+  ],
+  "face_height": 66.56,
+  "top_center": [
+    83.2,
+    41.6
+  ],
+  "bake_scale": 4,
+  "bleed": 4,
+  "variant_count": 3,
+  "method": "Geometric face reprojection from approved asset masters. Original side ornament strip retained at natural scale; plain structural wall inserted below. No new image generation, no recoloring, no vertical stretching of pipe or root ornament.",
+  "patches": [
+    {
+      "name": "top_01",
+      "variant": 1,
+      "face": "top",
+      "file": "top_01.png",
+      "atlas_rect": [
+        8,
+        8,
+        674,
+        341
+      ],
+      "atlas_points": [
+        [
+          344.8,
+          12
+        ],
+        [
+          677.6,
+          178.4
+        ],
+        [
+          344.8,
+          344.8
+        ],
+        [
+          12,
+          178.4
+        ]
+      ],
+      "geometry_points": [
+        [
+          83.2,
+          0
+        ],
+        [
+          166.4,
+          41.6
+        ],
+        [
+          83.2,
+          83.2
+        ],
+        [
+          0,
+          41.6
+        ]
+      ],
+      "standalone_texture_scale": 0.25,
+      "standalone_sprite_offset": [
+        -1,
+        -1
+      ],
+      "source": "block_01_mint",
+      "source_sha256": "A7F07E8DF98449CD05606F86AC30A3B644714CE903BFC5E533A79B057EA13AC2"
+    },
+    {
+      "name": "side_left_01",
+      "variant": 1,
+      "face": "left",
+      "file": "side_left_01.png",
+      "atlas_rect": [
+        696,
+        8,
+        341,
+        441
+      ],
+      "atlas_points": [
+        [
+          700,
+          12
+        ],
+        [
+          1032.8,
+          178.4
+        ],
+        [
+          1032.8,
+          444.64
+        ],
+        [
+          700,
+          278.24
+        ]
+      ],
+      "geometry_points": [
+        [
+          0,
+          41.6
+        ],
+        [
+          83.2,
+          83.2
+        ],
+        [
+          83.2,
+          149.76
+        ],
+        [
+          0,
+          108.16
+        ]
+      ],
+      "standalone_texture_scale": 0.25,
+      "standalone_sprite_offset": [
+        -1,
+        40.6
+      ],
+      "source": "block_01_mint",
+      "source_sha256": "A7F07E8DF98449CD05606F86AC30A3B644714CE903BFC5E533A79B057EA13AC2"
+    },
+    {
+      "name": "side_right_01",
+      "variant": 1,
+      "face": "right",
+      "file": "side_right_01.png",
+      "atlas_rect": [
+        1048,
+        8,
+        341,
+        441
+      ],
+      "atlas_points": [
+        [
+          1052,
+          178.4
+        ],
+        [
+          1384.8,
+          12
+        ],
+        [
+          1384.8,
+          278.24
+        ],
+        [
+          1052,
+          444.64
+        ]
+      ],
+      "geometry_points": [
+        [
+          83.2,
+          83.2
+        ],
+        [
+          166.4,
+          41.6
+        ],
+        [
+          166.4,
+          108.16
+        ],
+        [
+          83.2,
+          149.76
+        ]
+      ],
+      "standalone_texture_scale": 0.25,
+      "standalone_sprite_offset": [
+        82.2,
+        40.6
+      ],
+      "source": "block_01_mint",
+      "source_sha256": "A7F07E8DF98449CD05606F86AC30A3B644714CE903BFC5E533A79B057EA13AC2"
+    },
+    {
+      "name": "top_02",
+      "variant": 2,
+      "face": "top",
+      "file": "top_02.png",
+      "atlas_rect": [
+        8,
+        488,
+        674,
+        341
+      ],
+      "atlas_points": [
+        [
+          344.8,
+          492
+        ],
+        [
+          677.6,
+          658.4
+        ],
+        [
+          344.8,
+          824.8
+        ],
+        [
+          12,
+          658.4
+        ]
+      ],
+      "geometry_points": [
+        [
+          83.2,
+          0
+        ],
+        [
+          166.4,
+          41.6
+        ],
+        [
+          83.2,
+          83.2
+        ],
+        [
+          0,
+          41.6
+        ]
+      ],
+      "standalone_texture_scale": 0.25,
+      "standalone_sprite_offset": [
+        -1,
+        -1
+      ],
+      "source": "block_02_sprout",
+      "source_sha256": "F9CE9854D2358D9BA583CCBD9E9B633D61BBF436DEB00114DA41D7EC9A4A561E"
+    },
+    {
+      "name": "side_left_02",
+      "variant": 2,
+      "face": "left",
+      "file": "side_left_02.png",
+      "atlas_rect": [
+        696,
+        488,
+        341,
+        441
+      ],
+      "atlas_points": [
+        [
+          700,
+          492
+        ],
+        [
+          1032.8,
+          658.4
+        ],
+        [
+          1032.8,
+          924.64
+        ],
+        [
+          700,
+          758.24
+        ]
+      ],
+      "geometry_points": [
+        [
+          0,
+          41.6
+        ],
+        [
+          83.2,
+          83.2
+        ],
+        [
+          83.2,
+          149.76
+        ],
+        [
+          0,
+          108.16
+        ]
+      ],
+      "standalone_texture_scale": 0.25,
+      "standalone_sprite_offset": [
+        -1,
+        40.6
+      ],
+      "source": "block_02_sprout",
+      "source_sha256": "F9CE9854D2358D9BA583CCBD9E9B633D61BBF436DEB00114DA41D7EC9A4A561E"
+    },
+    {
+      "name": "side_right_02",
+      "variant": 2,
+      "face": "right",
+      "file": "side_right_02.png",
+      "atlas_rect": [
+        1048,
+        488,
+        341,
+        441
+      ],
+      "atlas_points": [
+        [
+          1052,
+          658.4
+        ],
+        [
+          1384.8,
+          492
+        ],
+        [
+          1384.8,
+          758.24
+        ],
+        [
+          1052,
+          924.64
+        ]
+      ],
+      "geometry_points": [
+        [
+          83.2,
+          83.2
+        ],
+        [
+          166.4,
+          41.6
+        ],
+        [
+          166.4,
+          108.16
+        ],
+        [
+          83.2,
+          149.76
+        ]
+      ],
+      "standalone_texture_scale": 0.25,
+      "standalone_sprite_offset": [
+        82.2,
+        40.6
+      ],
+      "source": "block_02_sprout",
+      "source_sha256": "F9CE9854D2358D9BA583CCBD9E9B633D61BBF436DEB00114DA41D7EC9A4A561E"
+    },
+    {
+      "name": "top_03",
+      "variant": 3,
+      "face": "top",
+      "file": "top_03.png",
+      "atlas_rect": [
+        8,
+        968,
+        674,
+        341
+      ],
+      "atlas_points": [
+        [
+          344.8,
+          972
+        ],
+        [
+          677.6,
+          1138.4
+        ],
+        [
+          344.8,
+          1304.8
+        ],
+        [
+          12,
+          1138.4
+        ]
+      ],
+      "geometry_points": [
+        [
+          83.2,
+          0
+        ],
+        [
+          166.4,
+          41.6
+        ],
+        [
+          83.2,
+          83.2
+        ],
+        [
+          0,
+          41.6
+        ]
+      ],
+      "standalone_texture_scale": 0.25,
+      "standalone_sprite_offset": [
+        -1,
+        -1
+      ],
+      "source": "block_03_drain",
+      "source_sha256": "493397B4DFDD67A2949110F69EDAC959C63903027CB5973A54F7DD818F0B0F3A"
+    },
+    {
+      "name": "side_left_03",
+      "variant": 3,
+      "face": "left",
+      "file": "side_left_03.png",
+      "atlas_rect": [
+        696,
+        968,
+        341,
+        441
+      ],
+      "atlas_points": [
+        [
+          700,
+          972
+        ],
+        [
+          1032.8,
+          1138.4
+        ],
+        [
+          1032.8,
+          1404.6399999999999
+        ],
+        [
+          700,
+          1238.24
+        ]
+      ],
+      "geometry_points": [
+        [
+          0,
+          41.6
+        ],
+        [
+          83.2,
+          83.2
+        ],
+        [
+          83.2,
+          149.76
+        ],
+        [
+          0,
+          108.16
+        ]
+      ],
+      "standalone_texture_scale": 0.25,
+      "standalone_sprite_offset": [
+        -1,
+        40.6
+      ],
+      "source": "block_03_drain",
+      "source_sha256": "493397B4DFDD67A2949110F69EDAC959C63903027CB5973A54F7DD818F0B0F3A"
+    },
+    {
+      "name": "side_right_03",
+      "variant": 3,
+      "face": "right",
+      "file": "side_right_03.png",
+      "atlas_rect": [
+        1048,
+        968,
+        341,
+        441
+      ],
+      "atlas_points": [
+        [
+          1052,
+          1138.4
+        ],
+        [
+          1384.8,
+          972
+        ],
+        [
+          1384.8,
+          1238.24
+        ],
+        [
+          1052,
+          1404.6399999999999
+        ]
+      ],
+      "geometry_points": [
+        [
+          83.2,
+          83.2
+        ],
+        [
+          166.4,
+          41.6
+        ],
+        [
+          166.4,
+          108.16
+        ],
+        [
+          83.2,
+          149.76
+        ]
+      ],
+      "standalone_texture_scale": 0.25,
+      "standalone_sprite_offset": [
+        82.2,
+        40.6
+      ],
+      "source": "block_03_drain",
+      "source_sha256": "493397B4DFDD67A2949110F69EDAC959C63903027CB5973A54F7DD818F0B0F3A"
+    }
+  ]
+}

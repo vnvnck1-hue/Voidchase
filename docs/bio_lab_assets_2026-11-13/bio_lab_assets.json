@@ -1,0 +1,343 @@
+{
+  "version": 1,
+  "source": "../field_diorama_concepts_2026-11-13/03_bio_greenhouse.png",
+  "method": "Built-in image_gen reference-guided extraction/reconstruction; uniform resampling and alpha normalization for export. Not native pixel-identical cuts.",
+  "block_canvas": [
+    288,
+    208
+  ],
+  "atlas": "bio_lab_atlas.png",
+  "atlas_size": [
+    1024,
+    1024
+  ],
+  "filtering": "linear",
+  "mipmaps": false,
+  "texture_repeat": false,
+  "notes": [
+    "Block landmarks are manually read visual guides, not measured collision geometry.",
+    "Block anchor is top surface center; prop anchor is a starting bottom-center placement guide.",
+    "Alpha >=250 set to255; alpha<8 set to0; RGB retained elsewhere.",
+    "Master images are unchanged generator outputs; packed sprites are uniformly scaled."
+  ],
+  "assets": [
+    {
+      "name": "block_01_mint",
+      "file": "png/block_01_mint.png",
+      "master": "masters/block_01_mint.png",
+      "size": [
+        288,
+        208
+      ],
+      "source_master_size": [
+        1536,
+        1024
+      ],
+      "master_crop": [
+        104,
+        96,
+        1328,
+        864
+      ],
+      "anchor_px": [
+        144,
+        76
+      ],
+      "anchor_kind": "top_surface_center",
+      "alpha_bounds": [
+        16,
+        12,
+        256,
+        166
+      ],
+      "transparent_pixels": 33577,
+      "partial_alpha_pixels": 729,
+      "opaque_pixels": 25598,
+      "atlas_rect": [
+        8,
+        8,
+        288,
+        208
+      ],
+      "sha256": "DDD011CA69E8D4E0DDC89861941494FCC1095EB7196D77D800A7538B78359F94",
+      "top_quad_px": [
+        [
+          144,
+          13
+        ],
+        [
+          270,
+          77
+        ],
+        [
+          144,
+          142
+        ],
+        [
+          17,
+          77
+        ]
+      ],
+      "tile_step_x": [
+        126,
+        64
+      ],
+      "tile_step_y": [
+        -127,
+        64
+      ]
+    },
+    {
+      "name": "block_02_sprout",
+      "file": "png/block_02_sprout.png",
+      "master": "masters/block_02_sprout.png",
+      "size": [
+        288,
+        208
+      ],
+      "source_master_size": [
+        1536,
+        1024
+      ],
+      "master_crop": [
+        104,
+        96,
+        1328,
+        864
+      ],
+      "anchor_px": [
+        144,
+        76
+      ],
+      "anchor_kind": "top_surface_center",
+      "alpha_bounds": [
+        16,
+        12,
+        256,
+        166
+      ],
+      "transparent_pixels": 33463,
+      "partial_alpha_pixels": 749,
+      "opaque_pixels": 25692,
+      "atlas_rect": [
+        312,
+        8,
+        288,
+        208
+      ],
+      "sha256": "5A9B470F0BFF5AC19F8F6C7DCA32F8BC0E99377380111930887334463A697099",
+      "top_quad_px": [
+        [
+          144,
+          13
+        ],
+        [
+          270,
+          77
+        ],
+        [
+          144,
+          142
+        ],
+        [
+          17,
+          77
+        ]
+      ],
+      "tile_step_x": [
+        126,
+        64
+      ],
+      "tile_step_y": [
+        -127,
+        64
+      ]
+    },
+    {
+      "name": "block_03_drain",
+      "file": "png/block_03_drain.png",
+      "master": "masters/block_03_drain.png",
+      "size": [
+        288,
+        208
+      ],
+      "source_master_size": [
+        1536,
+        1024
+      ],
+      "master_crop": [
+        104,
+        96,
+        1328,
+        864
+      ],
+      "anchor_px": [
+        144,
+        76
+      ],
+      "anchor_kind": "top_surface_center",
+      "alpha_bounds": [
+        16,
+        12,
+        256,
+        166
+      ],
+      "transparent_pixels": 33448,
+      "partial_alpha_pixels": 788,
+      "opaque_pixels": 25668,
+      "atlas_rect": [
+        616,
+        8,
+        288,
+        208
+      ],
+      "sha256": "9DD3E9C6B0E427276A6E89AEC9D386CD2B7118B628D463DD94DAB1114F289E17",
+      "top_quad_px": [
+        [
+          144,
+          13
+        ],
+        [
+          270,
+          77
+        ],
+        [
+          144,
+          142
+        ],
+        [
+          17,
+          77
+        ]
+      ],
+      "tile_step_x": [
+        126,
+        64
+      ],
+      "tile_step_y": [
+        -127,
+        64
+      ]
+    },
+    {
+      "name": "prop_01_cultivation_chamber",
+      "file": "png/prop_01_cultivation_chamber.png",
+      "master": "masters/prop_01_cultivation_chamber.png",
+      "size": [
+        368,
+        427
+      ],
+      "source_master_size": [
+        1261,
+        1247
+      ],
+      "master_crop": [
+        152,
+        70,
+        951,
+        1111
+      ],
+      "anchor_px": [
+        184,
+        419
+      ],
+      "anchor_kind": "bottom_center_initial_placement",
+      "alpha_bounds": [
+        8,
+        8,
+        352,
+        411
+      ],
+      "transparent_pixels": 52124,
+      "partial_alpha_pixels": 1719,
+      "opaque_pixels": 103293,
+      "atlas_rect": [
+        8,
+        240,
+        368,
+        427
+      ],
+      "sha256": "5B61478CC4432E4920F22AD484955679742485A4DE255FCDE14DF63A8DF8C379"
+    },
+    {
+      "name": "prop_02_hydroponic_rack",
+      "file": "png/prop_02_hydroponic_rack.png",
+      "master": "masters/prop_02_hydroponic_rack.png",
+      "size": [
+        368,
+        272
+      ],
+      "source_master_size": [
+        1536,
+        1024
+      ],
+      "master_crop": [
+        149,
+        54,
+        1287,
+        936
+      ],
+      "anchor_px": [
+        184,
+        264
+      ],
+      "anchor_kind": "bottom_center_initial_placement",
+      "alpha_bounds": [
+        8,
+        8,
+        352,
+        256
+      ],
+      "transparent_pixels": 52428,
+      "partial_alpha_pixels": 2184,
+      "opaque_pixels": 45484,
+      "atlas_rect": [
+        400,
+        240,
+        368,
+        272
+      ],
+      "sha256": "D4691025A431F3D7CAAA53B848365D17BB2E55C6C0882403BE394BAFDA2DB800"
+    },
+    {
+      "name": "prop_03_sample_cooler",
+      "file": "png/prop_03_sample_cooler.png",
+      "master": "masters/prop_03_sample_cooler.png",
+      "size": [
+        192,
+        209
+      ],
+      "source_master_size": [
+        1282,
+        1227
+      ],
+      "master_crop": [
+        137,
+        72,
+        1006,
+        1103
+      ],
+      "anchor_px": [
+        96,
+        201
+      ],
+      "anchor_kind": "bottom_center_initial_placement",
+      "alpha_bounds": [
+        8,
+        8,
+        176,
+        193
+      ],
+      "transparent_pixels": 14635,
+      "partial_alpha_pixels": 773,
+      "opaque_pixels": 24720,
+      "atlas_rect": [
+        800,
+        240,
+        192,
+        209
+      ],
+      "sha256": "9490C194B52BC043941567DD0F4B4A99A7B868CD4182A2D01F37CBA618F0754A"
+    }
+  ]
+}

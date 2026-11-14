@@ -1,0 +1,11 @@
+Tool: built-in image_gen.imagegen
+Edit target: battle_desert_station_v2.png
+Output: battle_desert_station_v3.png
+Purpose: second projection correction; concept preview, not integrated into the game.
+
+Use case: precise-object-edit
+Edit the attached desert railway game screen with ONE tightly targeted correction: align the station canopy, crates and railway to the floor tile axes. Preserve everything else in the attached image unchanged.
+The battle tiles establish an orthographic isometric world: ground edges slope +0.55 or -0.55 screen-y per screen-x (about +/-29 degrees); vertical edges stay vertical. All parallel edges remain parallel, never converge.
+The upper-left station canopy roof currently has its long edges too horizontal. Redraw that roof as a proper isometric parallelogram: in the 1672-by-941 reference image, approximate outer top-plane corners are (35,180), (300,35), (440,112), (175,257). These are invisible construction coordinates, NOT marks or labels. Both pairs of opposite roof edges must be precisely parallel to the corresponding battle tile seams. Make a simple flat wooden canopy with chunky cel-shaded reddish planks. Move the four posts beneath the corrected corners, posts vertically downward to the sand, with their bases describing the same footprint. Rebuild the small crate top planes with those same floor axes.
+The upper-right railway tracks and locomotive longitudinal base should follow the down-right floor axis at +29 degrees, with sleepers along the other floor axis at -29 degrees. Maintain a real isometric locomotive with visible roof and side/end planes and parallel edges, no side-on elevation. Keep its approximate peripheral placement and scale. Do not cover any playable tiles.
+Preserve the entire battlefield floor, tile geometry, platform footprint and all characters, enemies, poses, positions, HP bars, selection outlines, combat numbers and effects EXACTLY. Preserve ALL UI and Korean text exactly, including purple top bar, bottom portrait stack, four cards, buttons, hexagon outlines. Preserve the muted warm desert colors, dark chunky outlines, two-to-three-tone cel shading and simple graphic style. No sky, no horizon, no sun, no realistic rendering. No coordinate marks or guides. Output the full same 16:9 screen.

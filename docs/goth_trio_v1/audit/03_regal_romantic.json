@@ -1,0 +1,15 @@
+{
+  "name": "Regal romantic",
+  "crown": 5,
+  "chin": 544,
+  "shoulder": 595,
+  "waist": 800,
+  "crotch": 1045,
+  "knee": 1210,
+  "sole": 1481,
+  "cx": 530,
+  "head_left": 157,
+  "head_right": 855,
+  "file": "docs/goth_trio_v1/png/03_regal_romantic.png",
+  "notes": "Manual visible projected contour landmarks, approx +/-5px at crown/chin. Hidden body joints estimated +/-20-30px. Main head width excludes independent ponytails, ahoge and projecting isolated tips; hair silhouette, not skull width."
+}

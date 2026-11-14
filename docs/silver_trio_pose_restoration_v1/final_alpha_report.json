@@ -1,0 +1,71 @@
+[
+  {
+    "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\silver_trio_pose_restoration_v1\\png\\01_left_pose.png",
+    "width": 1280,
+    "height": 1792,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 1642110,
+    "partial_alpha_pixels": 651567,
+    "opaque_pixels": 83,
+    "content_bounds": [
+      112,
+      253,
+      1146,
+      1740
+    ],
+    "edge_nontransparent_pixels": 0,
+    "strong_alpha_bounds": [
+      288,
+      257,
+      993,
+      1728
+    ],
+    "has_transparency": true
+  },
+  {
+    "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\silver_trio_pose_restoration_v1\\png\\02_middle_pose.png",
+    "width": 1280,
+    "height": 1792,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 1665130,
+    "partial_alpha_pixels": 628630,
+    "opaque_pixels": 0,
+    "content_bounds": [
+      143,
+      221,
+      1156,
+      1756
+    ],
+    "edge_nontransparent_pixels": 0,
+    "strong_alpha_bounds": [
+      295,
+      228,
+      985,
+      1728
+    ],
+    "has_transparency": true
+  },
+  {
+    "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\silver_trio_pose_restoration_v1\\png\\03_right_pose.png",
+    "width": 1280,
+    "height": 1792,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 1544103,
+    "partial_alpha_pixels": 749428,
+    "opaque_pixels": 229,
+    "content_bounds": [
+      153,
+      204,
+      1102,
+      1741
+    ],
+    "edge_nontransparent_pixels": 0,
+    "strong_alpha_bounds": [
+      242,
+      212,
+      1039,
+      1728
+    ],
+    "has_transparency": true
+  }
+]

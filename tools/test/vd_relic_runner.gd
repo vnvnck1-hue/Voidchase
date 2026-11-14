@@ -1,4 +1,5 @@
-## 유물 성좌판 자동 테스트: 유물 5종을 보관함에 넣고 열린 4칸에 배치 → 전투 N방 → 발동 횟수·칸 해금·침식/정화·배치 문법을 확인.
+## 유물 성좌판 자동 테스트: 유물 5종을 보관함에 넣고 열린 4칸에 배치 → 슬롯 카드 흐름(카드 선택 → 보관함 → 잠긴 칸에 드래그 → 열림 → 유물 드롭)
+## → 전투 N방 → 발동 횟수·보상 묶음(첫 보상엔 슬롯 카드)·침식/정화·배치 문법을 확인. 칸은 자동으로 열리지 않는다 (2026-11-09).
 ##   godot --headless --path . res://tools/test/VDRelicRunner.tscn -- --cycles=3 --speed=4
 extends Node
 
@@ -12,6 +13,7 @@ var _started := false
 var _cleared := 0
 var _fails: Array[String] = []
 var _open_before := 0
+var _slot_flow_done := false
 var out_dir := ""            # --out=DIR 이면 창이 있을 때 단계별 스크린샷 저장
 var _battle_t := 0.0
 var _battle_shot := false
@@ -60,7 +62,8 @@ func _process(delta: float) -> void:
 		_shot_later("01_placement", 0.3)
 		_tip_later(0.4)
 		_turn_later(0.5)
-		_start_later(1.6)
+		_slot_flow_later(1.9)
+		_start_later(6.6)
 	if _b.state == VDBattle.State.BATTLE:
 		_battle_t += delta
 		if not _battle_shot and _battle_t > 1.2:
@@ -79,6 +82,43 @@ func _setup_board() -> void:
 	_check(board.tray.size() == VDRelicData.RELIC_ORDER.size(), "tray has all %d relics (got %d)" % [VDRelicData.RELIC_ORDER.size(), board.tray.size()])
 	# 잠긴 칸에는 못 놓는다
 	_check(not board.place_from_tray(0, Vector2i(0, 2)), "cannot place on locked cell")
+	# 슬롯 모델: 열린 칸엔 못 놓고(place_from_tray 도 거절), 잠긴 칸에 놓으면 열린다. 자동 해금 API 는 없다
+	_check(not board.has_method("unlock"), "no auto unlock API")
+	_check(board.locked_count() == VDRelicData.BOARD_CELLS.size() - VDRelicData.START_UNLOCKED, "locked_count == %d" % (VDRelicData.BOARD_CELLS.size() - VDRelicData.START_UNLOCKED))
+	board.add_to_tray(VDRelicData.SLOT_ID)
+	var si := board.tray.size() - 1
+	_check(board.is_slot(si) and board.slot_count() == 1, "slot in tray")
+	_check(not board.place_from_tray(si, Vector2i(0, 0)), "slot cannot be placed as a relic")
+	_check(not board.unlock_from_tray(si, Vector2i(0, 0)), "slot refused on open cell")
+	_check(not board.unlock_from_tray(0, Vector2i(1, 4)), "relic cannot unlock a cell")
+	_check(board.unlock_from_tray(si, Vector2i(1, 4)) and board.is_open(Vector2i(1, 4)) and board.slot_count() == 0, "slot opens locked cell (1,4)")
+	_check(board.open_count() == VDRelicData.START_UNLOCKED + 1, "open_count after slot == %d" % (VDRelicData.START_UNLOCKED + 1))
+	# 되돌려 둔다 (아래 배치 검사는 처음 4칸 기준)
+	board.cells[Vector2i(1, 4)] = VDRelicBoard.Cell.LOCKED
+	board.add_to_tray(VDRelicData.SLOT_ID)
+	board.add_to_tray(VDRelicData.SLOT_ID)
+	_check(board.take_slots() == 2 and board.slot_count() == 0, "take_slots removes all slots")
+	# 보상 묶음: 잠긴 칸이 없으면 슬롯 없음, 첫 보상·열린 칸 없음이면 슬롯 확정, 유물은 서로 다르게
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var ok_roll := true
+	for i in 40:
+		var o0: Array = VDRelicData.roll_offer(rng, 0, true, false)
+		var o1: Array = VDRelicData.roll_offer(rng, 6, true, false)
+		var o2: Array = VDRelicData.roll_offer(rng, 6, false, true)
+		var o3: Array = VDRelicData.roll_offer(rng, 6, false, false)
+		for o in [o0, o1, o2, o3]:
+			if o.size() != VDRelicData.PICK_COUNT:
+				ok_roll = false
+			var relics: Array = o.filter(func(x: String) -> bool: return not VDRelicData.is_slot(x))
+			var uniq := {}
+			for r in relics:
+				uniq[r] = true
+			if uniq.size() != relics.size():
+				ok_roll = false
+		if o0.has(VDRelicData.SLOT_ID) or not o1.has(VDRelicData.SLOT_ID) or not o2.has(VDRelicData.SLOT_ID) or o3.count(VDRelicData.SLOT_ID) > 1:
+			ok_roll = false
+	_check(ok_roll, "roll_offer: slot rules (none when board full / forced on first or no-open / at most one)")
 	# 별 깃털은 최상단에, 서리 결정은 뇌운 조각 아래(위 칸 유물 → 둔화 2배), 잉걸불은 빈 이웃이 많은 자리
 	_place("star_feather", Vector2i(0, 0))
 	_place("thunder_shard", Vector2i(1, 0))
@@ -91,7 +131,7 @@ func _setup_board() -> void:
 	_check(board.rotate(Vector2i(1, 0), 3) and board.rot_of(Vector2i(1, 0)) == 3 and board.ports_of(Vector2i(1, 0)) == [3], "rotate thunder 3 -> port down")
 	_check(board.port_to(Vector2i(1, 0), Vector2i(1, 1)) and board.linked(Vector2i(1, 0), Vector2i(1, 1)), "thunder socket touches resonance")
 	# 공명 수정의 소켓(위)은 뇌운 조각에 닿는다 → 뇌운 조각 위력 +10%, 공명 수정은 뇌운 조각의 가속 +15% 를 받는다
-	_check(is_equal_approx(float(board.socket_bonus(Vector2i(1, 0))["power"]), 0.1), "thunder gets power +10% from resonance (got %s)" % [str(board.socket_bonus(Vector2i(1, 0)))])
+	_check(is_equal_approx(float(board.socket_bonus(Vector2i(1, 0))["power"]), 0.1), "thunder gets power +10%% from resonance (got %s)" % [str(board.socket_bonus(Vector2i(1, 0)))])
 	_check(is_equal_approx(float(board.socket_bonus(Vector2i(1, 1))["haste"]), 0.15), "resonance gets haste +15% from thunder")
 	_check(board.socket_links(Vector2i(1, 1)) == [Vector2i(1, 0)], "resonance links == [thunder] (got %s)" % str(board.socket_links(Vector2i(1, 1))))
 	_check(is_equal_approx(_b.relics.power_of(Vector2i(1, 0)), 1.1), "runtime power_of thunder == 1.1")
@@ -138,6 +178,112 @@ func _tip_later(sec: float) -> void:
 	get_viewport().push_input(ev, true)
 
 
+## 슬롯 카드 흐름을 실제 입력으로: 보상 3택1(슬롯 포함) 제시 → 슬롯 카드 선택 → 보관함에 슬롯 → 잠긴 칸 (0,2) 로 드래그 → 칸 열림
+## → 보관함 유물(잉걸불)을 그 칸으로 드래그 → 놓임. 슬롯을 열린 칸에 놓으면 거절되는 것도 본다.
+func _slot_flow_later(sec: float) -> void:
+	await get_tree().create_timer(sec).timeout
+	if not is_inside_tree():
+		return
+	var board: VDRelicBoard = _b.relic_board
+	var hud: VDRelicHud = _b.relic_hud
+	var open0 := board.open_count()
+	var tray0 := board.tray.size()
+	hud.offer([VDRelicData.SLOT_ID, "ember", "frost_mirror"])
+	await get_tree().create_timer(0.8).timeout   # 카드 글리치 등장
+	if not is_inside_tree():
+		return
+	_check(hud.has_offer() and hud.offer_ids().has(VDRelicData.SLOT_ID) and hud._cards.size() == 3, "slot card offered (cards=%d ids=%s)" % [hud._cards.size(), str(hud.offer_ids())])
+	var slot_card: Button = null
+	for cd in hud._cards:
+		if cd.get_meta("id", "") == VDRelicData.SLOT_ID:
+			slot_card = cd
+	_check(slot_card != null and slot_card.get_child(0).get_child(0).get_child(0) is Control and not (slot_card.get_child(0).get_child(0).get_child(0) is TextureRect), "slot card draws hex icon (not a relic texture)")
+	await _shot("05_slot_offer")
+	# 카드 클릭 = pressed 시그널 (버튼은 화면 가운데 층에 있어 좌표 대신 직접 누른다)
+	hud.pick(VDRelicData.SLOT_ID)
+	_check(board.tray.size() == tray0 + 1 and board.is_slot(tray0), "picked slot lands in tray[%d]" % tray0)
+	_check(not hud.has_offer(), "offer closed after pick")
+	await get_tree().create_timer(0.7).timeout   # 카드가 보관함으로 날아간다
+	if not is_inside_tree():
+		return
+	_shot("05b_slot_in_tray")
+	# 슬롯을 열린 칸(0,0: 별 깃털)에 놓으면 거절 → 보관함에 그대로
+	var tgt_open := Vector2i(0, 0)
+	_mouse(hud, hud.tray_rect(tray0).get_center(), MOUSE_BUTTON_LEFT, true)
+	_mouse_move(hud, hud.cell_center(tgt_open))
+	_check(hud.dragging_slot(), "dragging slot from tray")
+	_mouse(hud, hud.cell_center(tgt_open), MOUSE_BUTTON_LEFT, false)
+	_check(board.is_slot(tray0) and board.relic_at(tgt_open) == "star_feather" and board.open_count() == open0, "slot refused on open cell (stays in tray)")
+	# 잠긴 칸 (0,2) 로 드래그 → 열림
+	var tgt := Vector2i(0, 2)
+	_check(board.can_unlock(tgt), "(0,2) is locked before")
+	_mouse(hud, hud.tray_rect(tray0).get_center(), MOUSE_BUTTON_LEFT, true)
+	_mouse_move(hud, hud.cell_center(tgt) + Vector2(40, 30))
+	_mouse_move(hud, hud.cell_center(tgt))
+	_check(hud.dragging_slot() and hud._hover_cell == tgt, "slot ghost over locked cell")
+	await get_tree().create_timer(0.15).timeout
+	if not is_inside_tree():
+		return
+	await _shot("05c_slot_drag")
+	_mouse(hud, hud.cell_center(tgt), MOUSE_BUTTON_LEFT, false)
+	_check(board.is_open(tgt) and board.open_count() == open0 + 1 and board.slot_count() == 0, "slot drop opens (0,2) (open=%d)" % board.open_count())
+	_check(board.tray.size() == tray0, "slot consumed from tray")
+	await get_tree().create_timer(0.4).timeout
+	if not is_inside_tree():
+		return
+	await _shot("05d_slot_opened")
+	# 열린 칸에 유물 드래그: 보관함 0번(잉걸불) → (0,2)
+	var rid: String = board.tray[0]
+	_mouse(hud, hud.tray_rect(0).get_center(), MOUSE_BUTTON_LEFT, true)
+	_mouse_move(hud, hud.cell_center(tgt))
+	_mouse(hud, hud.cell_center(tgt), MOUSE_BUTTON_LEFT, false)
+	_check(board.relic_at(tgt) == rid, "relic %s dropped into the new cell" % rid)
+	_check(board.tray.size() == tray0 - 1, "tray shrank by one")
+	_mouse_move(hud, Vector2(400, 400))
+	await get_tree().create_timer(0.3).timeout
+	if not is_inside_tree():
+		return
+	_shot("05e_relic_in_new_cell")
+	# 실제 보상 루틴: 첫 유물 보상(stage == RELIC_EVERY)에는 슬롯 카드가 반드시 있고, 칸은 자동으로 열리지 않는다
+	var stage0: int = _b.stage
+	var open1 := board.open_count()
+	_b.stage = VDRelicData.RELIC_EVERY
+	_b._relic_rewards()
+	_b.stage = stage0
+	await get_tree().create_timer(0.3).timeout
+	if not is_inside_tree():
+		return
+	var ids := hud.offer_ids()
+	_check(ids.size() == VDRelicData.PICK_COUNT and ids.has(VDRelicData.SLOT_ID), "_relic_rewards: first reward has a slot card (%s)" % str(ids))
+	_check(board.open_count() == open1, "_relic_rewards: no automatic unlock")
+	var relic_pick := ""
+	for x in ids:
+		if not VDRelicData.is_slot(x):
+			relic_pick = x
+			break
+	hud.pick(relic_pick)
+	_check(board.tray.back() == relic_pick and not hud.has_offer(), "picked %s from the real offer" % relic_pick)
+	await get_tree().create_timer(0.7).timeout
+	_open_before = board.open_count()
+	_slot_flow_done = true
+
+
+func _mouse(hud: Control, local: Vector2, btn: int, pressed: bool) -> void:
+	var ev := InputEventMouseButton.new()
+	ev.button_index = btn
+	ev.pressed = pressed
+	ev.position = hud.get_global_transform_with_canvas() * local
+	ev.global_position = ev.position
+	get_viewport().push_input(ev, true)
+
+
+func _mouse_move(hud: Control, local: Vector2) -> void:
+	var ev := InputEventMouseMotion.new()
+	ev.position = hud.get_global_transform_with_canvas() * local
+	ev.global_position = ev.position
+	get_viewport().push_input(ev, true)
+
+
 func _place(id: String, c: Vector2i) -> void:
 	var board: VDRelicBoard = _b.relic_board
 	var i := board.tray.find(id)
@@ -175,22 +321,36 @@ func _after_clear() -> void:
 	var board: VDRelicBoard = _b.relic_board
 	var hud: VDRelicHud = _b.relic_hud
 	print("[relic-test] after clear %d: open=%d corrupt=%d tray=%s fired=%s essence=%d" % [_cleared, board.open_count(), board.corrupt_count(), str(board.tray), str(_b.relics.fire_count), _b.essence])
-	# 유물 보상(칸 해금 + 3택1)은 RELIC_EVERY 구역마다. 방금 끝난 구역은 wave - 1 (다음 방으로 넘어와 PLACEMENT)
-	if (_b.wave - 1) % VDRelicData.RELIC_EVERY == 0:
-		_check(board.open_count() >= _open_before + 1 or board.open_count() == VDRelicData.BOARD_CELLS.size(), "cell unlocked on relic clear")
+	# 유물 보상(3택1, 슬롯 카드 섞임)은 RELIC_EVERY 스테이지마다. 방금 끝난 스테이지는 stage - 1 (다음 방으로 넘어와 PLACEMENT). 칸은 자동으로 열리지 않는다
+	var done_stage: int = _b.stage - 1
+	_check(board.open_count() == _open_before, "no automatic cell unlock on clear (open=%d)" % board.open_count())
+	if done_stage % VDRelicData.RELIC_EVERY == 0:
 		_check(hud.has_offer(), "reward offer shown")
+		var ids := hud.offer_ids()
+		_check(ids.size() == VDRelicData.PICK_COUNT, "offer has %d cards (%s)" % [VDRelicData.PICK_COUNT, str(ids)])
+		if done_stage == VDRelicData.RELIC_EVERY:
+			_check(ids.has(VDRelicData.SLOT_ID), "first relic reward includes a slot card (%s)" % str(ids))
 		var before := board.tray.size()
-		hud.pick("thunder_shard")
+		var pick_id: String = VDRelicData.SLOT_ID if ids.has(VDRelicData.SLOT_ID) else "thunder_shard"
+		hud.pick(pick_id)
 		_check(board.tray.size() == before + 1, "pick adds to tray")
+		if pick_id == VDRelicData.SLOT_ID:
+			# 모델로 잠긴 칸 하나를 연다 (드래그 UX 는 _slot_flow_later 에서 검사했다)
+			for c in VDRelicData.BOARD_CELLS:
+				if board.can_unlock(c):
+					_check(board.unlock_from_tray(board.tray.find(VDRelicData.SLOT_ID), c), "picked slot opens %s" % str(c))
+					break
 	else:
-		_check(board.open_count() == _open_before, "no cell unlock between relic clears")
 		_check(not hud.has_offer(), "no reward offer between relic clears")
 	_open_before = board.open_count()
 	if _cleared == 1:
 		# 침식을 강제로 만들고 정화한다. 클리어 보상의 35% 침식이 유일한 빈 칸을 이미 먹었으면 그 칸을 쓴다
-		# (첫 클리어엔 칸 해금이 없어 빈 칸이 없을 수 있다 → 테스트용으로 한 칸 연다)
-		if board.open_count() < VDRelicData.BOARD_CELLS.size() and board.corrupt_count() == 0:
-			board.unlock(1)
+		# (칸은 자동으로 열리지 않아 빈 칸이 없을 수 있다 → 테스트용으로 한 칸 연다)
+		if board.corrupt_count() == 0:
+			for c in VDRelicData.BOARD_CELLS:
+				if board.can_unlock(c):
+					board.unlock_cell(c)
+					break
 			_open_before = board.open_count()
 		var c := board.corrupt_random()
 		if c.x < 0:
@@ -226,22 +386,15 @@ func _after_clear_later(sec: float) -> void:
 func _fx_show() -> void:
 	var hud: VDRelicHud = _b.relic_hud
 	if burstshow:
-		# 버스트 셰이더 단독 확인: t 를 고정한 쿼드 4개
+		# 착탄 피격 파티클(VDTouchHit) 단독 확인: 보통·강타 한 쌍을 0.06초 간격으로 4쌍
 		var x := 0.0
-		for tv in [0.02, 0.15, 0.35, 0.7]:
-			var sp := Sprite2D.new()
-			sp.texture = VDRelicFx.quad_texture()
-			sp.position = _b._chest(_b.allies[0]) + Vector2(x, 160.0)
-			sp.scale = Vector2.ONE * 3.0
-			sp.z_index = 60
-			var m := ShaderMaterial.new()
-			m.shader = VDRelicFx.BurstShader
-			m.set_shader_parameter("t", tv)
-			m.set_shader_parameter("seed", 3.0)
-			sp.material = m
-			_b.fx_root.add_child(sp)
+		for i in 4:
+			for hv in 2:
+				var sp := VDTouchHit.spawn(_b.fx_root, _b._chest(_b.allies[0]) + Vector2(x, 160.0 + 200.0 * hv), 0.45, hv == 1)
+				sp.z_index = 60
 			x += 220.0
-		await get_tree().create_timer(0.3).timeout
+			await get_tree().create_timer(0.06).timeout
+		await get_tree().create_timer(0.06).timeout
 		_shot("burst_static")
 		await get_tree().create_timer(0.3).timeout
 		get_tree().quit(0)

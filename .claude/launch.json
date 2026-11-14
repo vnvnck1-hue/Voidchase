@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fonts",
+      "runtimeExecutable": "C:/Python314/python.exe",
+      "runtimeArgs": ["docs/fonts/serve.py", "8765"],
+      "port": 8765
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "output": "01_left_pose.png",
+    "source": "C:\\Users\\vnvnc\\.codex\\generated_images\\01a1c3dd-410e-7820-8a83-14eb1d42f184\\exec-dbdf240b-cc07-416a-b0e6-de0414cd23c2.png",
+    "source_size": [
+      1057,
+      1488
+    ],
+    "canvas_size": [
+      1280,
+      1792
+    ],
+    "translation": [
+      112,
+      253
+    ],
+    "resized": false,
+    "alpha_different_pixels": 0,
+    "visible_rgb_different_pixels": 0,
+    "note": "Only transparent canvas padding/translation and zeroing RGB at alpha=0; all alpha and all visible RGB preserved exactly."
+  },
+  {
+    "output": "02_middle_pose.png",
+    "source": "C:\\Users\\vnvnc\\.codex\\generated_images\\01a1c3dd-410e-7820-8a83-14eb1d42f184\\exec-a7983206-6393-4528-acf6-a8dd72a9eb02.png",
+    "source_size": [
+      1024,
+      1536
+    ],
+    "canvas_size": [
+      1280,
+      1792
+    ],
+    "translation": [
+      143,
+      221
+    ],
+    "resized": false,
+    "alpha_different_pixels": 0,
+    "visible_rgb_different_pixels": 0,
+    "note": "Only transparent canvas padding/translation and zeroing RGB at alpha=0; all alpha and all visible RGB preserved exactly."
+  },
+  {
+    "output": "03_right_pose.png",
+    "source": "C:\\Users\\vnvnc\\.codex\\generated_images\\01a1c3dd-410e-7820-8a83-14eb1d42f184\\exec-8dafc81a-a37b-4c06-bf37-e98ddf131313.png",
+    "source_size": [
+      1019,
+      1543
+    ],
+    "canvas_size": [
+      1280,
+      1792
+    ],
+    "translation": [
+      120,
+      199
+    ],
+    "resized": false,
+    "alpha_different_pixels": 0,
+    "visible_rgb_different_pixels": 0,
+    "note": "Only transparent canvas padding/translation and zeroing RGB at alpha=0; all alpha and all visible RGB preserved exactly."
+  }
+]

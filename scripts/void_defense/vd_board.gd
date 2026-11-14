@@ -1,17 +1,19 @@
-## VDMap의 방과 복도를 수도원 석판과 외곽 타일로 그린다.
+## VDMap의 방과 복도를 선택한 테마(공허 유적 / 사막 정거장)의 타일로 그린다.
 ## 현재 방에는 아군 배치 구역/적 스폰 구역 색을 깔고, 갈림길 선택 중엔 출구 복도를 빛나게 표시한다.
 ## 새로 생긴 방·복도 블록은 raise_tiles() 로 바닥 아래에서 무작위 시간차로 솟아오른다.
 class_name VDBoard
 extends Node2D
 
-const FACE_H := 44.0 * VDData.TILE_SCALE
+const FACE_H := VDData.TILE_W * VDDesertTerrain.FACE_RATIO
 const HALF_W := VDData.TILE_W * 0.5
 const HALF_H := VDData.TILE_H * 0.5
 const GROUND_SIZE := Vector2(VDData.TILE_W, VDData.TILE_H + FACE_H)
-const BASE_TILE := preload("res://assets/void_defense_original/background/terrain/violet-ruins-base-tile.png")
-const EDGE_TILE := preload("res://assets/void_defense_original/background/terrain/violet-ruins-edge-tile.png")
 const TOP_CENTER := Vector2(HALF_W, HALF_H)
-const RIM_REACH := 0.48
+var terrain := VDDesertTerrain.new()
+var void_terrain := VDVoidTerrain.new()
+const BioTerrain := preload("res://scripts/void_defense/vd_bio_terrain.gd")
+var bio_terrain := BioTerrain.new()
+var theme_id: int = VDWorldTheme.Kind.VOID
 static var _top := PackedVector2Array([
 	Vector2(HALF_W, 0), Vector2(VDData.TILE_W, HALF_H),
 	Vector2(HALF_W, VDData.TILE_H), Vector2(0, HALF_H),
@@ -25,11 +27,6 @@ static var _right := PackedVector2Array([
 	Vector2(VDData.TILE_W, HALF_H + FACE_H), Vector2(HALF_W, GROUND_SIZE.y),
 ])
 
-static var _top_uv := _face_uv(_top, 0.04)
-static var _left_uv := _face_uv(_left, 0.09)
-static var _right_uv := _face_uv(_right, 0.09)
-static var _edge_right_uv := PackedVector2Array([_left_uv[1], _left_uv[0], _left_uv[3], _left_uv[2]])
-static var _rim_uv := _rim_strip(_top_uv, 2, TOP_CENTER / GROUND_SIZE)
 static var _top_outline := PackedVector2Array([_top[0], _top[1], _top[2], _top[3], _top[0]])
 
 var map: VDMap
@@ -40,7 +37,8 @@ var hover_valid := false
 var hover_on := false
 var exits: Array = []
 var show_exits := false
-var exit_hover := -1            # 길 선택 버튼에 마우스를 올린 출구: 그 길만 밝게, 나머지는 흐리게
+var zone_k := 1.0               # 아군 배치·적 등장 구역 색 띠의 세기 (필드 연구실, vd_field_look.gd 의 tile/zone)
+var exit_hover := -1           # 길 선택 버튼에 마우스를 올린 출구: 그 길만 밝게, 나머지는 흐리게
 
 ## 새 타일 솟아오르기: 셀 -> 시작 시각(_clock 기준). 끝난 셀은 지운다.
 const RISE_SEC := 0.5
@@ -67,6 +65,14 @@ func _ready() -> void:
 	_mid = _layer("RisingBand", _draw_cells.bind(1))
 	_front = _layer("Front", _draw_front)
 	_overlay = _layer("Overlay", _draw_overlay)
+	# 필드 색 보정 재질(보드에 입힌다)은 블록 층만 따라간다. 출구 표시·드래그 커서(오버레이)는 원래 색 그대로
+	_mid.use_parent_material = true
+	_front.use_parent_material = true
+
+
+func set_theme(value: int) -> void:
+	theme_id = value
+	queue_redraw()  # _draw()가 솟아오르는 띠·앞쪽 층도 같이 갱신한다.
 
 
 func _layer(n: String, fn: Callable) -> Node2D:
@@ -109,10 +115,6 @@ func _layer_of(cell: Vector2i) -> int:
 	return 0 if d < _band.x else (1 if d <= _band.y else 2)
 
 
-func is_rising() -> bool:
-	return not _rise.is_empty()
-
-
 ## 살짝 튀어 오르는 ease-out-back (오버슈트 작게).
 static func _ease_out_back(u: float) -> float:
 	var c1 := 1.0
@@ -127,28 +129,6 @@ func set_hover(c: Vector2i, valid: bool, on := true) -> void:
 	_overlay.queue_redraw()
 
 
-## 다각형은 셀 경계까지 그리고, 텍스처는 면 안쪽을 샘플링해 투명 가장자리와 다른 면의 색이 섞이지 않게 한다.
-static func _face_uv(points: PackedVector2Array, inset: float) -> PackedVector2Array:
-	var center := (points[0] + points[2]) * 0.5
-	var uv := PackedVector2Array()
-	for p in points:
-		uv.append(p.lerp(center, inset) / GROUND_SIZE)
-	return uv
-
-
-## 외곽 원화의 왼쪽 아래 테두리만 가져와 비어 있는 이웃 방향으로 돌려 얹는다.
-static func _rim_strip(points: PackedVector2Array, edge: int, center: Vector2) -> PackedVector2Array:
-	var a := points[edge]
-	var b := points[(edge + 1) % 4]
-	return PackedVector2Array([a, b, b.lerp(center, RIM_REACH), a.lerp(center, RIM_REACH)])
-
-
-func _draw_rim(ci: CanvasItem, edge: int, alpha: float) -> void:
-	var fade := PackedColorArray([Color(1.0, 1.0, 1.0, alpha), Color(1.0, 1.0, 1.0, alpha),
-		Color(1.0, 1.0, 1.0, 0.0), Color(1.0, 1.0, 1.0, 0.0)])
-	ci.draw_polygon(_rim_strip(_top, edge, TOP_CENTER), fade, _rim_uv, EDGE_TILE)
-
-
 func _draw() -> void:
 	_draw_cells(0)
 	# 다른 층도 보드 상태(블록, 현재 방, exits, show_exits)에 따라 함께 갱신
@@ -161,7 +141,7 @@ func _draw() -> void:
 func _draw_front() -> void:
 	_draw_cells(2)
 	if not current_room.is_empty():
-		var f := VDData.to_screen(VDMap.to_world_f(current_room, -1.3, 2.5))
+		var f := VDData.to_screen(VDMap.to_world_f(current_room, -1.3, float(current_room.get("door_c", 2)) + 0.5))
 		_front.draw_line(f, f + Vector2(0, -96), Color(0.82, 0.78, 0.92), 4.0)
 		_front.draw_colored_polygon(PackedVector2Array([f + Vector2(0, -96), f + Vector2(56, -80), f + Vector2(0, -62)]), Color(0.55, 0.3, 0.88))
 		_front.draw_string(VDData.font(), f + Vector2(-50, 24), "거점", HORIZONTAL_ALIGNMENT_CENTER, 100.0, 16, Color(0.9, 0.85, 1.0))
@@ -192,39 +172,33 @@ func _draw_cells(layer: int) -> void:
 			alpha = clampf(u * 3.0, 0.0, 1.0)
 		var c := VDData.to_screen(Vector2(cell)) + Vector2(0, lift)
 		ci.draw_set_transform(c - TOP_CENTER)
-		var tint := PackedColorArray([Color(1.0, 1.0, 1.0, alpha)])
 		# 옆면: 아래쪽(y+1)·오른쪽(x+1) 이웃이 없거나, 어느 한쪽이 솟아오르는 중이라 높이가 다를 때
 		var moving := _rise.has(cell)
 		var n_down := cell + Vector2i(0, 1)
 		var n_right := cell + Vector2i(1, 0)
 		var left_exposed := not map.tiles.has(n_down)
 		var right_exposed := not map.tiles.has(n_right)
-		if left_exposed or moving or _rise.has(n_down):
-			ci.draw_polygon(_left, tint, _left_uv, EDGE_TILE if left_exposed else BASE_TILE)
-		if right_exposed:
-			# 왼쪽 아치를 반사하고 기존 오른쪽 암면처럼 그늘을 준다.
-			var shadow := PackedColorArray([Color(0.78, 0.74, 0.84, alpha)])
-			ci.draw_polygon(_right, shadow, _edge_right_uv, EDGE_TILE)
-		elif moving or _rise.has(n_right):
-			ci.draw_polygon(_right, tint, _right_uv, BASE_TILE)
-		ci.draw_polygon(_top, tint, _top_uv, BASE_TILE)
-		if not map.tiles.has(cell + Vector2i.UP):
-			_draw_rim(ci, 0, alpha)
-		if right_exposed:
-			_draw_rim(ci, 1, alpha)
-		if left_exposed:
-			_draw_rim(ci, 2, alpha)
-		if not map.tiles.has(cell + Vector2i.LEFT):
-			_draw_rim(ci, 3, alpha)
-		ci.draw_polyline(_top_outline, Color(0.25, 0.17, 0.32, 0.82 * alpha), 1.5, true)
+		var draw_left := left_exposed or moving or _rise.has(n_down)
+		var draw_right := right_exposed or moving or _rise.has(n_right)
+		if theme_id == VDWorldTheme.Kind.VOID:
+			void_terrain.draw_cell(ci, alpha, left_exposed, right_exposed, draw_left, draw_right,
+				not map.tiles.has(cell + Vector2i.UP), not map.tiles.has(cell + Vector2i.LEFT))
+		elif theme_id == VDWorldTheme.Kind.BIO:
+			bio_terrain.draw_cell(ci, cell, alpha, draw_left, draw_right)
+		else:
+			if draw_left:
+				terrain.draw_side(ci, _left, false, alpha)
+			if draw_right:
+				terrain.draw_side(ci, _right, true, alpha)
+			terrain.draw_top(ci, _top, cell, alpha)
 		var t: Dictionary = map.tiles[cell]
 		if t["room"] == cur_id and t["kind"] == "room":
 			var z := VDMap.zone(current_room, cell)
 			if z == "A" and placement_mode:
-				ci.draw_colored_polygon(_top, Color(0.5, 0.9, 1.0, 0.18 * alpha))
-				ci.draw_polyline(_top_outline, Color(0.65, 0.9, 1.0, 0.30 * alpha), 1.0)
+				ci.draw_colored_polygon(_top, Color(0.5, 0.9, 1.0, 0.18 * alpha * zone_k))
+				ci.draw_polyline(_top_outline, Color(0.65, 0.9, 1.0, minf(0.30 * alpha * zone_k, 1.0)), 1.0)
 			elif z == "E":
-				ci.draw_colored_polygon(_top, Color(1.0, 0.35, 0.5, 0.16 * alpha))
+				ci.draw_colored_polygon(_top, Color(1.0, 0.35, 0.5, 0.16 * alpha * zone_k))
 	ci.draw_set_transform(Vector2.ZERO)
 
 

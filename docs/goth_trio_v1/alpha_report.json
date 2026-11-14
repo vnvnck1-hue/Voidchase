@@ -1,0 +1,71 @@
+[
+  {
+    "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\goth_trio_v1\\png\\01_quiet_dreamer.png",
+    "width": 1041,
+    "height": 1511,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 627368,
+    "partial_alpha_pixels": 945081,
+    "opaque_pixels": 502,
+    "content_bounds": [
+      0,
+      11,
+      1001,
+      1510
+    ],
+    "edge_nontransparent_pixels": 215,
+    "strong_alpha_bounds": [
+      44,
+      14,
+      998,
+      1505
+    ],
+    "has_transparency": true
+  },
+  {
+    "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\goth_trio_v1\\png\\02_playful_punk.png",
+    "width": 1076,
+    "height": 1462,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 918883,
+    "partial_alpha_pixels": 652796,
+    "opaque_pixels": 1433,
+    "content_bounds": [
+      25,
+      5,
+      1021,
+      1461
+    ],
+    "edge_nontransparent_pixels": 164,
+    "strong_alpha_bounds": [
+      130,
+      10,
+      948,
+      1455
+    ],
+    "has_transparency": true
+  },
+  {
+    "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\goth_trio_v1\\png\\03_regal_romantic.png",
+    "width": 1059,
+    "height": 1486,
+    "pixel_format": "Format32bppArgb",
+    "transparent_pixels": 728431,
+    "partial_alpha_pixels": 843563,
+    "opaque_pixels": 1680,
+    "content_bounds": [
+      0,
+      0,
+      1033,
+      1485
+    ],
+    "edge_nontransparent_pixels": 196,
+    "strong_alpha_bounds": [
+      30,
+      5,
+      1030,
+      1481
+    ],
+    "has_transparency": true
+  }
+]

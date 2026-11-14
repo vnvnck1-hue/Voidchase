@@ -1,0 +1,33 @@
+00_stage.png	무대 (적 4 · 기사 · 힐러)
+01_heal_basic_a.png	힐러 일반 회복: 마법진(vr_magic_circle) + 회복 반짝임(vr_heal_sparkles)
+01_heal_basic_b.png	힐러 일반 회복 (0.25초)
+02_blessing_a.png	힐러 스킬 생명의 축복: 큰 마법진 + 아군마다 작은 마법진 + 회복 반짝임
+02_blessing_b.png	생명의 축복 (0.45초)
+03_absolute_zero_a.png	마법사 스킬 절대 영도: 푸른 마법진 + 바닥 충격파
+03_absolute_zero_b.png	절대 영도 적중: 적마다 하늘 번개(vr_lightning_bolt) + 별 섬광, 몸은 얼음빛
+04_prayer_a.png	힐러 궁극기 부활의 기도: 금빛 큰 마법진
+04_prayer_b.png	부활: 금빛 하늘 번개 + 회복 반짝임 + 충격파 + 마법진
+05_chain_lightning.png	마법사 궁극기 체인 라이트닝: 지그재그 번개 선 + 마지막 적 하늘 번개
+06_levelup.png	레벨업: 금빛 별 섬광 + 금빛 번개 기둥 + 바닥 충격파
+07_hero_down.png	영웅 전투불능: 붉은 하늘 번개 + 별 섬광
+08_summon_portal.png	적 소환 예고 균열: 보라 소용돌이 포털(vr_portal_swirl), 보통/보스
+08_champion_warn.png	강적 예고: 큰 붉은 소용돌이 포털 + 자홍 마법진
+08_champion_impact.png	강적 착지: 충격파 + 위로 솟는 번개 + 먼지 + 내려찍기
+09_boss_descent_portal.png	보스 공허 강하: 사라지는 자리·내려오는 자리 보라 포털 + 번개
+10_energy_orb.png	에너지 구슬(vr_energy_orb): 마법사 평타(보라)·포자(분홍) 투사체, 망루 레이저 충전(붉음)
+11_relic_bolt_fly.png	유물 투사체 뇌운 조각 (번개 띠): 비행 중
+11_relic_bolt_hit.png	유물 투사체 뇌운 조각 (번개 띠): 착탄
+11_relic_comet_fly.png	유물 투사체 잉걸불 (불덩이 + 궤적 불꽃): 비행 중
+11_relic_comet_hit.png	유물 투사체 잉걸불 (불덩이 + 궤적 불꽃): 착탄
+11_relic_frost_fly.png	유물 투사체 서리 결정 (시안 혜성 + 눈꽃 착탄): 비행 중
+11_relic_frost_hit.png	유물 투사체 서리 결정 (시안 혜성 + 눈꽃 착탄): 착탄
+11_relic_feather_fly.png	유물 투사체 별 깃털 (금빛 깃털 띠): 비행 중
+11_relic_feather_hit.png	유물 투사체 별 깃털 (금빛 깃털 띠): 착탄
+11_relic_essence_fly.png	유물 투사체 공허 정수병 (보라 띠 3개): 비행 중
+11_relic_essence_hit.png	유물 투사체 공허 정수병 (보라 띠 3개): 착탄
+12_touch_hit_a.png	몬스터 피격 파티클: 노란 별 섬광 + 내리치는 번개 (강타 / 보통)
+12_touch_hit_b.png	몬스터 피격 파티클 (0.2초)
+13_sword_slash_a.png	기사 검기: 셀 초승달 (4프레임)
+13_sword_slash_b.png	기사 검기 (8프레임)
+14_status_overlays.png	상태 표시: 화상 불꽃 점(적1) · 둔화 얼음 고리(적2) · 기절 별(적3) · 기사 가드 고리+보호막 · 힐러 마나 READY 별
+15_card_flame.png	궁극기 준비 카드 불꽃: 카드 둘레 황금 불꽃 + 불티 (card_ult_flame.gdshader)

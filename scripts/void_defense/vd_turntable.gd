@@ -7,8 +7,18 @@ class_name VDTurntable
 extends Control
 
 signal selected_changed(index: int)
+signal front_pressed(index: int)          # 이미 앞에 있는 캐릭터를 눌렀다 (VDBattle 이 스킬창을 연다/닫는다)
 
 const OLIVIA_RIG := "res://scenes/characters/olivia_rig.tscn"
+## 스킬 SP 알림 외곽선 (생성물: tools/shaders/build_sp_alert.gd). 쓸 SP 가 있는 캐릭터 실루엣이 금빛 네온으로 숨쉬고 스캔 띠가 훑는다.
+const AlertShader := preload("res://shaders/sp_alert_outline.tres")
+const ALERT_LINE_PX := 3.5                # 외곽선 두께 (디자인 px)
+const ALERT_GLOW_PX := 9.0                # 선 바깥 글로우 폭
+const ALERT_FADE := 5.0                   # 켜고 끄는 빠르기 (1/초)
+const ALERT_BACK := 0.7                   # 뒤 캐릭터의 선 세기 (앞 = 1)
+## 리그는 파츠마다 z 가 달라 한 장으로 합쳐야 실루엣 외곽선을 그릴 수 있다 → 서브뷰포트에 그려 그 텍스처를 Sprite2D 로 보여 준다.
+const RIG_VP := Vector2(560, 620)         # 서브뷰포트 크기 (디자인 px, 앞 캐릭터 크기 기준)
+const RIG_FOOT := Vector2(280, 590)       # 그 안의 발 위치
 const Frame := preload("res://scripts/void_defense/vd_battle_frame.gd")
 const UILayout := preload("res://scripts/void_defense/vd_battle_ui_layout.gd")
 const Items := preload("res://scripts/void_defense/vd_items.gd")
@@ -18,10 +28,11 @@ const LAVA_DARK := Color(0.0, 0.0, 0.0, 0.55)
 ## 스탠딩은 약 1800px 높이 원화. scale 은 StandingCharacter 의 pixel_scale/texture_scales 와 같다 (화면 ~576px).
 const ROSTER := [
 	# 애니메이션이 제대로 된 넷만: 올리비아 본 리그 1 + idle 시트 2 + 스틸(숨쉬기) 1
-	{"name": "올리비아", "rig": OLIVIA_RIG, "scale": 0.32},
-	{"name": "캐릭터 2", "sheet": "res://assets/textures/standing/char_02_idle.png", "grid": Vector2i(8, 8), "count": 57, "fps": 10.0, "scale": 0.911},
-	{"name": "캐릭터 4", "sheet": "res://assets/textures/standing/char_07_idle.png", "grid": Vector2i(7, 6), "count": 37, "fps": 10.0, "scale": 1.0622},
-	{"name": "캐릭터 1", "tex": "res://assets/textures/standing/char_01.png", "scale": 0.32},
+	# hero = 이 스탠딩이 맡는 분대 영웅 (분대 카드 초상과 같은 그림: tools/expand/make_portraits.py). 스킬창·SP 알림이 이 id 로 이어진다
+	{"name": "올리비아", "hero": "mage", "rig": OLIVIA_RIG, "scale": 0.32},
+	{"name": "캐릭터 2", "hero": "healer", "sheet": "res://assets/textures/standing/char_02_idle.png", "grid": Vector2i(8, 8), "count": 57, "fps": 10.0, "scale": 0.911},
+	{"name": "캐릭터 4", "hero": "knight", "sheet": "res://assets/textures/standing/char_07_idle.png", "grid": Vector2i(7, 6), "count": 37, "fps": 10.0, "scale": 1.0622},
+	{"name": "캐릭터 1", "hero": "gunner", "tex": "res://assets/textures/standing/char_01.png", "scale": 0.32},
 ]
 
 const CENTER := Vector2(270.0, 410.0)     # 타원 중심 (컨트롤 로컬, 발 기준). 목업: 앞 캐릭터 x≈230
@@ -144,12 +155,29 @@ func _make_item(def: Dictionary) -> Dictionary:
 	var wrap := Node2D.new()
 	wrap.name = def["name"]
 	add_child(wrap)
-	var it := {"node": wrap, "kind": "still", "sprite": null, "scale": float(def["scale"]), "t": randf() * IDLE_PERIOD, "def": def}
+	var it := {"node": wrap, "kind": "still", "sprite": null, "scale": float(def["scale"]), "t": randf() * IDLE_PERIOD, "def": def,
+		"alert": false, "alert_k": 0.0, "mat": null}
 	if def.has("rig"):
+		# 리그는 서브뷰포트에 그리고 그 텍스처를 Sprite2D 로 보여 준다 (발이 원점). 해상도는 _sync_rig_vp 가 창 배율에 맞춘다
+		var vp := SubViewport.new()
+		vp.transparent_bg = true
+		vp.disable_3d = true
+		vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		wrap.add_child(vp)
 		var rig: Node2D = (load(def["rig"]) as PackedScene).instantiate()
-		wrap.add_child(rig)
+		vp.add_child(rig)
+		var sp := Sprite2D.new()
+		sp.centered = false
+		sp.texture = vp.get_texture()
+		wrap.add_child(sp)
 		it["kind"] = "rig"
-		it["sprite"] = rig
+		it["sprite"] = sp
+		it["rig"] = rig
+		it["vp"] = vp
+		it["ss"] = 0.0
+		_sync_rig_vp(it)
+		# 뷰포트 텍스처는 프리멀티플라이드라 늘 알림 재질로 그린다 (strength 0 이면 그림 그대로)
+		_alert_material(it)
 		# 리그 idle 도 실제 시간으로: AnimationPlayer 를 수동 모드로 두고 _process 에서 직접 advance
 		var ap := rig.find_child("AnimationPlayer", true, false) as AnimationPlayer   # 올리비아는 Skeleton/Spine_1 아래
 		if ap:
@@ -169,6 +197,54 @@ func _make_item(def: Dictionary) -> Dictionary:
 		wrap.add_child(sp)
 		it["sprite"] = sp
 	return it
+
+
+## 이 캐릭터의 알림 재질 (없으면 만든다). 캐릭터마다 프레임·배율이 달라 재질도 하나씩.
+func _alert_material(it: Dictionary) -> ShaderMaterial:
+	if it["mat"] == null:
+		var m := ShaderMaterial.new()
+		m.shader = AlertShader
+		m.set_shader_parameter("premult", 1.0 if it["kind"] == "rig" else 0.0)
+		it["mat"] = m
+	(it["sprite"] as Sprite2D).material = it["mat"]
+	return it["mat"]
+
+
+## 리그 서브뷰포트 해상도를 창 배율에 맞춘다: 앞 캐릭터가 화면 px 과 1:1 이 되게 (창이 크면 선명하게, 작으면 가볍게).
+func _sync_rig_vp(it: Dictionary) -> void:
+	var ss := clampf(snappedf(get_viewport().get_final_transform().get_scale().x, 0.05), 0.5, 3.0)
+	if is_equal_approx(ss, float(it["ss"])):
+		return
+	it["ss"] = ss
+	var vp: SubViewport = it["vp"]
+	vp.size = Vector2i((RIG_VP * ss).ceil())
+	var rig: Node2D = it["rig"]
+	rig.position = RIG_FOOT * ss
+	rig.scale = Vector2.ONE * float(it["scale"]) * FRONT_SCALE * ss
+	(it["sprite"] as Sprite2D).offset = -RIG_FOOT * ss
+
+
+func hero_of(i: int) -> String:
+	return String(ROSTER[posmod(i, ROSTER.size())].get("hero", ""))
+
+
+func index_of_hero(hid: String) -> int:
+	for i in ROSTER.size():
+		if ROSTER[i].get("hero", "") == hid:
+			return i
+	return -1
+
+
+## 스킬 SP 알림: 이 영웅의 스탠딩 외곽선을 켜고 끈다 (부드럽게 켜지고 꺼진다).
+func set_alert(hid: String, on: bool) -> void:
+	var i := index_of_hero(hid)
+	if i >= 0 and i < _items.size():
+		_items[i]["alert"] = on
+
+
+func is_alerting(hid: String) -> bool:
+	var i := index_of_hero(hid)
+	return i >= 0 and i < _items.size() and bool(_items[i]["alert"])
 
 
 func _target_angle(i: int) -> float:
@@ -196,6 +272,9 @@ func select_next(step: int) -> void:
 
 
 func _process(_dt: float) -> void:
+	if not is_visible_in_tree():
+		_clock_us = 0
+		return
 	# 게임 배속·히트스탑·슬로모션과 무관하게 항상 기본 속도로 재생한다
 	var now_us := Time.get_ticks_usec()
 	var dt := clampf((now_us - _clock_us) / 1000000.0, 0.0, 0.1) if _clock_us > 0 else 0.0
@@ -204,6 +283,9 @@ func _process(_dt: float) -> void:
 		it["t"] += dt
 		if it.has("anim"):
 			(it["anim"] as AnimationPlayer).advance(dt)
+		if it.has("vp"):
+			_sync_rig_vp(it)
+		it["alert_k"] = move_toward(float(it["alert_k"]), 1.0 if it["alert"] else 0.0, dt * ALERT_FADE)
 	_layout(false)
 
 
@@ -234,26 +316,62 @@ func _layout(_force: bool) -> void:
 		node.modulate = DIM.lerp(Color.WHITE, k)
 		if i == _hover and i != selected:
 			node.modulate = node.modulate.lightened(0.2)
-		var sp = it["sprite"]
+		var spr := it["sprite"] as Sprite2D
 		match it["kind"]:
 			"sheet":
-				var spr := sp as Sprite2D
 				spr.frame = int(float(it["t"]) * float(it["def"]["fps"])) % maxi(int(it["def"]["count"]), 1)
 				spr.scale = Vector2(s, s)
 			"rig":
-				(sp as Node2D).scale = Vector2(s, s)
+				# 서브뷰포트는 앞 캐릭터 크기(× 창 배율)로 그려 두었다 → 깊이에 맞춰 줄여 보여 준다
+				var rs := s / (float(it["scale"]) * FRONT_SCALE * maxf(float(it["ss"]), 0.01))
+				spr.scale = Vector2(rs, rs)
 			_:
 				# 스틸: 숨쉬기 + 발을 축으로 한 느린 기울임 (StandingCharacter 와 같은 수치)
-				var spr := sp as Sprite2D
 				var w := TAU * float(it["t"]) / IDLE_PERIOD
 				var breath := sin(w)
 				var sway := sin(w * 0.5 + 0.8)
 				spr.scale = Vector2(s * (1.0 - 0.014 * 0.5 * breath), s * (1.0 + 0.014 * breath))
 				spr.rotation = deg_to_rad(0.9) * sway
 				spr.position = Vector2(2.0 * sway, 0.0)
+		_sync_alert(it, spr, depth)
 	_name.text = ROSTER[selected]["name"]
 	if _strip:
 		_strip.queue_redraw()
+
+
+## SP 알림 재질 갱신. 알림이 켜져 있거나(사그라드는 중 포함) 리그면 재질로 그린다: 딤드는 modulate 대신 body_tint 로 넘겨
+## 몸만 어두워지고 외곽선은 밝게 남는다 (뒤로 돌아가 있어도 눈에 띄게). 꺼지면 재질을 떼고 원래 modulate 로 돌아간다.
+func _sync_alert(it: Dictionary, spr: Sprite2D, depth: float) -> void:
+	var k := float(it["alert_k"])
+	if k <= 0.0 and it["kind"] != "rig":
+		if spr.material != null:
+			spr.material = null
+		return
+	var m := _alert_material(it)
+	var node: Node2D = it["node"]
+	m.set_shader_parameter("body_tint", node.modulate)
+	node.modulate = Color.WHITE
+	var tex := spr.texture
+	var tsz := Vector2(tex.get_size())
+	if tsz.x < 1.0 or tsz.y < 1.0:
+		return
+	var fr := Vector4(0, 0, 1, 1)
+	if spr.hframes > 1 or spr.vframes > 1:
+		var fsz := Vector2(1.0 / spr.hframes, 1.0 / spr.vframes)
+		var fo := Vector2(spr.frame_coords) * fsz
+		fr = Vector4(fo.x, fo.y, fo.x + fsz.x, fo.y + fsz.y)
+	var ppx := 1.0 / maxf(spr.scale.y, 0.0001)                 # 디자인 1px = 텍스처 몇 px
+	var strength := k * lerpf(ALERT_BACK, 1.0, depth * depth)
+	m.set_shader_parameter("frame_rect", fr)
+	m.set_shader_parameter("quad_rect", fr)
+	m.set_shader_parameter("tex_px", Vector2.ONE / tsz)
+	m.set_shader_parameter("quad_tex_px", Vector2.ONE / tsz)
+	m.set_shader_parameter("ppx", ppx)
+	m.set_shader_parameter("quad_pad", (ALERT_LINE_PX + ALERT_GLOW_PX + 4.0) * ppx if k > 0.0 else 0.0)
+	m.set_shader_parameter("outline_px", ALERT_LINE_PX)
+	m.set_shader_parameter("glow_px", ALERT_GLOW_PX)
+	m.set_shader_parameter("strength", strength)
+	m.set_shader_parameter("t", fmod(Time.get_ticks_msec() * 0.001, 3600.0))
 
 
 ## 캐릭터 히트 상자: 발 위치에서 위로 높이 h, 폭 0.4h.
@@ -305,7 +423,10 @@ func _gui_input(event: InputEvent) -> void:
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			var i := item_at(mb.position)
 			if i >= 0:
-				select(i)
+				if i == selected:
+					front_pressed.emit(i)   # 앞 캐릭터를 누름: 스킬창 열기/닫기
+				else:
+					select(i)
 				accept_event()
 		elif mb.button_index == MOUSE_BUTTON_WHEEL_UP and item_at(mb.position) >= 0:
 			select_next(-1)

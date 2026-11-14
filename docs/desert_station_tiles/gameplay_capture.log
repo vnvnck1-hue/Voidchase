@@ -1,0 +1,44 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.341 - Forward+ - Using Device #0: NVIDIA - NVIDIA GeForce RTX 3060
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2582)
+[VD] VoidDefense ready (main_scene=res://scenes/Lobby.tscn)
+[VD] room 0 (canyon) / wave 1: 4 enemies ["fast", "normal", "normal", "normal"] (x1.00)
+[runner] ready  cycles=1 speed=1.0 headless=false
+[runner] start_battle()  formation knight=(3,0) healer=(0,5)
+[runner] shot res://docs/desert_station_tiles/gameplay/01_placement.png
+[runner] state -> SPAWNING
+[runner] state -> BATTLE
+[runner] shot res://docs/desert_station_tiles/gameplay/02_battle_room0_0.png
+[runner] shot res://docs/desert_station_tiles/gameplay/02_battle_room0_1.png
+[VD] enemy down: 공허 파편  (+6 essence)
+[runner] shot res://docs/desert_station_tiles/gameplay/02_battle_room0_2.png
+[runner] shot res://docs/desert_station_tiles/gameplay/02_battle_room0_3.png
+[runner] shot res://docs/desert_station_tiles/gameplay/02_battle_room0_4.png
+[VD] enemy down: 공허 잔재  (+5 essence)
+[runner] shot res://docs/desert_station_tiles/gameplay/02_battle_room0_5.png
+[VD] enemy down: 공허 잔재  (+5 essence)
+[VD] enemy down: 공허 잔재  (+5 essence)
+[runner] state -> TRANSITION
+[VD] room 0 cleared (wave 1)  essence=0
+[runner] wave 1 cleared (1/1)
+[VD] no relic this room (next in 2)
+[VD] exits from room 0: ["앞 ↘ · 협곡", "옆 ↗ · 전장"]
+[runner] state -> CHOOSE_PATH
+[runner] branch with 2 exits -> choosing 1
+[runner] shot res://docs/desert_station_tiles/gameplay/03_choose_room0.png
+[runner] shot res://docs/desert_station_tiles/gameplay/03b_choose_ui_room0.png
+[VD] path chosen: 1 (옆 ↗ · 전장) -> room 2
+[runner] state -> TRAVEL
+[runner] state -> PLACEMENT
+[runner] formation ok in room 2 (field): { "gunner": (1, 1), "mage": (1, 4), "knight": (3, 2), "healer": (0, 5) }  enemies_visible=0
+[runner] DONE  cycles=1  rooms=[2]  wave=2  essence=21  heroes_alive=4  formation_ok=1
+[runner] map: rooms=3 tiles=226
+[runner] sfx plays: { "enemy_spawn": 4, "chime": 2, "click": 2, "wave_start": 1, "enemy_hit": 2, "gun": 3, "gun_hit": 3, "enemy_die": 4, "tick": 6, "knight_hit": 3, "enemy_attack": 1, "ally_hurt": 1, "voice_knight_hurt": 1, "knight_attack": 1, "mage_cast": 1, "mage_hit": 1, "wave_clear": 1, "heal": 1, "slab_rise": 1, "step": 19 }
+[runner] vfx plays: { "portal": 4, "shockwave": 6, "dust": 30, "burst": 5, "dash": 11, "hit_light": 6, "kill_burst": 4, "gun_hit": 3, "hit_heavy": 3, "orb": 1, "heal": 1 }
+[runner] skill casts: {  }
+[runner] tactics: retreats={  } taunts=0
+[runner] impact: { "back": 0, "side": 3, "push": 0, "wall": 0, "bump": 0 }  flow: { "reinf": 0, "void": 0, "void_hits": 0, "leap": 0 }
+[runner] ultimate casts: {  }  intro_log=[]
+[runner] damage numbers spawned: 12  preset=bounce

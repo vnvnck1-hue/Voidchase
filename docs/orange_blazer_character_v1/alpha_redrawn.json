@@ -1,0 +1,23 @@
+{
+  "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\orange_blazer_character_v1\\orange_blazer_redrawn.png",
+  "width": 1056,
+  "height": 1490,
+  "pixel_format": "Format32bppArgb",
+  "transparent_pixels": 766815,
+  "partial_alpha_pixels": 806342,
+  "opaque_pixels": 283,
+  "content_bounds": [
+    0,
+    0,
+    1027,
+    1489
+  ],
+  "edge_nontransparent_pixels": 222,
+  "strong_alpha_bounds": [
+    41,
+    9,
+    1015,
+    1486
+  ],
+  "has_transparency": true
+}

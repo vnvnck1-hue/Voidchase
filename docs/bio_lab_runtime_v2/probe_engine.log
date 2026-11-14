@@ -1,0 +1,18 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.341 - Forward+ - Using Device #0: NVIDIA - NVIDIA GeForce RTX 3060
+
+[bio] PASS game tile 166.4 x 83.2
+[bio] PASS game side height 66.56
+[bio] PASS manifest matches current tile dimensions
+[bio] PASS manifest matches current side height
+[bio] PASS three variants x three independent faces
+[bio] PASS block 1 transparent exterior and solid top
+[bio] PASS block 2 transparent exterior and solid top
+[bio] PASS block 3 transparent exterior and solid top
+[bio] PASS only exposed sides are drawn, including hole and corridor edges
+[bio] PASS shared tile edges have no transparent gaps: 189 samples
+[bio] PASS current board rise animation is active
+[bio] PASS rise animation settles without changing map
+[bio] PASS settled board matches original static render: 0 differences
+[bio] PASS theme switching preserves map and rising cells
+[bio] DONE failures=0

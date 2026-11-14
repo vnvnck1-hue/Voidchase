@@ -1,0 +1,16 @@
+{
+  "name": "Rose punk redesign",
+  "crown": 100,
+  "chin": 605,
+  "shoulder": 645,
+  "waist": 815,
+  "crotch": 1015,
+  "knee": 1160,
+  "sole": 1459,
+  "cx": 510,
+  "head_left": 128,
+  "head_right": 775,
+  "width_notes": "Main hair contour at y~378 excludes the separate high ponytail, ribbon and isolated spikes. Right boundary partly merges with ponytail attachment; approx +/-20px.",
+  "file": "docs/goth_redesign_v2/png/01_punk_rose.png",
+  "notes": "Manual projected measurements, crown/chin approx +/-5px. Concealed body joints estimated +/-20-30px. Head silhouette width is not skull width."
+}

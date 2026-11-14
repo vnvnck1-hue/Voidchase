@@ -1,0 +1,123 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[bio-props] PASS field dir=(1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS field dir=(-1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS field dir=(0, -1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS field dir=(0, 1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS canyon dir=(1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS canyon dir=(-1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS canyon dir=(0, -1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS canyon dir=(0, 1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS plaza dir=(1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS plaza dir=(-1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS plaza dir=(0, -1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS plaza dir=(0, 1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS arena dir=(1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS arena dir=(-1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS arena dir=(0, -1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS arena dir=(0, 1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS hall dir=(1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS hall dir=(-1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS hall dir=(0, -1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS hall dir=(0, 1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS ring dir=(1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS ring dir=(-1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS ring dir=(0, -1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS ring dir=(0, 1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS bridge dir=(1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS bridge dir=(-1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS bridge dir=(0, -1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS bridge dir=(0, 1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS pillars dir=(1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS pillars dir=(-1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS pillars dir=(0, -1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS pillars dir=(0, 1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS slope dir=(1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS slope dir=(-1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS slope dir=(0, -1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS slope dir=(0, 1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS cross dir=(1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS cross dir=(-1, 0) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS cross dir=(0, -1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS cross dir=(0, 1) count=3, fixed placement, no gameplay overlap, HUD framing
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] PASS new playable floor removes any overlapping prop
+[bio-props] DONE layouts=40 failures=0

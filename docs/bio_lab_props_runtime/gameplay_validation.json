@@ -1,0 +1,26 @@
+{
+	"failures": [],
+	"rooms": [
+		{
+			"phase": "initial",
+			"playable_overlap": 0,
+			"props": 3,
+			"room": 0,
+			"shape": "field"
+		},
+		{
+			"phase": "arrived",
+			"playable_overlap": 0,
+			"props": 3,
+			"room": 2,
+			"shape": "cross"
+		},
+		{
+			"phase": "arrived",
+			"playable_overlap": 0,
+			"props": 3,
+			"room": 3,
+			"shape": "pillars"
+		}
+	]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Orange blazer selected",
+  "file": "docs/orange_blazer_character_v1/orange_blazer_selected.png",
+  "crown": 8,
+  "chin": 557,
+  "shoulder": 610,
+  "waist": 805,
+  "crotch": 1085,
+  "knee": 1230,
+  "sole": 1508,
+  "cx": 520,
+  "head_left": 158,
+  "head_right": 831,
+  "notes": "Manual visible contour reading. Shoulder, waist, crotch and knee are estimates under clothing and pose. Head width at crown+0.55H reflects the swept hairstyle, not skull width."
+}

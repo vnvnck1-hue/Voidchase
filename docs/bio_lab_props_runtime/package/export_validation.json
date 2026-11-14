@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-13",
+  "executable": "build/windows/KSC_Touch_Game.exe",
+  "exe_sha256": "3FA22366D90C7DB8CAC573D507304AD723AF23526730AA4BF243AAEA7352DBE4",
+  "export_exit_code": 0,
+  "export_errors": 0,
+  "included": {
+    "placement_code": true,
+    "terrain_code": true,
+    "chamber": true,
+    "hydroponics": true,
+    "cooler": true
+  },
+  "smoke_exit_code": 0,
+  "smoke_errors": 0,
+  "tested_layouts": 40,
+  "gameplay_rooms": [
+    {
+      "phase": "initial",
+      "playable_overlap": 0,
+      "props": 3,
+      "room": 0,
+      "shape": "field"
+    },
+    {
+      "phase": "arrived",
+      "playable_overlap": 0,
+      "props": 3,
+      "room": 2,
+      "shape": "cross"
+    },
+    {
+      "phase": "arrived",
+      "playable_overlap": 0,
+      "props": 3,
+      "room": 3,
+      "shape": "pillars"
+    }
+  ],
+  "prop_script_sha256": "B80A501F64AC792597BD8537C092DFEA443A0B99C515B607D46BD202169A43DE"
+}

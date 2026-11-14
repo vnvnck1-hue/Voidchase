@@ -41,8 +41,24 @@ var _flames := {}                        # hid -> Node2D: 궁극기 준비 때 �
 var _flame_k := {}                       # hid -> 불꽃 세기 (켜고 끌 때 부드럽게)
 var _flame_layer: CanvasLayer             # 불꽃은 HUD CanvasGroup 밖에서 그린다: 그룹 버퍼를 거치면 가산 블렌드가 어둡게 섞인다
 var _flame_ver := -1                      # 마지막으로 셰이더에 넣은 CardFlameFx.version
+var _parry := {}                         # hid -> VDParryCard: 패링 대상 강조 (빛기둥·반짝이·키캡). 불꽃 층, 바 위
 var _bars: Node2D                         # 에너지바(HP+마나): 불꽃 층에서 불꽃보다 나중에 그려 불꽃에 가려지지 않게
+## 입장 애니메이션(UIIntro)이 미는 틀 조각: 하단 그림자 띠 · 우측 하단 뒷패널 · 상단 바 · 명판
+var _shade: TextureRect
+var _panel: TextureRect
+var _top_bar: NinePatchRect
+var _top_plate: TextureRect
+## 분대 카드 입장: 카드가 아래에서 차례로 튀어 올라온다. _fx[hid]["in_t"] = 경과(음수면 아직 대기), INTRO_SEC 지나면 끝
+const INTRO_SEC := 0.55
+const INTRO_DROP := 320.0                 # 시작 위치 (아래로, px)
 const STAMP_FONT_SIZE := 30
+## 궁극기 게이지가 막 찼을 때(ult_t 0 부터, 실제 시간): 카드가 순백으로 번쩍 + 짧고 강한 핀치 진동(가로·세로가 번갈아 꼬집히듯 찌그러지며 살짝 비틀림)
+const ULT_FLASH_SEC := 0.34
+const ULT_FLASH_HOLD := 0.07     # 처음 이만큼은 완전히 하얗게
+const ULT_PINCH_SEC := 0.34
+const ULT_PINCH_AMP := 0.12        # 찌그러짐 최대 (배율)
+const ULT_PINCH_HZ := 16.0         # 진동 빠르기
+const ULT_PINCH_TWIST := 0.045     # 비틀림 최대 (라디안)
 
 ## 피격 색: 흰 섬광(밝게 곱하기) → 붉은 기 (카드 텍스처에 곱하는 modulate)
 const HIT_WHITE := Color(2.6, 2.4, 2.4)
@@ -65,8 +81,8 @@ func setup(hero_order: Array) -> void:
 		var hid: String = _heroes[i]
 		_card_tex[hid] = load(HERO_PANEL[hid])
 		_items[hid] = Items.mock_slots(i)
-		_state[hid] = {"hp": 1.0, "mana": 0.0, "full": false, "alive": true, "stat": "", "ult": 0.0, "ult_full": false}
-		_fx[hid] = {"ghost": 1.0, "shown": 1.0, "hold": 0.0, "heal": 0.0, "pop": 0.0, "pop_k": 1.0, "lift": 0.0, "down_t": -1.0, "ult_t": -1.0}
+		_state[hid] = {"hp": 1.0, "mana": 0.0, "full": false, "alive": true, "stat": "", "ult": 0.0, "ult_full": false, "level": 1, "sp": 0}
+		_fx[hid] = {"ghost": 1.0, "shown": 1.0, "hold": 0.0, "heal": 0.0, "pop": 0.0, "pop_k": 1.0, "lift": 0.0, "down_t": -1.0, "ult_t": -1.0, "lv_t": -1.0}
 
 	# 하단 그림자 띠 (화면 폭 전체)
 	var shade := TextureRect.new()
@@ -82,6 +98,7 @@ func setup(hero_order: Array) -> void:
 	shade.offset_bottom = Layout.SHADE_RECT.end.y - 1080.0
 	shade.modulate = Color(1, 1, 1, Layout.SHADE_OPACITY)
 	add_child(shade)
+	_shade = shade
 
 	# 우측 하단 뒷패널 + 라바램프
 	var panel := TextureRect.new()
@@ -92,6 +109,7 @@ func setup(hero_order: Array) -> void:
 	SceneSwitcher.pin(panel, Vector2(1, 1), Layout.PANEL_RIGHT_RECT)
 	panel.material = lava_material(Layout.PANEL_RIGHT_RECT.size, Layout.LAVA_COLOR, Layout.LAVA_DARK, 0.62, 3.0, 0.0)
 	add_child(panel)
+	_panel = panel
 
 	cards = HitArea.new()
 	cards.hit = func(p: Vector2) -> bool: return _hit_slot(p).x >= 0 or _hit_card(p) >= 0
@@ -131,6 +149,7 @@ func _build_top() -> void:
 	bar.offset_top = Layout.TOP_RECT.position.y
 	bar.offset_bottom = Layout.TOP_RECT.end.y
 	add_child(bar)
+	_top_bar = bar
 	var plate := TextureRect.new()
 	plate.texture = load(Layout.DIR + "top_plate.png")
 	plate.stretch_mode = TextureRect.STRETCH_SCALE
@@ -138,6 +157,7 @@ func _build_top() -> void:
 	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	SceneSwitcher.pin(plate, Vector2(1, 0), Layout.TOP_PLATE_RECT)
 	add_child(plate)
+	_top_plate = plate
 	stage_label = Label.new()
 	stage_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var font: Font
@@ -239,9 +259,13 @@ func set_stage(zone: int, stage: int) -> void:
 	stage_label.text = "W%d - S%d" % [zone, stage]
 
 
-func set_hero(hid: String, hp_ratio: float, mana_ratio: float, full: bool, alive: bool, stat: String, ult_ratio := 0.0, ult_full := false) -> void:
+func set_hero(hid: String, hp_ratio: float, mana_ratio: float, full: bool, alive: bool, stat: String, ult_ratio := 0.0, ult_full := false, level := 1, sp := 0) -> void:
 	var s: Dictionary = _state[hid]
 	var f: Dictionary = _fx[hid]
+	if level > int(s["level"]):
+		f["lv_t"] = 0.0                  # 레벨 배지가 톡 튄다
+	s["level"] = level
+	s["sp"] = sp
 	if hp_ratio < float(s["hp"]) - 0.0001:
 		f["hold"] = VDUnit.GHOST_FLASH   # 잔상: 흰색으로 번쩍한 뒤 주황으로 일정하게 줄어든다
 	elif hp_ratio > float(s["hp"]) + 0.002:
@@ -255,6 +279,44 @@ func set_hero(hid: String, hp_ratio: float, mana_ratio: float, full: bool, alive
 		f["ult_t"] = 0.0             # 궁극기 준비: 카드가 번쩍
 	s["ult"] = ult_ratio
 	s["ult_full"] = ult_full
+
+
+## 패링 대상 강조 (VDParry): on 이면 카드 위에 빛기둥·반짝이·단축키 키캡을 띄우고 카드가 튄다.
+## 끌 때 success 면 빛이 치솟으며 터지고(받아침), 아니면 조용히 꺼진다.
+func parry_mark(hid: String, on: bool, success := false) -> void:
+	if not _fx.has(hid):
+		return
+	if _parry.has(hid):
+		var old: VDParryCard = _parry[hid]
+		_parry.erase(hid)
+		if is_instance_valid(old):
+			old.leave(success)
+	if on:
+		var n := VDParryCard.new()
+		n.key_text = key_label(hid)
+		_parry[hid] = n
+		_flame_layer.add_child(n)
+		_place_parry(_heroes.find(hid))
+		pop_card(hid, 0.9)
+	elif success:
+		pop_card(hid, 1.0)
+		_fx[hid]["ult_t"] = 0.0      # 카드가 순백으로 번쩍 + 핀치 진동 (궁극기 준비 연출을 빌린다)
+
+
+func is_parry_marked(hid: String) -> bool:
+	return _parry.has(hid) and is_instance_valid(_parry[hid])
+
+
+## 강조 노드를 카드와 같은 변환에 맞춘다 (패널 텍스처 px → 화면).
+func _place_parry(i: int) -> void:
+	if i < 0 or not _parry.has(_heroes[i]):
+		return
+	var n: VDParryCard = _parry[_heroes[i]]
+	if not is_instance_valid(n):
+		_parry.erase(_heroes[i])
+		return
+	var r := _card_rect(i)
+	n.transform = cards.get_global_transform_with_canvas() * _card_xform(i) * Transform2D(0.0, r.size / PANEL_TEX, 0.0, r.position)
 
 
 ## 카드가 톡 튀어나온다 (READY 0.6 · 궁극기 1.0).
@@ -274,8 +336,38 @@ func card_down(hid: String) -> void:
 
 ## 새 판: 도장·잔상 초기화.
 func reset_cards() -> void:
+	for hid in _parry.keys():
+		parry_mark(hid, false)
 	for hid in _fx:
-		_fx[hid] = {"ghost": 1.0, "shown": 1.0, "hold": 0.0, "heal": 0.0, "pop": 0.0, "pop_k": 1.0, "lift": 0.0, "down_t": -1.0, "ult_t": -1.0}
+		_fx[hid] = {"ghost": 1.0, "shown": 1.0, "hold": 0.0, "heal": 0.0, "pop": 0.0, "pop_k": 1.0, "lift": 0.0, "down_t": -1.0, "ult_t": -1.0, "lv_t": -1.0}
+
+
+## 전투 입장 애니메이션 (시각적 위계 순): 상단 바 → 명판·스테이지 글자(위에서) → 하단 띠(아래에서 스르륵) →
+## 우측 뒷패널(오른쪽에서) → 분대 카드가 왼쪽부터 한 장씩 아래에서 튀어 올라온다. t0 = 첫 조각이 움직이기 시작하는 시각(초).
+## 카드가 모두 자리를 잡는 시각을 돌려준다 (VDBattle 이 뒤 조각 타이밍에 쓴다).
+func play_intro(t0 := 0.0) -> float:
+	UIIntro.slide(_top_bar, UIIntro.FROM_TOP, t0, 0.5, 140.0)
+	UIIntro.slide(_top_plate, UIIntro.FROM_TOP, t0 + 0.1, 0.5, 160.0)
+	UIIntro.slide(stage_label, UIIntro.FROM_TOP, t0 + 0.18, 0.45, 90.0)
+	UIIntro.slide(_shade, UIIntro.FROM_BOTTOM, t0 + 0.05, 0.6, 120.0, true, UIIntro.Ease.QUINT)
+	UIIntro.slide(_panel, UIIntro.FROM_RIGHT, t0 + 0.2, 0.6, 260.0, true, UIIntro.Ease.QUINT)
+	var card_t0 := t0 + 0.3
+	var step := 0.09
+	for i in _heroes.size():
+		_fx[_heroes[i]]["in_t"] = -(card_t0 + step * i)
+	return card_t0 + step * (_heroes.size() - 1) + INTRO_SEC
+
+
+## 카드 입장 진행 (1 = 아직 화면 밖, 0 = 제자리). 탄성 곡선으로 살짝 넘치고 돌아온다.
+static func _intro_k(f: Dictionary) -> float:
+	if not f.has("in_t"):
+		return 0.0
+	var t: float = f["in_t"]
+	if t <= 0.0:
+		return 1.0
+	if t >= INTRO_SEC:
+		return 0.0
+	return 1.0 - UIIntro.back_out(t / INTRO_SEC)
 
 
 func _process(_dt: float) -> void:
@@ -302,6 +394,13 @@ func _process(_dt: float) -> void:
 			f["down_t"] += dt
 		if f["ult_t"] >= 0.0:
 			f["ult_t"] += dt
+		if f["lv_t"] >= 0.0:
+			f["lv_t"] += dt
+		if f.has("in_t"):
+			if f["in_t"] < INTRO_SEC:
+				f["in_t"] += dt    # 입장 (음수 = 대기 시간, 실제 시간)
+			else:
+				f.erase("in_t")
 		# 궁극기 준비 불꽃: 차면 확 타오르고(막 찼을 땐 잠깐 더 세게), 쓰거나 쓰러지면 사그라든다. 수치는 CardFlameFx (연출 연구실)
 		var want := 1.0 if (_state[hid]["ult_full"] and _state[hid]["alive"]) else 0.0
 		var since: float = f["ult_t"]
@@ -353,8 +452,19 @@ func _card_xform(i: int) -> Transform2D:
 	var osc := sin((1.0 - pk) * PI * 3.0) * pk * pk * 0.16 * float(f["pop_k"])
 	var scl: Vector2 = Vector2.ONE * (1.0 + 0.03 * f["lift"]) * Vector2(1.0 + osc, 1.0 + osc * 0.6)
 	var off: Vector2 = _shake(hid) + Vector2(0, -12.0 * f["lift"] - 26.0 * pk * pk * float(f["pop_k"]))
+	var ik := _intro_k(f)
+	if ik > 0.0:
+		off.y += INTRO_DROP * ik     # 입장: 아래에서 올라온다 (바·슬롯·불꽃·배지가 같은 변환을 쓰므로 함께)
+	var rot := 0.0
+	var ut: float = f["ult_t"]
+	if ut >= 0.0 and ut < ULT_PINCH_SEC:
+		var e := 1.0 - ut / ULT_PINCH_SEC
+		e *= e
+		var p := sin(ut * TAU * ULT_PINCH_HZ) * ULT_PINCH_AMP * e
+		scl *= Vector2(1.0 + p, 1.0 - p)
+		rot = sin(ut * TAU * ULT_PINCH_HZ * 0.7 + 1.3) * ULT_PINCH_TWIST * e
 	var c := _card_rect(i).get_center()
-	return Transform2D(0.0, scl, 0.0, c + off - c * scl)
+	return Transform2D(rot, scl, 0.0, c + off) * Transform2D(0.0, -c)
 
 
 func _draw_energy(ci: CanvasItem, r: Rect2, s: Dictionary, f: Dictionary, t: float, card_xf: Transform2D) -> void:
@@ -425,6 +535,7 @@ func _draw_cards() -> void:
 		# 궁극기 준비 불꽃은 카드와 같은 변환으로 (카드가 튀고 흔들리면 같이)
 		var fl: Node2D = _flames[hid]
 		fl.transform = cards.get_global_transform_with_canvas() * card_xf * Transform2D(0.0, r.position)
+		_place_parry(i)
 		var tint := _hit_tint(hid) if s["alive"] else Color(0.42, 0.4, 0.5)
 		if f["heal"] > 0.0:
 			tint = tint.lerp(Color(1.2, 1.6, 1.2), f["heal"] * 0.5)
@@ -433,9 +544,16 @@ func _draw_cards() -> void:
 		cards.draw_texture_rect(tex, r, false, tint)
 		if pk > 0.5:
 			cards.draw_texture_rect(tex, r, false, Color(2.0, 1.9, 1.4, (pk - 0.5) * 0.9))
+		# 궁극기 막 참: 순백 섬광 (밝게 곱해 하얗게 날린다 — 검은 외곽선은 남아 실루엣이 읽힌다)
+		var ut: float = f["ult_t"]
+		if s["alive"] and ut >= 0.0 and ut < ULT_FLASH_SEC:
+			var a := 1.0 - clampf((ut - ULT_FLASH_HOLD) / (ULT_FLASH_SEC - ULT_FLASH_HOLD), 0.0, 1.0)
+			cards.draw_texture_rect(tex, r, false, Color(8.0, 8.0, 8.0, pow(a, 1.6)))
 		# 에너지바는 _draw_bars 가 불꽃 위 층에 그린다
 		if s["alive"]:
 			_draw_ult_badge(i, r, t, s, float(f["ult_t"]), card_xf)
+		_draw_level_badge(r, s, float(f["lv_t"]), t)
+		_draw_key_badge(i, r, s, t)
 		var slots: Array = Layout.CARD_SLOTS[i]
 		for j in slots.size():
 			draw_slot(cards, slots[j] - ORIGIN, 1.0, _items[hid][j], _hover_slot == Vector2i(i, j))
@@ -514,6 +632,49 @@ func card_at(p: Vector2) -> String:
 	return _heroes[ci] if ci >= 0 else ""
 
 
+## 궁극기 단축키: 카드 순서(왼쪽부터)대로 Z X C V. 자판 위치(physical) 기준이라 한글 입력 상태에서도 같다.
+const ULT_KEYS := [KEY_Z, KEY_X, KEY_C, KEY_V]
+
+
+## 이 키 입력이 가리키는 영웅 id (단축키가 아니거나 Ctrl·Alt 조합이면 "").
+func hero_for_key(event: InputEventKey) -> String:
+	if event.ctrl_pressed or event.alt_pressed or event.meta_pressed:
+		return ""
+	var i := ULT_KEYS.find(event.physical_keycode)
+	if i < 0:
+		i = ULT_KEYS.find(event.keycode)
+	return _heroes[i] if i >= 0 and i < _heroes.size() else ""
+
+
+func key_label(hid: String) -> String:
+	var i := _heroes.find(hid)
+	return OS.get_keycode_string(ULT_KEYS[i]) if i >= 0 and i < ULT_KEYS.size() else ""
+
+
+## 단축키 키캡: 카드 왼쪽 아래 (레벨 배지 반대편). 궁극기가 준비되면 금빛으로 숨쉰다.
+static var _key_box: StyleBoxFlat
+
+
+func _draw_key_badge(i: int, r: Rect2, s: Dictionary, t: float) -> void:
+	if i >= ULT_KEYS.size():
+		return
+	if _key_box == null:
+		_key_box = StyleBoxFlat.new()
+		_key_box.set_border_width_all(2)
+		_key_box.border_width_bottom = 4      # 키캡처럼 아래가 두껍다
+		_key_box.set_corner_radius_all(7)
+	var ready: bool = s["ult_full"] and s["alive"]
+	var k := 0.5 + 0.5 * sin(t * 6.0)
+	var gold := Color(1.0, 0.84, 0.3)
+	_key_box.bg_color = Color(0.3, 0.2, 0.05, 0.95) if ready else Color(0.12, 0.06, 0.2, 0.92)
+	_key_box.border_color = gold.lerp(Color(1, 1, 0.9), k * 0.6) if ready else Color(0.55, 0.4, 0.8, 0.9)
+	var sz := Vector2(30.0, 28.0)
+	var badge := Rect2(Vector2(r.position.x + 12.0, r.end.y - sz.y - 30.0), sz)
+	cards.draw_style_box(_key_box, badge)
+	var col := Color(1.0, 0.95, 0.7) if ready else (Color(0.85, 0.82, 0.95) if s["alive"] else Color(0.6, 0.58, 0.68))
+	cards.draw_string(VDData.font(), badge.position + Vector2(0, 19.0), OS.get_keycode_string(ULT_KEYS[i]), HORIZONTAL_ALIGNMENT_CENTER, sz.x, 15, col)
+
+
 ## 부활: 금·'전투 불능' 도장을 걷어 내고 카드가 톡 튄다.
 func card_up(hid: String) -> void:
 	if _fx.has(hid):
@@ -543,13 +704,48 @@ func _cards_input(event: InputEvent) -> void:
 	var hid: String = _heroes[ci]
 	var sk: Dictionary = VDData.SKILLS[hid]
 	var ud: Dictionary = VDData.ULTS[hid]
-	cards.tooltip_text = "%s\n%s\n★ 고유 스킬 %s — %s\n✦ 궁극기 %s — %s\n   (궁극기 게이지가 차면 카드를 탭)" % [VDData.HEROES[hid]["name"], _state[hid]["stat"], sk["name"], sk["desc"], ud["name"], ud["desc"]]
+	cards.tooltip_text = "%s\n%s\n★ 고유 스킬 %s — %s\n✦ 궁극기 %s — %s\n   (궁극기 게이지가 차면 카드를 탭 또는 %s 키)" % [VDData.HEROES[hid]["name"], _state[hid]["stat"], sk["name"], sk["desc"], ud["name"], ud["desc"], key_label(hid)]
 
 
 ## 궁극기 게이지 배지: 카드 왼쪽 위 원형 게이지(분홍 호가 차오른다). 가득 차면 금빛으로 숨쉬고 막 찼을 땐(since = ult_t) 크게 튄다.
 ## 카드 둘레가 타오르는 황금 불꽃은 _make_flame (card_ult_flame 셰이더).
 const ULT_BADGE := Vector2(54, 64)       # 패널 텍스처 px (위쪽 에너지바 왼쪽 끝을 가리지 않게)
 const ULT_BADGE_R := 21.0
+
+
+## 레벨 배지 (시안 카드 오른쪽 아래 "LV.2"): 어두운 알약 + 흰 기울임 글자. 레벨이 오르면 금빛으로 톡 튄다.
+## SP 가 남아 있으면(배치 단계) 카드 오른쪽 위에 붉은 점 + 숫자: 스킬창에서 쓰라는 신호 (기획서의 'SP 뱃지').
+static var _lv_box: StyleBoxFlat
+static var _sp_box: StyleBoxFlat
+
+
+func _draw_level_badge(r: Rect2, s: Dictionary, since: float, t: float) -> void:
+	if _lv_box == null:
+		_lv_box = StyleBoxFlat.new()
+		_lv_box.bg_color = Color(0.12, 0.06, 0.2, 0.92)
+		_lv_box.border_color = Color(0.55, 0.4, 0.8, 0.9)
+		_lv_box.set_border_width_all(2)
+		_lv_box.set_corner_radius_all(9)
+		_sp_box = StyleBoxFlat.new()
+		_sp_box.bg_color = Color("ff4d5e")
+		_sp_box.border_color = Color(1, 1, 1, 0.9)
+		_sp_box.set_border_width_all(2)
+		_sp_box.set_corner_radius_all(12)
+	var pop := clampf(1.0 - since * 2.2, 0.0, 1.0) if since >= 0.0 else 0.0
+	var sz := Vector2(58.0, 24.0) * (1.0 + 0.35 * pop)
+	var badge := Rect2(r.end - sz - Vector2(12.0, 30.0), sz)
+	cards.draw_style_box(_lv_box, badge)
+	if pop > 0.0:
+		cards.draw_rect(badge, Color(1.0, 0.9, 0.5, pop * 0.7))
+	var dim := Color.WHITE if s["alive"] else Color(0.6, 0.58, 0.68)
+	cards.draw_string(VDData.font(), badge.position + Vector2(0, sz.y * 0.72), "LV.%d" % int(s["level"]), HORIZONTAL_ALIGNMENT_CENTER, sz.x, int(14 * (1.0 + 0.35 * pop)), dim)
+	var sp := int(s["sp"])
+	if sp > 0 and s["alive"]:
+		var k := 0.5 + 0.5 * sin(t * 5.0)
+		var dot := Rect2(r.position + Vector2(r.size.x - 30.0, 6.0 - 2.0 * k), Vector2(24.0, 24.0))
+		cards.draw_circle(dot.get_center(), 16.0 + 3.0 * k, Color(1.0, 0.3, 0.4, 0.25 + 0.15 * k))
+		cards.draw_style_box(_sp_box, dot)
+		cards.draw_string(VDData.font(), dot.position + Vector2(0, 17.0), str(sp), HORIZONTAL_ALIGNMENT_CENTER, dot.size.x, 13, Color.WHITE)
 
 
 func _draw_ult_badge(i: int, r: Rect2, t: float, s: Dictionary, since: float, card_xf: Transform2D) -> void:

@@ -1,0 +1,22 @@
+스웨거체 (SDSwagger TTF)
+Copyright (c) 2015, Art & Design International Inc. (http://www.artanddesign.co.kr), with Reserved Font Name SDSwagger.*, SDSwaggerTTF.*, SDSwaggerOTF.*
+출처: https://www.swagger.kr/font_license.html  (2026-11-09 확인, 배포 파일: https://www.swagger.kr/font/SDSwaggerTTF.ttf 원본 그대로)
+
+[스웨거 폰트 라이선스 원문]
+폰트 '스웨거체'의 지적재산권은 ㈜아트앤디자인인터내셔널과 ㈜산돌커뮤니케이션이 공동 소유하고 있습니다.
+
+스웨거체는 개인 및 기업 사용자를 포함한 모든 사용자에게 무료로 제공되며, 자유롭게 사용할 수 있습니다. 단, 로고 형태와 그래픽 형태를 띄는 글리프 글자체의 경우 스웨거의 상표권이 우선합니다. 따라서, 글리프 글자체는 비상업적인 용도에 한해 사용이 가능합니다. 배포된 파일 그대로 사용해야 하며, 글꼴 자체를 유료로 판매하거나, 어떠한 형태로든 글꼴을 임의 수정하거나, 개작하여 재배포 하는 것은 금지합니다.
+
+스웨거체는 본 저작권 안내와 라이선스 전문을 포함해서 다른 소프트웨어에 임베딩 또는 번들하여 판매하거나 재배포가 가능합니다. 스웨거체 라이선스 전문을 포함하기 어려울 경우, 스웨거체의 출처 표기를 권장합니다.
+
+예) 이 페이지에는 ㈜아트앤디자인인터내셔널과 ㈜산돌커뮤니케이션이 제공한 스웨거체가 적용되어 있습니다.
+
+스웨거체를 사용한 인쇄물, 광고물(온라인 포함)의 이미지는 스웨거(㈜아트앤디자인인터내셔널)와 산돌(㈜산돌커뮤니케이션)의 프로모션을 위해 활용될 수 있습니다. 이를 원치 않는 사용자는 언제든지 당사에 요청하실 수 있습니다.
+
+면책조항
+본 폰트 소프트웨어는 저작권, 특허권, 상표권 및 기타 권리의 비침해성과 특정 목적에의 적합성 포함한 명시적, 묵시적인 어떠한 종류의 보증 없이 "있는 그대로" 제공됩니다. 어떠한 경우에도 저작권자는 본 폰트 소프트웨어의 사용 또는 이의 사용불가, 그밖에 폰트 소프트웨어의 취급과 관련하여 발생하는 모든 계약, 불법행위 혹은 다른 일로 하여금 발생하는 일반적, 특수적, 간접적, 부차적 혹은 필연적 손해를 포함하는 소송, 손해, 혹은 기타 책임에 대한 의무를 가지지 않습니다.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM OTHER DEALINGS IN THE FONT SOFTWARE.
+
+[주의] 로고·그래픽 모양 글리프(스웨거 상표)는 비상업 한정이므로 게임 화면에 쓰지 않는다.

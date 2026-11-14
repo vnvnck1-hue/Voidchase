@@ -1,0 +1,50 @@
+{
+  "tr-a-1": {
+    "lead_cut": 0,
+    "sec": 1,
+    "rms_db": -19,
+    "peak_ms": 135
+  },
+  "tr-a-2": {
+    "lead_cut": 0,
+    "sec": 1,
+    "rms_db": -20.2,
+    "peak_ms": 42
+  },
+  "tr-a-3": {
+    "lead_cut": 0,
+    "sec": 1,
+    "rms_db": -21.1,
+    "peak_ms": 89
+  },
+  "tr-a-4": {
+    "lead_cut": 0,
+    "sec": 1,
+    "rms_db": -21.4,
+    "peak_ms": 171
+  },
+  "tr-b-1": {
+    "lead_cut": 0,
+    "sec": 1,
+    "rms_db": -21.2,
+    "peak_ms": 205
+  },
+  "tr-b-2": {
+    "lead_cut": 0.2,
+    "sec": 0.8,
+    "rms_db": -15.3,
+    "peak_ms": 471
+  },
+  "tr-b-3": {
+    "lead_cut": 0.02,
+    "sec": 0.98,
+    "rms_db": -19.6,
+    "peak_ms": 147
+  },
+  "tr-b-4": {
+    "lead_cut": 0,
+    "sec": 1,
+    "rms_db": -17.3,
+    "peak_ms": 162
+  }
+}

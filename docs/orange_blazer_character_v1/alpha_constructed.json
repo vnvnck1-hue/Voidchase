@@ -1,0 +1,23 @@
+{
+  "file": "D:\\2020_이전승찬파일\\작업,내파일\\2026\\프로토타입 게임\\미소녀 카드게임\\docs\\orange_blazer_character_v1\\orange_blazer_constructed.png",
+  "width": 1086,
+  "height": 1448,
+  "pixel_format": "Format32bppArgb",
+  "transparent_pixels": 651501,
+  "partial_alpha_pixels": 919983,
+  "opaque_pixels": 1044,
+  "content_bounds": [
+    0,
+    10,
+    1069,
+    1447
+  ],
+  "edge_nontransparent_pixels": 176,
+  "strong_alpha_bounds": [
+    41,
+    13,
+    1028,
+    1439
+  ],
+  "has_transparency": true
+}

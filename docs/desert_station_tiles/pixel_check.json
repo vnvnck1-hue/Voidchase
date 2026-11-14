@@ -1,0 +1,7 @@
+{
+  "source_sha256": "4B68ECBF6C0F8FDA2099F688024971B6CB1839FA274B8D5BB32B61D9286FC429",
+  "method": "Native source RGBA copy; alpha mask only outside face; no resizing, recoloring, repainting or generation",
+  "compared_native_pixels": 61701,
+  "different_native_pixels": 0,
+  "runtime_note": "Native crop PNGs are pixel-identical inside the masks. Runtime uses those native atlas pixels as polygon UVs; existing game projection and camera scale cause normal texture filtering."
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Shy bookworm",
+  "crown": 8,
+  "chin": 568,
+  "shoulder": 610,
+  "waist": 850,
+  "crotch": 1090,
+  "knee": 1240,
+  "sole": 1508,
+  "cx": 520,
+  "head_left": 151,
+  "head_right": 825,
+  "file": "docs/uniform_trio_v1/png/02_shy_bookworm.png",
+  "notes": "Manual visual projection; concealed joints and head-width hair silhouette are estimates. Boundary uncertainty approx +/- 5px. Independent ponytail excluded from crown and head-width probe."
+}

@@ -11,7 +11,7 @@ extends RefCounted
 
 const ROLE := {
 	"knight": "guard", "gunner": "kite", "mage": "kite", "healer": "support",
-	"fast": "flank", "skirmisher": "kite", "longneck": "kite", "tank": "charge",
+	"fast": "flank", "skirmisher": "kite", "longneck": "kite", "tank": "charge", "crab": "charge", "wraith": "kite", "watcher": "kite", "gazer": "kite",
 }
 const KITE_CD := 2.4            # 한 번 물러난 뒤 다시 물러나기까지 (그 사이엔 그 자리에서 쏜다)
 const GUARD_ALERT := 3          # 적이 후열 아군에서 이 거리 안이면 기사가 막으러 간다
@@ -35,6 +35,13 @@ var _last_target := {}          # instance id -> 직전 대상 instance id
 
 func _init(battle: VDBattle) -> void:
 	b = battle
+
+
+## 전투 시작: 지난 전투의 유닛별 기록을 비운다 (instance id 가 쌓이기만 하지 않게).
+func reset() -> void:
+	_kite_ready.clear()
+	_taunt_shown.clear()
+	_last_target.clear()
 
 
 func tick(dt: float) -> void:

@@ -1,0 +1,75 @@
+{
+  "date": "2026-11-13",
+  "source_sha256": "A3C943775B2BE3A8B58162B0B674450403F9D145AEAC7819CD09A6695D037C4A",
+  "asset_count": 6,
+  "alpha_checked": true,
+  "atlas_pixel_checks": [
+    {
+      "name": "block_01_mint",
+      "compared_pixels": 59904,
+      "atlas_rgba_mismatches": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "block_02_sprout",
+      "compared_pixels": 59904,
+      "atlas_rgba_mismatches": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "block_03_drain",
+      "compared_pixels": 59904,
+      "atlas_rgba_mismatches": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "prop_01_cultivation_chamber",
+      "compared_pixels": 157136,
+      "atlas_rgba_mismatches": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "prop_02_hydroponic_rack",
+      "compared_pixels": 100096,
+      "atlas_rgba_mismatches": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "prop_03_sample_cooler",
+      "compared_pixels": 40128,
+      "atlas_rgba_mismatches": 0,
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "visual_review": "All six assets inspected on a contrasting flat background. Original source and reference crops inspected. No characters/UI/background retained. Source-guided reconstruction, not native pixel identity."
+}

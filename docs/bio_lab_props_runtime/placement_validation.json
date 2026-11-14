@@ -1,0 +1,365 @@
+{
+	"failures": [],
+	"layouts": [
+		{
+			"dir": [
+				1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "field"
+		},
+		{
+			"dir": [
+				-1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "field"
+		},
+		{
+			"dir": [
+				0,
+				-1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "field"
+		},
+		{
+			"dir": [
+				0,
+				1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "field"
+		},
+		{
+			"dir": [
+				1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "canyon"
+		},
+		{
+			"dir": [
+				-1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "canyon"
+		},
+		{
+			"dir": [
+				0,
+				-1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "canyon"
+		},
+		{
+			"dir": [
+				0,
+				1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "canyon"
+		},
+		{
+			"dir": [
+				1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "plaza"
+		},
+		{
+			"dir": [
+				-1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "plaza"
+		},
+		{
+			"dir": [
+				0,
+				-1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "plaza"
+		},
+		{
+			"dir": [
+				0,
+				1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "plaza"
+		},
+		{
+			"dir": [
+				1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "arena"
+		},
+		{
+			"dir": [
+				-1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "arena"
+		},
+		{
+			"dir": [
+				0,
+				-1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "arena"
+		},
+		{
+			"dir": [
+				0,
+				1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "arena"
+		},
+		{
+			"dir": [
+				1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "hall"
+		},
+		{
+			"dir": [
+				-1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "hall"
+		},
+		{
+			"dir": [
+				0,
+				-1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "hall"
+		},
+		{
+			"dir": [
+				0,
+				1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "hall"
+		},
+		{
+			"dir": [
+				1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "ring"
+		},
+		{
+			"dir": [
+				-1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "ring"
+		},
+		{
+			"dir": [
+				0,
+				-1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "ring"
+		},
+		{
+			"dir": [
+				0,
+				1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "ring"
+		},
+		{
+			"dir": [
+				1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "bridge"
+		},
+		{
+			"dir": [
+				-1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "bridge"
+		},
+		{
+			"dir": [
+				0,
+				-1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "bridge"
+		},
+		{
+			"dir": [
+				0,
+				1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "bridge"
+		},
+		{
+			"dir": [
+				1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "pillars"
+		},
+		{
+			"dir": [
+				-1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "pillars"
+		},
+		{
+			"dir": [
+				0,
+				-1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "pillars"
+		},
+		{
+			"dir": [
+				0,
+				1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "pillars"
+		},
+		{
+			"dir": [
+				1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "slope"
+		},
+		{
+			"dir": [
+				-1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "slope"
+		},
+		{
+			"dir": [
+				0,
+				-1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "slope"
+		},
+		{
+			"dir": [
+				0,
+				1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "slope"
+		},
+		{
+			"dir": [
+				1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "cross"
+		},
+		{
+			"dir": [
+				-1,
+				0
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "cross"
+		},
+		{
+			"dir": [
+				0,
+				-1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "cross"
+		},
+		{
+			"dir": [
+				0,
+				1
+			],
+			"ok": true,
+			"props": 3,
+			"shape": "cross"
+		}
+	]
+}

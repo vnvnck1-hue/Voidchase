@@ -1,0 +1,29 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.341 - Forward+ - Using Device #0: NVIDIA - NVIDIA GeForce RTX 3060
+
+[VD] VoidDefense ready (main_scene=res://scenes/Lobby.tscn)
+[VD] room 0 (hall) / stage 1 wave 1/2 (total 1): 3 enemies ["fast", "normal", "normal"] (x1.00)
+[theme] PASS default desert palette + tile package
+[theme] PASS desert hides floating void ruins
+[theme] PASS settings contains the three named theme choices
+[theme] PASS real dropdown applies void tiles
+[theme] PASS void switches both shader layers
+[theme] PASS void restores original props
+[theme] PASS theme choice preserves room, state and units
+[theme] PASS void adjustments kept independently
+[theme] PASS desert adjustments kept independently
+[theme] PASS bio uses an independent background profile
+[theme] PASS switch from bio preserves void adjustments
+[theme] PASS bio adjustments kept independently
+[theme] PASS bio selects its runtime terrain and hides floating ruins
+[theme] PASS invalid choices cannot break current theme
+[theme] PASS sand and dust visibly move: 15713 background pixels
+[theme] PASS combat starts with desert theme
+[theme] PASS switch to void during active combat without reset
+[theme] PASS switch preserves tile-rise animation
+[theme] PASS last choice reloads from config
+[VD] VoidDefense ready (main_scene=res://scenes/Lobby.tscn)
+[VD] room 0 (cross) / stage 1 wave 1/2 (total 1): 3 enemies ["fast", "normal", "normal"] (x1.00)
+[theme] PASS new battle restores saved theme
+[theme] PASS void board matches pre-desert renderer: 0 different pixels
+[theme] DONE failures=0
