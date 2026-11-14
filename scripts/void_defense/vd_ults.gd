@@ -1,6 +1,6 @@
 ## VOID DEFENSE 궁극기: 궁극기 게이지가 찬 영웅의 카드를 플레이어가 탭하면 VDBattle 이 연출(VDUltCinematic.intro) 뒤 cast() 를 부른다.
 ## 세명이 오리라(TrioChess) skills.gd 의 ULTIMATES 를 옮기고, 힐러 것은 새로 만들었다.
-##   기사 충격파:       모든 적 피해 + 한 칸 밀어내기 + 기절
+##   기사 충격파:       모든 적 피해 + 한 칸 밀어내기 + 공중에 뜸(air 초, 상태이상) → 착지 뒤 남은 기절
 ##   건너 집중 포화:    조준한 방향 부채꼴에 1초간 난사, 안의 적마다 hits 회 피해
 ##   마법사 체인 라이트닝: 고른 적에서 시작해 가까운 적으로 튕기는 번개, 마지막 적은 하늘 번개 + 감전(기절)
 ##   힐러 부활의 기도:   가장 먼저 쓰러진 아군 부활 (없으면 전원 회복)
@@ -24,7 +24,7 @@ func _init(battle: VDBattle) -> void:
 func cast(u: VDUnit, aim: Variant) -> bool:
 	if not VDData.ULTS.has(u.id):
 		return false
-	var ud: Dictionary = VDData.ULTS[u.id]
+	var ud: Dictionary = b.growth.ult_def(u.id)   # 숙련 스킬 보정이 든 복사본
 	var ok := false
 	match u.id:
 		"knight":
@@ -59,10 +59,22 @@ func _shockwave(u: VDUnit, ud: Dictionary) -> bool:
 	b.camera.hitstop(0.1)
 	var dmg := floorf(u.atk * float(ud["dmg"]))
 	for e in foes:
-		e.stun(float(ud["stun"]))
+		e.stun(float(ud["stun"]))     # 행동 불가 총 시간 (공중에 떠 있는 시간 포함)
+		e.knock_up(float(ud.get("air", 0.5)))
+		if not e.air_landed.is_connected(_on_air_landed):
+			e.air_landed.connect(_on_air_landed, CONNECT_ONE_SHOT)
 		_push_away(e, u.cell)
-		_hit(e, dmg, "hit_heavy", Color(1.0, 0.85, 0.55), 2.2)
+		_hit(e, dmg, "hit_light", Color(1.0, 0.85, 0.55), 3.3)
+		if e.alive:
+			b.dmg_log.spawn_status(b._chest(e) + Vector2(0, -30), "공중에 뜸!", Color(0.65, 0.95, 1.0), e)
 	return true
+
+
+## 공중에 뜬 적이 바닥에 떨어진 순간: 먼지 + 작은 쿵
+func _on_air_landed(e: VDUnit) -> void:
+	if not is_instance_valid(e) or not e.alive or not is_instance_valid(b):
+		return
+	b.vfx.spawn("dust", b.ground_fx, e.position, 1.1 if e.size == 1 else 1.8, 0.0, Color(1, 1, 1, 0.7))
 
 
 ## 시전자에게서 먼 쪽으로 한 칸 (막혀 있으면 그대로). 대형 적은 밀리지 않는다.
@@ -213,11 +225,11 @@ func _chain_run(u: VDUnit, ud: Dictionary, path: Array[VDUnit], run: int) -> voi
 			b.camera.shake(0.6)
 			b.camera.hitstop(0.08)
 			e.stun(float(ud["finish_stun"]))
-			_hit(e, dmg * 1.5, "burst", Color(0.7, 0.85, 1.0), 0.5)
+			_hit(e, dmg * 1.5, "burst", Color(0.7, 0.85, 1.0), 0.5, "번개")
 		else:
 			b.audio.play("mage_hit", 0.06, -4.0, 1.4)
 			b.camera.shake(0.15)
-			_hit(e, dmg, "hit_light", Color(0.7, 0.85, 1.0), 1.4)
+			_hit(e, dmg, "hit_light", Color(0.7, 0.85, 1.0), 1.4, "번개")
 			await b.get_tree().create_timer(CHAIN_STEP, false).timeout
 	if is_instance_valid(u):
 		u.casting = false
@@ -240,9 +252,7 @@ static func bolt(parent: Node, from: Vector2, to: Vector2, col: Color, dur: floa
 		l.begin_cap_mode = Line2D.LINE_CAP_ROUND
 		l.end_cap_mode = Line2D.LINE_CAP_ROUND
 		if layer == 0:
-			var m := CanvasItemMaterial.new()
-			m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-			l.material = m
+			l.material = VDVfx.add_material()
 		parent.add_child(l)
 		var tw := l.create_tween()
 		tw.tween_property(l, "modulate:a", 0.0, dur).set_delay(dur * 0.4)
@@ -271,7 +281,7 @@ func _prayer(u: VDUnit, ud: Dictionary) -> bool:
 		return true
 	for a in _alive(b.allies):
 		var before := a.hp
-		a.heal(floorf(a.max_hp * float(ud["heal_hp"])))
+		a.heal(floorf(a.max_hp * float(ud["heal_hp"]) * (1.0 + u.heal_bonus)))
 		b.vfx.spawn("heal", b.fx_root, b._chest(a), 0.8, 0.0, Color(0.9, 1.0, 0.8))
 		var gain := int(a.hp - before)
 		if gain > 0:
@@ -281,11 +291,12 @@ func _prayer(u: VDUnit, ud: Dictionary) -> bool:
 
 # ---------------------------------------------------------------- helpers
 
-func _hit(e: VDUnit, dmg: float, fx: String, tint: Color, fx_scale: float) -> void:
+## element: 피격 색 속성 ("" 물리 · "번개" · "화염" · "서리" · "정수")
+func _hit(e: VDUnit, dmg: float, fx: String, tint: Color, fx_scale: float, element := "") -> void:
 	if not is_instance_valid(e) or not e.alive or dmg <= 0.0:
 		return
 	var at := b._chest(e)
-	var dealt := e.take_damage(dmg)
+	var dealt := e.take_damage(dmg, element)
 	b.vfx.spawn(fx, b.fx_root, at, fx_scale, randf() * TAU, tint)
 	b.dmg_log.spawn(at + Vector2(0, -16), int(dealt), true, e)
 

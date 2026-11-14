@@ -68,7 +68,7 @@ func is_void(c: Vector2i) -> bool:
 ## footprint 중 한 칸이라도 오염(경고 중 포함)이면 true: 길 찾기가 피한다.
 func is_hazard(u: VDUnit, at: Vector2i) -> bool:
 	for c in u.footprint(at):
-		if _tiles.has(c):
+		if _tiles.has(c) or (b.field != null and b.field.is_hazard(c)):   # 방전 직전의 격자 칸도 피한다
 			return true
 	return false
 
@@ -112,6 +112,8 @@ func _tick_reinforce() -> void:
 	for c in cells:
 		if b._occupied(c):
 			c = b.free_cell_near(c, c)
+			if b._occupied(c):
+				continue   # 둘레 5칸이 다 차 있으면 겹쳐 내리지 않는다
 		var t: String = REINF_POOL[randi() % REINF_POOL.size()]
 		var e := b._make_unit(VDData.ENEMIES[t], t, 1, c, mult * 0.7, mult)
 		e.casting = true   # 내려앉는 동안은 행동하지 않는다
@@ -125,7 +127,8 @@ func _tick_reinforce() -> void:
 			if e2 != null:
 				e2.casting = false)
 		await b.get_tree().create_timer(0.12, false).timeout
-		if run != b._run_id:
+		if run != b._run_id or b.state != VDBattle.State.BATTLE:
+			_reinf_pending = 0
 			return
 	_reinf_pending = 0
 
@@ -139,7 +142,7 @@ func _edge_cells(n: int) -> Array[Vector2i]:
 		hi = maxi(hi, l.y)
 	var cand: Array[Vector2i] = []
 	for l: Vector2i in b.room["cells"]:
-		if (l.y != lo and l.y != hi) or l.x < 3 or l.x > 8:
+		if (l.y != lo and l.y != hi) or l.x < 3 or l.x > int(b.room["len"]) - 2:
 			continue
 		var c := VDMap.to_world(b.room, l.x, l.y)
 		if b._occupied(c) or _near_ally(c, 1):
@@ -218,6 +221,7 @@ func _new_tile() -> void:
 	_tiles[c] = {"t": 0.0, "warn": true}
 	count["void"] += 1
 	_ensure_layer()
+	b.ground_fx.move_child(_layer, b.ground_fx.get_child_count() - 1)   # 바닥 이펙트(체액·균열) 중에서는 맨 위
 	b.audio.play("tick", 0.1, -4.0, 0.7)
 
 
@@ -231,7 +235,7 @@ func _ensure_layer() -> void:
 	if _layer and is_instance_valid(_layer):
 		return
 	_layer = Node2D.new()
-	_layer.z_index = 1
+	_layer.z_index = 0   # z 를 올리면 ground_fx 밖의 유닛(z 0)까지 덮어 캐릭터를 가린다 — 순서는 move_child 로만 정한다
 	_layer.draw.connect(_draw_tiles)
 	b.ground_fx.add_child(_layer)
 

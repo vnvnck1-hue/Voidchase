@@ -150,7 +150,7 @@ func voice(hero_id: String, kind: String) -> void:
 
 
 static func _is_synth(s: AudioStream) -> bool:
-	return _synth.values().has(s)
+	return s is AudioStreamWAV and s.resource_path.is_empty()   # 합성음만 파일 없이 메모리에서 만든 WAV (values() 배열을 매번 만들지 않게)
 
 
 # ---------------------------------------------------------------- TrioChess sfx.gd 합성식

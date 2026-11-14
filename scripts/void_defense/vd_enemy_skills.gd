@@ -136,9 +136,7 @@ func _void_beam_run(u: VDUnit, sk: Dictionary, target: VDUnit) -> void:
 			return
 	var beam := Beam.new()
 	beam.col = LASER_COL
-	var mat := CanvasItemMaterial.new()
-	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	beam.material = mat
+	beam.material = VDVfx.add_material()
 	beam.follow = func() -> Array:
 		if not is_instance_valid(u):
 			return [Vector2.ZERO, Vector2.ZERO]
@@ -147,7 +145,7 @@ func _void_beam_run(u: VDUnit, sk: Dictionary, target: VDUnit) -> void:
 		return [_muzzle(u), to]
 	b.fx_root.add_child(beam)
 	beam.create_tween().tween_property(beam, "k", 1.0, 0.08)
-	b.vfx.spawn("hit_heavy", b.fx_root, _muzzle(u), 1.6, 0.0, LASER_COL)
+	b.vfx.spawn("hit_light", b.fx_root, _muzzle(u), 2.4, 0.0, LASER_COL)
 	b.audio.play("lightning", 0.0, 6.0, 0.75)
 	b.camera.punch(0.03)
 	b.camera.shake(0.35)
@@ -274,7 +272,7 @@ func _descent_land(u: VDUnit, sk: Dictionary, target: VDUnit, land: Vector2i, ru
 		a.last_hit_by = u
 		var dealt := a.take_damage(dmg)
 		var at := b._chest(a)
-		b.vfx.spawn("hit_heavy", b.fx_root, at, 2.0, randf() * TAU, DESCENT_COL.lightened(0.3))
+		b.vfx.spawn("hit_light", b.fx_root, at, 3.0, randf() * TAU, DESCENT_COL.lightened(0.3))
 		b.dmg_log.spawn(at + Vector2(0, -16), int(dealt), true, a)
 		if dealt > 0.0:
 			b.hurt_glitch.kick(1.0 if on_target else 0.6, a.id)

@@ -1,6 +1,7 @@
 ## 대형 적(4칸, 공허 망루) 헤드리스 점검: 6구역 편성으로 다시 소환 → 전투를 돌리며
 ## 매 프레임 모든 유닛 footprint 가 방 안에 있고 서로 겹치지 않는지, 망루가 움직이고 공격하는지 본다.
-##   godot --headless --path . res://tools/test/VDBigEnemyProbe.tscn -- --wave=6 --speed=4
+##   godot --headless --path . res://tools/test/VDBigEnemyProbe.tscn -- --stage=3 --speed=4
+## 적 구성은 스테이지·스테이지 안 웨이브로 정해진다 (2026-11-08 스테이지/웨이브 이식): 대형 적(공허 망루) 스테이지(3)의 마지막 웨이브를 바로 소환한다.
 ## 창으로 띄우고 --out=<폴더> 를 주면 등장 직후·전투 중 스크린샷을 남긴다 (서브 모니터 인자 필수).
 extends Node
 
@@ -8,7 +9,7 @@ var _b: VDBattle
 var _t := 0.0
 var _phase := 0
 var _fail := 0
-var _wave := 6
+var _stage := 3
 var _speed := 4.0
 var _big: Array[VDUnit] = []
 var _start_cells := {}
@@ -20,8 +21,8 @@ var _shots := 0
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--wave="):
-			_wave = int(a.substr(7))
+		if a.begins_with("--stage="):
+			_stage = int(a.substr(8))
 		elif a.begins_with("--speed="):
 			_speed = float(a.substr(8))
 		elif a.begins_with("--out="):
@@ -39,7 +40,9 @@ func _process(delta: float) -> void:
 				for e in _b.enemies:
 					e.queue_free()
 				_b.enemies.clear()
-				_b.wave = _wave
+				_b.stage = _stage
+				_b.wave_in_stage = VDData.waves_in_stage(_stage)
+				_b.gimmick = ""
 				_b._spawn_wave(_b._run_id)
 				_phase = 1
 		1:
@@ -48,7 +51,7 @@ func _process(delta: float) -> void:
 					if e.size > 1:
 						_big.append(e)
 						_start_cells[e] = e.cell
-				print("[probe] wave %d enemies=%s big=%d" % [_wave, str(_b.enemies.map(func(e: VDUnit) -> String: return "%s@%s" % [e.id, e.cell])), _big.size()])
+				print("[probe] stage %d enemies=%s big=%d" % [_stage, str(_b.enemies.map(func(e: VDUnit) -> String: return "%s@%s" % [e.id, e.cell])), _big.size()])
 				if _big.is_empty():
 					print("[probe] FAIL no big enemy spawned")
 					_fail += 1

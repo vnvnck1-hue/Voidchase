@@ -51,6 +51,8 @@ func _ready() -> void:
 
 ## 캔버스를 뷰포트 안에 비율 유지로 맞추거나(fit) 1:1 로 가운데 둔다.
 func _layout() -> void:
+	if not is_inside_tree():
+		return   # 씬을 떠나는 중에 화면 비율이 바뀌면 (SceneSwitcher._refresh) 아직 연결이 남아 있다
 	var vp := get_viewport_rect().size
 	var s := minf(vp.x / CANVAS_PX.x, vp.y / CANVAS_PX.y) if fit else 1.0
 	canvas.scale = Vector2(s, s)

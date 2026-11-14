@@ -1,4 +1,4 @@
-## 로비(연출 연구실 카드)와 연출 연구실 화면을 캡처한다: 연출 목록 → 몬스터 등장 → 목록 → 초궁극기 컷인 → 목록 → 궁극기 카드 불꽃.
+## 로비(연출 연구실 카드)와 연출 연구실 화면을 캡처한다: 연출 목록 → 몬스터 등장 → 목록 → 초궁극기 컷인 → 목록 → 궁극기 카드 불꽃 → 목록 → 화면 전환.
 ## 각 연출에서 값 하나를 바꿔 다시 재생되는지도 본다. 바꾼 값은 저장하지 않고 버린다.
 ## 창이 필요하므로 서브 모니터에서:
 ##   Godot --path . --screen 1 --position 4380,80 --resolution 1280x720 res://tools/test/FxLabCapture.tscn
@@ -8,6 +8,7 @@ extends Node
 const OUT := "res://docs/fx_lab/"
 const CutinFx := preload("res://scripts/void_defense/vd_super_cutin_fx.gd")
 const CardFlameFx := preload("res://scripts/void_defense/vd_card_flame_fx.gd")
+const WipeFx := preload("res://scripts/screen_transition_fx.gd")
 
 
 func _ready() -> void:
@@ -64,6 +65,22 @@ func _ready() -> void:
 	await _real(0.3)
 	await _shot("11_flame_edited")
 	CardFlameFx.load_saved()
+	# 목록으로 → 화면 전환: 필드 위에서 와이프가 돌고, 색을 바꾸면 재생 중에도 바로 바뀌는지
+	lab.call("_show_picker")
+	await _wait(0.2)
+	await _shot("12_picker_8")
+	lab.call("_open", "wipe")
+	await _real(WipeFx.g("in_dur") * 0.6)
+	await _shot("13_wipe_cover")
+	await _real(WipeFx.g("in_dur") * 0.4 + WipeFx.g("out_dur") * 0.45)
+	await _shot("14_wipe_reveal")
+	lab.call("_on_value", "plane2_r", 0.2)
+	lab.call("_on_value", "plane2_g", 0.9)
+	lab.call("_on_value", "plane2_b", 1.0)
+	print("[fx_lab] wipe describe:\n%s" % WipeFx.describe())
+	await _real(lab.get("EDIT_DELAY") + WipeFx.g("in_dur") * 0.6)
+	await _shot("15_wipe_edited")
+	WipeFx.load_saved()
 	get_tree().quit(0)
 
 

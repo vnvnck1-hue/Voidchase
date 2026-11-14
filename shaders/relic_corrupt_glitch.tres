@@ -1,0 +1,466 @@
+[gd_resource type="VisualShader" format=3]
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_jkf1b"]
+parameter_name = "cell_alpha"
+hint = 1
+default_value_enabled = true
+default_value = 0.77
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_r45sr"]
+parameter_name = "edge_alpha"
+hint = 1
+default_value_enabled = true
+default_value = 0.77
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_1x67j"]
+parameter_name = "tear_px"
+hint = 1
+max = 30.0
+default_value_enabled = true
+default_value = 7.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_r64d1"]
+parameter_name = "block_px"
+hint = 1
+min = 2.0
+max = 20.0
+default_value_enabled = true
+default_value = 6.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_cpaxp"]
+parameter_name = "step_fps"
+hint = 1
+min = 1.0
+max = 30.0
+default_value_enabled = true
+default_value = 12.0
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_c6lmx"]
+parameter_name = "col_main"
+default_value_enabled = true
+default_value = Color(1, 0.16, 0.62, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_w776g"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_bhcub"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_6qqr2"]
+parameter_name = "col_alt"
+default_value_enabled = true
+default_value = Color(0.25, 0.95, 1, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_iieg4"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeGlobalExpression" id="VisualShaderNodeGlobalExpression_a2vyd"]
+size = Vector2(900, 700)
+expression = "
+// 정수 해시 (실수 해시는 GPU 반올림으로 격자 경계가 어긋난다). 입력은 floor 해서 정수 칸으로
+float rc_hash(vec2 p) {
+	uvec2 q = uvec2(ivec2(floor(p))) * uvec2(1597334673u, 3812015801u);
+	uint n = (q.x ^ q.y) * 1597334673u;
+	return float(n) * (1.0 / 4294967295.0);
+}
+
+float rc_vnoise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(rc_hash(i), rc_hash(i + vec2(1.0, 0.0)), u.x), mix(rc_hash(i + vec2(0.0, 1.0)), rc_hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+// 평평한 윗변(flat-top) 육각형 거리장. r = 내접 반지름 (윗변까지). 안쪽 음수
+float rc_hex(vec2 p, float r) {
+	const vec3 k = vec3(-0.866025404, 0.5, 0.577350269);
+	p = abs(p);
+	p -= 2.0 * min(dot(k.xy, p), 0.0) * k.xy;
+	p -= vec2(clamp(p.x, -k.z * r, k.z * r), r);
+	return length(p) * sign(p.y);
+}
+
+// 띠 하나 (거리 d 가 0 근처 w 폭에서 1)
+float rc_line(float d, float w) {
+	return 1.0 - smoothstep(w * 0.5, w * 0.5 + 1.0, abs(d));
+}
+"
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_q8s8j"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_1f0pp"]
+parameter_name = "col_void"
+default_value_enabled = true
+default_value = Color(0.03, 0.006, 0.06, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_e681r"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_7x7os"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_u4wbq"]
+parameter_name = "col_cell"
+default_value_enabled = true
+default_value = Color(0.050980393, 0.03137255, 0.09411765, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_nv3hb"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_cles4"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_rxlgh"]
+parameter_name = "col_edge"
+default_value_enabled = true
+default_value = Color(0.37254903, 0.31764707, 0.5568628, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_122ux"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_3apxw"]
+
+[sub_resource type="VisualShaderNodeVec2Parameter" id="VisualShaderNodeVec2Parameter_p2454"]
+parameter_name = "rect_px"
+default_value_enabled = true
+default_value = Vector2(200, 180)
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_20tdf"]
+input_name = "time"
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_sip38"]
+input_name = "uv"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_5oplu"]
+size = Vector2(560, 128)
+expression = "p = (uv - vec2(0.5)) * rect;"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_8q4o5"]
+size = Vector2(560, 332)
+expression = "
+// 가로 찢김: 5px 띠마다 박자(step_fps)로 일부가 좌우로 밀린다. 가끔 큰 글리치 프레임 (14px 띠가 크게)
+float tk = floor(t * step_fps);
+float row = floor((p.y + 400.0) / 5.0);
+float on = step(0.84 - hover * 0.12 - jolt * 0.4, rc_hash(vec2(row, tk + seed * 31.0)));
+float sh = (rc_hash(vec2(row * 1.7 + 3.0, tk * 1.3 + seed)) - 0.5) * 2.0 * tear_px * on;
+float big_t = floor(t * 3.0);
+float big = step(0.9 - jolt * 0.6, rc_hash(vec2(big_t, seed * 7.0 + 5.0)));
+sh += big * (rc_hash(vec2(floor((p.y + 400.0) / 14.0), big_t + 9.0)) - 0.5) * 28.0;
+q = vec2(p.x + sh * spawn, p.y);
+"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_xh18b"]
+size = Vector2(560, 706)
+expression = "
+float r_in = hex_r * 0.8660254;
+float d = rc_hex(q, r_in);
+float inside = 1.0 - smoothstep(-1.0, 0.5, d);
+float tk = floor(t * step_fps);
+// 블록 격자
+vec2 g = (q + 400.0) / block_px;
+vec2 blk = floor(g);
+vec2 fb = fract(g);
+vec2 bc = (blk + 0.5) * block_px - 400.0;
+float bn = rc_hash(blk + seed * 13.0);
+// 침식 전선: 가운데서 블록 단위로 퍼진다 (블록마다 들쭉날쭉)
+float reach = spawn * r_in * 1.45;
+float rad = length(bc) + (bn - 0.5) * 22.0;
+infected = step(rad, reach);
+float front = infected * (1.0 - step(rad, reach - block_px * 1.6)) * (1.0 - step(0.999, spawn));
+float gap = step(0.14, fb.x) * step(0.14, fb.y);
+// 오염 블록: 정해진 블록 일부가 박자마다 깜빡이며 자홍/청록
+float fixed_set = step(0.84 - hover * 0.06, rc_hash(blk * 1.31 + seed * 3.0));
+float flick = step(0.32, rc_hash(blk + vec2(tk, seed * 2.0)));
+float hot = step(0.982 - jolt * 0.05, rc_hash(blk + vec2(tk * 0.5 + 7.0, seed)));
+// 스캔 막대: 위아래로 훑으며 지나가는 자리의 블록을 더 많이 켠다
+float scan_y = mod(t * 34.0 + seed * 7.0, r_in * 2.8) - r_in * 1.4;
+float sweep = 1.0 - smoothstep(0.0, 12.0, abs(q.y - scan_y));
+float sweep_line = rc_line(q.y - scan_y, 1.4);
+float sweep_set = step(0.62, rc_hash(blk * 1.31 + seed * 3.0)) * sweep;
+vec3 tile = mix(col_main, col_alt, step(0.55, rc_hash(blk + seed + 2.0)));
+// 데드 픽셀 줄기: 블록 열마다 가는 줄기가 아래로 흘러내린다
+float colx = blk.x;
+float has = step(0.55, rc_hash(vec2(colx, seed + 13.0)));
+float spd = 18.0 + 46.0 * rc_hash(vec2(colx, seed + 9.0));
+float len = 8.0 + 34.0 * rc_hash(vec2(colx, seed + 5.0));
+float dy = mod(q.y + 400.0 - t * spd - rc_hash(vec2(colx, seed + 11.0)) * 120.0, 96.0);
+float drip = has * (1.0 - smoothstep(0.0, len, dy)) * step(0.3, fb.x) * step(fb.x, 0.7);
+// 주사선
+float scan = 0.78 + 0.22 * step(1.0, mod(floor(q.y + 400.0), 3.0));
+// 깨진 경고 육각 (가운데): 둘레가 조각나 돌며 깜빡
+float ang = atan(q.y, q.x);
+float dc = rc_hex(q, r_in * 0.3);
+float seg = step(0.34, fract(ang / 6.2831853 * 6.0 + floor(t * step_fps) * 0.06));
+float blink = 0.55 + 0.45 * step(0.5, fract(t * 1.7));
+float icon = rc_line(dc, 3.0) * seg * blink;
+float bar = step(abs(q.x), 2.4) * step(-r_in * 0.19, q.y) * step(q.y, r_in * 0.05) + step(length(q - vec2(0.0, r_in * 0.14)), 2.6);   // 가운데 '!'
+// 바탕: 감염 전 = 평소 칸 바탕, 감염 = 공허색
+vec3 vbg = mix(col_void, col_main * 0.16, rc_vnoise(q * 0.07 + vec2(t * 0.25, seed)) * 0.9);
+vec3 col = mix(col_cell, vbg, infected);
+col = mix(col, tile * 0.95, clamp(fixed_set * flick + sweep_set, 0.0, 1.0) * gap * infected * 0.9);
+col = mix(col, col_alt * 1.2, sweep_line * infected * 0.7);
+col = mix(col, vec3(1.0), hot * gap * infected);
+col += col_main * drip * infected * 0.85;
+col = mix(col, col_alt, front * gap);
+col = mix(col, mix(col_main * 1.3, vec3(1.0, 0.85, 0.95), 0.35), clamp(icon + bar * blink, 0.0, 1.0) * infected);
+col *= scan;
+float a = inside * mix(cell_alpha, 0.95, infected);
+// 테두리: 평소 테두리 → 자홍/청록 RGB 분리 + 흰 심지
+float sp = smoothstep(0.0, 0.5, spawn);
+float split = 2.5 + jolt * 4.0 + hover * 1.0;
+float e0 = rc_line(rc_hex(q + vec2(split, 0.0), r_in), 3.0);
+float e1 = rc_line(rc_hex(q - vec2(split, 0.0), r_in), 3.0);
+float e2 = rc_line(d, 2.0);
+float dash = step(0.18, fract((ang / 6.2831853) * 18.0 - t * 0.35));
+float eg = rc_line(d, 6.0) * edge_alpha;
+vec3 ec = col_main * e0 + col_alt * e1 + vec3(1.0) * e2 * 0.85 * dash;
+float ea = clamp(max(max(e0, e1), e2 * dash), 0.0, 1.0) * sp;
+col = mix(col, col_edge, eg * (1.0 - sp));
+a = max(a, eg * (1.0 - sp));
+col = mix(col, ec / max(ea, 0.001) * sp, ea);
+a = max(a, ea);
+// 바깥 번짐 (자홍 후광)
+float halo = exp(-max(d, 0.0) / 9.0) * (1.0 - inside) * 0.4 * sp;
+col = mix(col, col_main, halo * (1.0 - a));
+a = max(a, halo);
+color = col * (1.0 + hover * 0.35 + jolt * 0.5) * intensity;
+alpha = a;
+"
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_njwm1"]
+parameter_name = "hex_r"
+hint = 1
+min = 20.0
+max = 120.0
+default_value_enabled = true
+default_value = 63.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_ibsca"]
+parameter_name = "spawn"
+hint = 1
+default_value_enabled = true
+default_value = 1.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_81f7f"]
+parameter_name = "hover"
+hint = 1
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_salgx"]
+parameter_name = "jolt"
+hint = 1
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_7chxd"]
+parameter_name = "seed"
+hint = 1
+max = 100.0
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_pcdn3"]
+parameter_name = "intensity"
+hint = 1
+max = 3.0
+default_value_enabled = true
+default_value = 1.0
+
+[resource]
+mode = 1
+flags/light_only = false
+nodes/fragment/2/node = SubResource("VisualShaderNodeGlobalExpression_a2vyd")
+nodes/fragment/2/position = Vector2(-2600, -1400)
+nodes/fragment/2/size = Vector2(900, 700)
+nodes/fragment/2/input_ports = ""
+nodes/fragment/2/output_ports = ""
+nodes/fragment/2/expression = "
+// 정수 해시 (실수 해시는 GPU 반올림으로 격자 경계가 어긋난다). 입력은 floor 해서 정수 칸으로
+float rc_hash(vec2 p) {
+	uvec2 q = uvec2(ivec2(floor(p))) * uvec2(1597334673u, 3812015801u);
+	uint n = (q.x ^ q.y) * 1597334673u;
+	return float(n) * (1.0 / 4294967295.0);
+}
+
+float rc_vnoise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(rc_hash(i), rc_hash(i + vec2(1.0, 0.0)), u.x), mix(rc_hash(i + vec2(0.0, 1.0)), rc_hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+// 평평한 윗변(flat-top) 육각형 거리장. r = 내접 반지름 (윗변까지). 안쪽 음수
+float rc_hex(vec2 p, float r) {
+	const vec3 k = vec3(-0.866025404, 0.5, 0.577350269);
+	p = abs(p);
+	p -= 2.0 * min(dot(k.xy, p), 0.0) * k.xy;
+	p -= vec2(clamp(p.x, -k.z * r, k.z * r), r);
+	return length(p) * sign(p.y);
+}
+
+// 띠 하나 (거리 d 가 0 근처 w 폭에서 1)
+float rc_line(float d, float w) {
+	return 1.0 - smoothstep(w * 0.5, w * 0.5 + 1.0, abs(d));
+}
+"
+nodes/fragment/3/node = SubResource("VisualShaderNodeVec2Parameter_p2454")
+nodes/fragment/3/position = Vector2(-1600, -400)
+nodes/fragment/4/node = SubResource("VisualShaderNodeFloatParameter_njwm1")
+nodes/fragment/4/position = Vector2(-1600, -250)
+nodes/fragment/5/node = SubResource("VisualShaderNodeFloatParameter_ibsca")
+nodes/fragment/5/position = Vector2(-1600, -100)
+nodes/fragment/6/node = SubResource("VisualShaderNodeFloatParameter_81f7f")
+nodes/fragment/6/position = Vector2(-1600, 50)
+nodes/fragment/7/node = SubResource("VisualShaderNodeFloatParameter_salgx")
+nodes/fragment/7/position = Vector2(-1600, 200)
+nodes/fragment/8/node = SubResource("VisualShaderNodeFloatParameter_7chxd")
+nodes/fragment/8/position = Vector2(-1600, 350)
+nodes/fragment/9/node = SubResource("VisualShaderNodeFloatParameter_pcdn3")
+nodes/fragment/9/position = Vector2(-1600, 500)
+nodes/fragment/10/node = SubResource("VisualShaderNodeFloatParameter_jkf1b")
+nodes/fragment/10/position = Vector2(-1600, 650)
+nodes/fragment/11/node = SubResource("VisualShaderNodeFloatParameter_r45sr")
+nodes/fragment/11/position = Vector2(-1600, 800)
+nodes/fragment/12/node = SubResource("VisualShaderNodeFloatParameter_1x67j")
+nodes/fragment/12/position = Vector2(-1600, 950)
+nodes/fragment/13/node = SubResource("VisualShaderNodeFloatParameter_r64d1")
+nodes/fragment/13/position = Vector2(-1600, 1100)
+nodes/fragment/14/node = SubResource("VisualShaderNodeFloatParameter_cpaxp")
+nodes/fragment/14/position = Vector2(-1600, 1250)
+nodes/fragment/15/node = SubResource("VisualShaderNodeColorParameter_c6lmx")
+nodes/fragment/15/position = Vector2(-1600, 1400)
+nodes/fragment/16/node = SubResource("VisualShaderNodeVectorDecompose_w776g")
+nodes/fragment/16/position = Vector2(-1600, 1550)
+nodes/fragment/17/node = SubResource("VisualShaderNodeVectorCompose_bhcub")
+nodes/fragment/17/position = Vector2(-1600, 1700)
+nodes/fragment/18/node = SubResource("VisualShaderNodeColorParameter_6qqr2")
+nodes/fragment/18/position = Vector2(-1600, 1850)
+nodes/fragment/19/node = SubResource("VisualShaderNodeVectorDecompose_iieg4")
+nodes/fragment/19/position = Vector2(-1600, 2000)
+nodes/fragment/20/node = SubResource("VisualShaderNodeVectorCompose_q8s8j")
+nodes/fragment/20/position = Vector2(-1600, 2150)
+nodes/fragment/21/node = SubResource("VisualShaderNodeColorParameter_1f0pp")
+nodes/fragment/21/position = Vector2(-1600, 2300)
+nodes/fragment/22/node = SubResource("VisualShaderNodeVectorDecompose_e681r")
+nodes/fragment/22/position = Vector2(-1600, 2450)
+nodes/fragment/23/node = SubResource("VisualShaderNodeVectorCompose_7x7os")
+nodes/fragment/23/position = Vector2(-1600, 2600)
+nodes/fragment/24/node = SubResource("VisualShaderNodeColorParameter_u4wbq")
+nodes/fragment/24/position = Vector2(-1600, 2750)
+nodes/fragment/25/node = SubResource("VisualShaderNodeVectorDecompose_nv3hb")
+nodes/fragment/25/position = Vector2(-1600, 2900)
+nodes/fragment/26/node = SubResource("VisualShaderNodeVectorCompose_cles4")
+nodes/fragment/26/position = Vector2(-1600, 3050)
+nodes/fragment/27/node = SubResource("VisualShaderNodeColorParameter_rxlgh")
+nodes/fragment/27/position = Vector2(-1600, 3200)
+nodes/fragment/28/node = SubResource("VisualShaderNodeVectorDecompose_122ux")
+nodes/fragment/28/position = Vector2(-1600, 3350)
+nodes/fragment/29/node = SubResource("VisualShaderNodeVectorCompose_3apxw")
+nodes/fragment/29/position = Vector2(-1600, 3500)
+nodes/fragment/30/node = SubResource("VisualShaderNodeInput_20tdf")
+nodes/fragment/30/position = Vector2(-1600, 3650)
+nodes/fragment/31/node = SubResource("VisualShaderNodeInput_sip38")
+nodes/fragment/31/position = Vector2(-1000, -400)
+nodes/fragment/32/node = SubResource("VisualShaderNodeExpression_5oplu")
+nodes/fragment/32/position = Vector2(-1000, -250)
+nodes/fragment/32/size = Vector2(560, 128)
+nodes/fragment/32/input_ports = "0,3,uv;1,3,rect;"
+nodes/fragment/32/output_ports = "0,3,p;"
+nodes/fragment/32/expression = "p = (uv - vec2(0.5)) * rect;"
+nodes/fragment/33/node = SubResource("VisualShaderNodeExpression_8q4o5")
+nodes/fragment/33/position = Vector2(-400, -400)
+nodes/fragment/33/size = Vector2(560, 332)
+nodes/fragment/33/input_ports = "0,3,p;1,0,t;2,0,spawn;3,0,hover;4,0,jolt;5,0,seed;6,0,tear_px;7,0,step_fps;"
+nodes/fragment/33/output_ports = "0,3,q;"
+nodes/fragment/33/expression = "
+// 가로 찢김: 5px 띠마다 박자(step_fps)로 일부가 좌우로 밀린다. 가끔 큰 글리치 프레임 (14px 띠가 크게)
+float tk = floor(t * step_fps);
+float row = floor((p.y + 400.0) / 5.0);
+float on = step(0.84 - hover * 0.12 - jolt * 0.4, rc_hash(vec2(row, tk + seed * 31.0)));
+float sh = (rc_hash(vec2(row * 1.7 + 3.0, tk * 1.3 + seed)) - 0.5) * 2.0 * tear_px * on;
+float big_t = floor(t * 3.0);
+float big = step(0.9 - jolt * 0.6, rc_hash(vec2(big_t, seed * 7.0 + 5.0)));
+sh += big * (rc_hash(vec2(floor((p.y + 400.0) / 14.0), big_t + 9.0)) - 0.5) * 28.0;
+q = vec2(p.x + sh * spawn, p.y);
+"
+nodes/fragment/34/node = SubResource("VisualShaderNodeExpression_xh18b")
+nodes/fragment/34/position = Vector2(200, -400)
+nodes/fragment/34/size = Vector2(560, 706)
+nodes/fragment/34/input_ports = "0,3,p;1,3,q;2,0,t;3,0,spawn;4,0,hover;5,0,jolt;6,0,seed;7,0,hex_r;8,0,intensity;9,0,cell_alpha;10,0,edge_alpha;11,0,tear_px;12,0,block_px;13,0,step_fps;14,4,col_main;15,4,col_alt;16,4,col_void;17,4,col_cell;18,4,col_edge;"
+nodes/fragment/34/output_ports = "0,4,color;1,0,alpha;2,0,infected;"
+nodes/fragment/34/expression = "
+float r_in = hex_r * 0.8660254;
+float d = rc_hex(q, r_in);
+float inside = 1.0 - smoothstep(-1.0, 0.5, d);
+float tk = floor(t * step_fps);
+// 블록 격자
+vec2 g = (q + 400.0) / block_px;
+vec2 blk = floor(g);
+vec2 fb = fract(g);
+vec2 bc = (blk + 0.5) * block_px - 400.0;
+float bn = rc_hash(blk + seed * 13.0);
+// 침식 전선: 가운데서 블록 단위로 퍼진다 (블록마다 들쭉날쭉)
+float reach = spawn * r_in * 1.45;
+float rad = length(bc) + (bn - 0.5) * 22.0;
+infected = step(rad, reach);
+float front = infected * (1.0 - step(rad, reach - block_px * 1.6)) * (1.0 - step(0.999, spawn));
+float gap = step(0.14, fb.x) * step(0.14, fb.y);
+// 오염 블록: 정해진 블록 일부가 박자마다 깜빡이며 자홍/청록
+float fixed_set = step(0.84 - hover * 0.06, rc_hash(blk * 1.31 + seed * 3.0));
+float flick = step(0.32, rc_hash(blk + vec2(tk, seed * 2.0)));
+float hot = step(0.982 - jolt * 0.05, rc_hash(blk + vec2(tk * 0.5 + 7.0, seed)));
+// 스캔 막대: 위아래로 훑으며 지나가는 자리의 블록을 더 많이 켠다
+float scan_y = mod(t * 34.0 + seed * 7.0, r_in * 2.8) - r_in * 1.4;
+float sweep = 1.0 - smoothstep(0.0, 12.0, abs(q.y - scan_y));
+float sweep_line = rc_line(q.y - scan_y, 1.4);
+float sweep_set = step(0.62, rc_hash(blk * 1.31 + seed * 3.0)) * sweep;
+vec3 tile = mix(col_main, col_alt, step(0.55, rc_hash(blk + seed + 2.0)));
+// 데드 픽셀 줄기: 블록 열마다 가는 줄기가 아래로 흘러내린다
+float colx = blk.x;
+float has = step(0.55, rc_hash(vec2(colx, seed + 13.0)));
+float spd = 18.0 + 46.0 * rc_hash(vec2(colx, seed + 9.0));
+float len = 8.0 + 34.0 * rc_hash(vec2(colx, seed + 5.0));
+float dy = mod(q.y + 400.0 - t * spd - rc_hash(vec2(colx, seed + 11.0)) * 120.0, 96.0);
+float drip = has * (1.0 - smoothstep(0.0, len, dy)) * step(0.3, fb.x) * step(fb.x, 0.7);
+// 주사선
+float scan = 0.78 + 0.22 * step(1.0, mod(floor(q.y + 400.0), 3.0));
+// 깨진 경고 육각 (가운데): 둘레가 조각나 돌며 깜빡
+float ang = atan(q.y, q.x);
+float dc = rc_hex(q, r_in * 0.3);
+float seg = step(0.34, fract(ang / 6.2831853 * 6.0 + floor(t * step_fps) * 0.06));
+float blink = 0.55 + 0.45 * step(0.5, fract(t * 1.7));
+float icon = rc_line(dc, 3.0) * seg * blink;
+float bar = step(abs(q.x), 2.4) * step(-r_in * 0.19, q.y) * step(q.y, r_in * 0.05) + step(length(q - vec2(0.0, r_in * 0.14)), 2.6);   // 가운데 '!'
+// 바탕: 감염 전 = 평소 칸 바탕, 감염 = 공허색
+vec3 vbg = mix(col_void, col_main * 0.16, rc_vnoise(q * 0.07 + vec2(t * 0.25, seed)) * 0.9);
+vec3 col = mix(col_cell, vbg, infected);
+col = mix(col, tile * 0.95, clamp(fixed_set * flick + sweep_set, 0.0, 1.0) * gap * infected * 0.9);
+col = mix(col, col_alt * 1.2, sweep_line * infected * 0.7);
+col = mix(col, vec3(1.0), hot * gap * infected);
+col += col_main * drip * infected * 0.85;
+col = mix(col, col_alt, front * gap);
+col = mix(col, mix(col_main * 1.3, vec3(1.0, 0.85, 0.95), 0.35), clamp(icon + bar * blink, 0.0, 1.0) * infected);
+col *= scan;
+float a = inside * mix(cell_alpha, 0.95, infected);
+// 테두리: 평소 테두리 → 자홍/청록 RGB 분리 + 흰 심지
+float sp = smoothstep(0.0, 0.5, spawn);
+float split = 2.5 + jolt * 4.0 + hover * 1.0;
+float e0 = rc_line(rc_hex(q + vec2(split, 0.0), r_in), 3.0);
+float e1 = rc_line(rc_hex(q - vec2(split, 0.0), r_in), 3.0);
+float e2 = rc_line(d, 2.0);
+float dash = step(0.18, fract((ang / 6.2831853) * 18.0 - t * 0.35));
+float eg = rc_line(d, 6.0) * edge_alpha;
+vec3 ec = col_main * e0 + col_alt * e1 + vec3(1.0) * e2 * 0.85 * dash;
+float ea = clamp(max(max(e0, e1), e2 * dash), 0.0, 1.0) * sp;
+col = mix(col, col_edge, eg * (1.0 - sp));
+a = max(a, eg * (1.0 - sp));
+col = mix(col, ec / max(ea, 0.001) * sp, ea);
+a = max(a, ea);
+// 바깥 번짐 (자홍 후광)
+float halo = exp(-max(d, 0.0) / 9.0) * (1.0 - inside) * 0.4 * sp;
+col = mix(col, col_main, halo * (1.0 - a));
+a = max(a, halo);
+color = col * (1.0 + hover * 0.35 + jolt * 0.5) * intensity;
+alpha = a;
+"
+nodes/fragment/connections = PackedInt32Array(15, 0, 16, 0, 16, 0, 17, 0, 16, 1, 17, 1, 16, 2, 17, 2, 18, 0, 19, 0, 19, 0, 20, 0, 19, 1, 20, 1, 19, 2, 20, 2, 21, 0, 22, 0, 22, 0, 23, 0, 22, 1, 23, 1, 22, 2, 23, 2, 24, 0, 25, 0, 25, 0, 26, 0, 25, 1, 26, 1, 25, 2, 26, 2, 27, 0, 28, 0, 28, 0, 29, 0, 28, 1, 29, 1, 28, 2, 29, 2, 31, 0, 32, 0, 3, 0, 32, 1, 32, 0, 33, 0, 30, 0, 33, 1, 5, 0, 33, 2, 6, 0, 33, 3, 7, 0, 33, 4, 8, 0, 33, 5, 12, 0, 33, 6, 14, 0, 33, 7, 32, 0, 34, 0, 33, 0, 34, 1, 30, 0, 34, 2, 5, 0, 34, 3, 6, 0, 34, 4, 7, 0, 34, 5, 8, 0, 34, 6, 4, 0, 34, 7, 9, 0, 34, 8, 10, 0, 34, 9, 11, 0, 34, 10, 12, 0, 34, 11, 13, 0, 34, 12, 14, 0, 34, 13, 17, 0, 34, 14, 20, 0, 34, 15, 23, 0, 34, 16, 26, 0, 34, 17, 29, 0, 34, 18, 34, 0, 0, 0, 34, 1, 0, 1)

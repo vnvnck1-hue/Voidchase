@@ -22,6 +22,23 @@ const SPECIALIST_ART := {
 	"tank": {"texture": preload("res://assets/void_defense_enemies/void_bulwark.png"), "width": 138.0, "lift": 0.0},
 	"longneck": {"texture": preload("res://assets/void_defense_enemies/void_longneck.png"), "width": 200.0, "lift": 0.0, "foot": 605.0},
 }
+## 파츠 몬스터: 머리·몸통·팔이 따로인 적. 배치는 생성물(data), 움직임은 VDPartsAnim.
+## width: 전장 표시 너비(px). 파츠 PNG 는 dir 아래 <파츠 이름>.png (tools/enemies/build_crystal_crab.py).
+const PARTS_ART := {
+	"crab": {"data": preload("res://scripts/void_defense/vd_crystal_crab_parts.gd"), "dir": "res://assets/void_defense_enemies/crystal_crab/", "width": 160.0},
+}
+## 기믹 무리 적: 전용 원화가 올 때까지 기존 적의 비주얼을 배율·틴트만 바꿔 쓴다 (as 의 비주얼 × scale, 파츠에 tint 곱).
+## 전용 원화 요청은 docs/stage_wave_port/CODEX_REQUESTS.md. 원화가 오면 SPECIALIST_ART 에 넣고 여기서 빼면 된다.
+const ENEMY_ALIAS := {
+	"swarm":    {"as": "normal", "scale": 0.62, "tint": Color(0.85, 0.8, 1.0)},
+	"splitter": {"as": "normal", "scale": 1.28, "tint": Color(0.75, 0.6, 0.95)},
+	"splitling": {"as": "normal", "scale": 0.5, "tint": Color(0.9, 0.75, 1.0)},
+	"assassin": {"as": "fast", "scale": 1.0, "tint": Color(0.55, 0.3, 0.65)},
+	"sprinter": {"as": "fast", "scale": 1.12, "tint": Color(1.0, 0.75, 0.9)},
+	"hydra":    {"as": "skirmisher", "scale": 1.15, "tint": Color(0.9, 0.55, 1.0)},
+	"illusionist": {"as": "normal", "scale": 1.1, "tint": Color(1.0, 0.6, 1.0)},
+	"illusion": {"as": "normal", "scale": 1.1, "tint": Color(0.8, 0.7, 1.0)},
+}
 
 ## 노드 경로(Canvas 아래, "Heroes/mage/body" 등) → {"type", "props"}
 static var _nodes := {}
@@ -55,6 +72,15 @@ static func _sprite(props: Dictionary, with_position := true) -> Sprite2D:
 ## 영웅 또는 적 타입 id의 비주얼.
 ## 루트 원점이 발밑이고, 기본 방향은 영웅=오른쪽, 몬스터=왼쪽. 없으면 null.
 static func build(id: String, team: int) -> Node2D:
+	if team == 1 and ENEMY_ALIAS.has(id):
+		var al: Dictionary = ENEMY_ALIAS[id]
+		var base := build(String(al["as"]), team)
+		if base:
+			base.scale *= float(al["scale"])
+			for c in base.get_children():
+				if c is Sprite2D:
+					c.self_modulate *= al["tint"]
+		return base
 	_load()
 	var root := Node2D.new()
 	root.name = "Visual"
@@ -75,6 +101,18 @@ static func build(id: String, team: int) -> Node2D:
 			sp.z_index = 0
 			root.add_child(sp)
 		root.scale = Vector2.ONE * HERO_SCALE
+	elif PARTS_ART.has(id):
+		var art: Dictionary = PARTS_ART[id]
+		for part in art["data"].PARTS:
+			var sp := Sprite2D.new()
+			sp.name = part["name"]
+			sp.texture = load(String(art["dir"]) + String(part["name"]) + ".png")
+			sp.centered = false
+			sp.position = part["pos"]
+			sp.offset = part["offset"]
+			root.add_child(sp)
+		root.scale = Vector2.ONE * (float(art["width"]) / float(art["data"].WIDTH))
+		root.set_meta("parts", true)
 	elif SPECIALIST_ART.has(id):
 		var art: Dictionary = SPECIALIST_ART[id]
 		var sp := Sprite2D.new()

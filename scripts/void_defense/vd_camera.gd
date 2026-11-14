@@ -120,8 +120,9 @@ func _now() -> float:
 
 
 func _exit_tree() -> void:
+	# 씬을 떠날 때는 배속(_saved_scale)도 남기지 않는다: 다음 씬은 언제나 1배
 	if _stopping or _slowing:
-		Engine.time_scale = _saved_scale
+		Engine.time_scale = 1.0
 		_stopping = false
 		_slowing = false
 

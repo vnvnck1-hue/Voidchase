@@ -5,7 +5,6 @@ class_name VDUnit
 extends Node2D
 
 signal died(unit: VDUnit)
-signal mana_ready(unit: VDUnit)   # 마나가 막 가득 찬 순간 (READY 연출)
 signal ult_ready(unit: VDUnit)    # 궁극기 게이지가 막 가득 찬 순간 (카드를 탭하라는 연출)
 signal stepped(unit: VDUnit)      # 걷는 중 두 걸음(STEP_SEC × 2)마다 — 발소리용
 
@@ -41,6 +40,11 @@ var ult := 0.0
 var ult_gain := 0.0           # 기본 공격(힐러는 치유) 한 번에 차는 게이지
 var stun_timer := 0.0        # > 0 이면 행동 불가 (기절·빙결)
 var frozen := false          # 기절이 빙결이면 얼음빛으로 물든다
+# 상태이상 [공중에 뜸] (롤의 에어본): knock_up() 이 건다. 떠 있는 동안 행동 불가 (stun 타이머를 같이 걸어 기존 행동 판정을 그대로 쓴다)
+var air_timer := 0.0         # > 0 이면 공중에 떠 있다 (남은 초)
+var air_total := 0.0
+var air_height := 0.0        # 이번 띄우기의 최고 높이(px)
+signal air_landed(u: VDUnit) # 공중에 뜸이 끝나 바닥에 떨어진 순간
 var guard_timer := 0.0       # > 0 이면 받는 피해 감소
 var guard_reduce := 0.0
 
@@ -51,15 +55,37 @@ var slow_mult := 1.0
 var burn_timer := 0.0        # > 0 이면 화상 (피해는 VDRelicRuntime 이 준다)
 var burn_dps := 0.0
 var last_hit_by = null       # 마지막으로 때린 쪽: VDUnit 또는 유물 id 문자열 (처치 판정용)
+## 성장·스킬 보정 (VDGrowth 가 써 넣는다. TrioChess stats.gd 의 skill_fx 역할)
+var level := 1
+var dmg_reduce := 0.0        # 받는 피해 - (최대 0.75)
+var dmg_bonus := 0.0         # 평타 피해 +
+var field_bonus := 0.0       # 필드 기믹(증폭 패널) 위에 서 있는 동안 평타 피해·치유량 + (vd_field_gimmicks.gd)
+var crit_bonus := 0.0        # 치명타 확률 +
+var atk_speed := 0.0         # 공격 간격 ÷ (1 + x)
+var mana_mult := 0.0         # 마나 획득 +
+var heal_bonus := 0.0        # 내가 주는 회복량 +
+var freeze_chance := 0.0     # 평타 빙결 확률
+var bonus_hp := 0.0          # 스킬로 더해진 최대 체력 (레벨업 체력과 따로 센다)
+## 기믹 (VDGimmicks): immune 이면 어떤 피해도 들어가지 않는다 (환술사가 살아 있는 동안의 환영). show_bar 는 적 HP 바 표시
+## (TrioChess: 적의 HP 바는 교전이 시작될 때 붙는다 — 배치 단계에선 이름만).
+var immune := false
+var show_bar := true
+var ghostly := false         # 반투명 (환영)
 
 var _flash := 0.0
+var _flash_el := ""             # 피격 색: 마지막으로 맞은 공격 속성 ("" 물리 = 흰빛만. vd_hit_fx.gd ELEMENT_KEY)
+var _flash_age := 99.0          # 그 피격부터 지난 시간(초)
+var _tint_on := false           # 피격 색 셰이더가 켜져 있는가 (꺼질 때 한 번 0 으로 돌린다)
 var _cast_glow := 0.0        # 시전 순간 몸이 빛나는 정도 (1 → 0)
 var _move_tween: Tween
 var _anim_tween: Tween
 var _death_tween: Tween
 
 var visual: Node2D            # VDRig 비주얼 (없으면 박스)
-var _overlay: Node2D          # 이름·HP 바: 비주얼 위에 그린다
+var _overlay: Node2D          # 이름·HP 바: 비주얼 위에 그린다 (top_root 가 있으면 그 아래로 옮겨 무엇에도 가리지 않게)
+## 이름·HP 바를 올려 둘 최상위 월드 노드 (VDBattle 이 안개 위 CanvasLayer 에 만든다). 없으면 유닛 자식으로 두고 z OVERLAY_Z.
+static var top_root: Node2D
+const OVERLAY_Z := 58         # top_root 가 없을 때: 유닛·이펙트(fx_root 50)·유물 투사체(55) 위, 피해 숫자(60) 아래
 var _top := -70.0             # 비주얼 위쪽 끝 y
 var _base_dir := 1.0          # 원화가 바라보는 방향 (영웅 +1 오른쪽, 몬스터 -1 왼쪽)
 var _facing := 1.0
@@ -79,6 +105,7 @@ var _wind_glow := 0.0           # 공격 예비 동작 중 차오르는 빛 (0 �
 var winding := false            # 공격 예비 동작 중 (VDBattle 이 끝나면 공격)
 var _ready_t := 0.0             # READY 펄스 경과 (마나가 찬 순간부터)
 var _idle := []               # [{node, pos, rot, scale, kind}]
+var _parts: VDPartsAnim        # 파츠 몬스터(머리·몸통·팔)면 이쪽이 파츠를 움직인다 (_idle 은 비운다)
 var _t := 0.0
 var _phase := 0.0
 
@@ -99,6 +126,8 @@ var _prev_vel := Vector2.ZERO
 
 ## HP 바 피격 연출 (TrioChess 체력바 방식): 깎인 구간이 주황 잔상으로 남아 HP_DRAIN 속도로 줄어들고,
 ## 맞은 순간 GHOST_FLASH 초 동안은 흰색으로 번쩍. 아군 바는 체력이 낮아지면 노랑 → 빨강.
+const HitFx := preload("res://scripts/void_defense/vd_hit_fx.gd")     # 몬스터 피격 몸 반응 조절값 (연출 연구실 "몬스터 피격")
+const KillFx := preload("res://scripts/void_defense/vd_kill_fx.gd")   # 몬스터 사망 조절값 (연출 연구실 "몬스터 사망")
 const HP_TRAIL := Color("f2900f")
 const HP_DRAIN := 0.7          # 잔상이 줄어드는 속도 (비율/초)
 const GHOST_FLASH := 0.12
@@ -150,10 +179,14 @@ func setup(def: Dictionary, id_: String, team_: int, cell_: Vector2i, hp_mult :=
 	if team == 0 and VDData.ULTS.has(id):
 		ult_gain = float(VDData.ULTS[id]["gain"])
 	size = int(def.get("size", 1))
+	ghostly = bool(def.get("ghostly", false))
+	show_bar = team == 0
 	# 전원이 같은 프레임에 행동하지 않게 타이머를 흩뜨린다
 	atk_timer = randf() * atk_cd * 0.5
 	move_timer = randf() * move_cd * 0.5
 	_build_visual()
+	if ghostly and visual:
+		visual.modulate.a = 0.55
 
 
 func _build_visual() -> void:
@@ -177,12 +210,20 @@ func _build_visual() -> void:
 			_idle.append({"node": c, "pos": c.position, "rot": c.rotation, "scale": c.scale, "kind": kind})
 		if team == 0:
 			_pose = VDHeroPose.POSES.get(id, {})
+		elif visual.has_meta("parts"):
+			_idle.clear()
+			_parts = VDPartsAnim.new()
+			_parts.setup(visual)
 	else:
 		_top = -(104.0 if is_boss else 66.0) - 4.0
 	_overlay = Node2D.new()
 	_overlay.name = "Overlay"
 	_overlay.draw.connect(_draw_overlay)
+	_overlay.z_as_relative = false
+	_overlay.z_index = OVERLAY_Z
 	add_child(_overlay)
+	if is_inside_tree():
+		_lift_overlay()
 
 
 ## 가로 방향 dx 쪽을 바라보게 비주얼을 뒤집는다.
@@ -249,6 +290,12 @@ func move_to_cell(c: Vector2i, dur := 0.25) -> void:
 ## 위로 튕겨 늘어났다가 쫀득하게 제 모습으로 돌아오며 흰빛이 빠진다. 착지 순간 on_land 를 부른다(충격 이펙트용).
 ## 타이밍·배율은 VDSummonFx (연출 연구실에서 조절).
 static var _white_shader: Shader
+## 궁극기 조준 대상 강조 (VDUltAim): 비주얼을 CanvasGroup 으로 감싸 shaders/unit_target_outline.gdshader 를 걸고 z 를 유닛 최상위로.
+static var _target_shader: Shader
+const TARGET_Z := 40            # 다른 유닛(y 정렬, z 0) 위 · 궁극기 무대(45)·조준 그림(46) 아래
+const TARGET_GROUP_MARGIN := 26.0   # CanvasGroup 여백(로컬 px): 외곽선이 잘리지 않게. clear 는 그 바깥 샘플까지 덮는다
+var _target_group: CanvasGroup
+var _target_z_saved := 0
 
 func appear(on_land := Callable()) -> void:
 	var sec := func(k: String) -> float: return maxf(VDSummonFx.g(k), 0.001)
@@ -297,7 +344,7 @@ var _airborne := false
 func _set_airborne(on: bool) -> void:
 	_airborne = on
 	if _overlay:
-		_overlay.visible = not on
+		_overlay.visible = not on and is_visible_in_tree()
 	queue_redraw()
 
 
@@ -312,16 +359,102 @@ func _set_white(k: float) -> void:
 			_white_shader = Shader.new()
 			_white_shader.code = """shader_type canvas_item;
 uniform float white : hint_range(0.0, 1.0) = 0.0;
+uniform vec3 flash_col = vec3(1.0);   // 덮는 색 (소환·물리 피격 = 흰색, 속성 피격 = 형광색)
+uniform float shade = 0.0;            // 0 = 납작한 실루엣, 1 = 원화 명암을 남긴 채 물들임
 void fragment() {
 	vec4 c = COLOR;   // fragment 의 COLOR 는 이미 텍스처 × modulate. texture() 를 또 곱하면 색이 제곱돼 어두워진다
-	COLOR = vec4(mix(c.rgb, vec3(1.0), white), c.a);
+	float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
+	vec3 t = flash_col * mix(1.0, 0.7 + 0.9 * l, shade);
+	COLOR = vec4(mix(c.rgb, t, white), c.a);
 }"""
 		var m := ShaderMaterial.new()
 		m.shader = _white_shader
 		visual.material = m
 		for c in visual.get_children():
 			(c as CanvasItem).use_parent_material = true
-	(visual.material as ShaderMaterial).set_shader_parameter("white", k)
+	var mat := visual.material as ShaderMaterial
+	mat.set_shader_parameter("white", k)
+	mat.set_shader_parameter("flash_col", Color.WHITE)
+	mat.set_shader_parameter("shade", 0.0)
+
+
+## 피격 색: 비주얼을 col 로 덮는다 (k 0~1, shade = 원화 명암 남기기). 흰 섬광 셰이더를 같이 쓴다.
+func _set_tint(k: float, col: Color, shade: float) -> void:
+	_set_white(k)
+	if visual == null:
+		return
+	var mat := visual.material as ShaderMaterial
+	mat.set_shader_parameter("flash_col", col)
+	mat.set_shader_parameter("shade", shade)
+
+
+## 맞은 순간: 몬스터는 실루엣이 순백으로 덮였다가(el_hold 초) 속성 공격이면 그 형광색으로 바뀌어 빠진다. strength 는 최대 세기(도트 피해는 약하게)
+func _hit_tint(element: String, strength := 1.0) -> void:
+	_flash = maxf(_flash, strength)
+	_flash_el = element
+	_flash_age = 0.0
+
+
+## 지금 덮을 색: 처음 el_hold 초는 흰색, 그 뒤 0.05초에 걸쳐 속성색으로
+func _flash_color() -> Color:
+	if _flash_el == "":
+		return Color.WHITE
+	var u := clampf((_flash_age - HitFx.g("el_hold")) / 0.05, 0.0, 1.0)
+	return Color.WHITE.lerp(HitFx.element_color(_flash_el), u)
+
+
+## 궁극기 조준 대상 강조를 켜고 끈다. col 은 외곽선·물들이는 색, strength 는 물드는 세기(0~1).
+## 켜면 비주얼을 CanvasGroup 아래로 옮겨(합친 실루엣에 외곽선) 유닛 z 를 TARGET_Z 로 올린다. 끄면 전부 원래대로.
+func set_target_highlight(on: bool, col := Color(1.0, 0.35, 0.4), strength := 1.0) -> void:
+	if visual == null:
+		return
+	if on:
+		if _target_group == null:
+			if _target_shader == null:
+				_target_shader = load("res://shaders/unit_target_outline.gdshader")
+			# 파츠가 use_parent_material 로 그룹 재질까지 타고 올라가지 않게 비주얼 자체 재질(흰 섬광)을 먼저 둔다
+			if visual.material == null:
+				_set_white(0.0)
+			var g := CanvasGroup.new()
+			g.name = "TargetGroup"
+			g.fit_margin = TARGET_GROUP_MARGIN
+			g.clear_margin = TARGET_GROUP_MARGIN * 2.0
+			var m := ShaderMaterial.new()
+			m.shader = _target_shader
+			g.material = m
+			var idx := visual.get_index()
+			remove_child(visual)
+			g.add_child(visual)
+			add_child(g)
+			move_child(g, idx)
+			_target_group = g
+			_target_z_saved = z_index
+			z_index = TARGET_Z
+		var m2 := _target_group.material as ShaderMaterial
+		# 형광 네온: 외곽선은 col 그대로 완전 불투명, 안쪽 코어는 거의 흰빛, 바깥으로 같은 색 글로우. 몸은 살짝만 물들인다
+		m2.set_shader_parameter("outline_color", Color(col, 1.0))
+		m2.set_shader_parameter("tint_color", Color(col, 1.0))
+		m2.set_shader_parameter("tint_k", 0.28 * strength)
+		m2.set_shader_parameter("outline_px", 3.5 + 2.0 * strength)
+		m2.set_shader_parameter("glow_px", 7.0 + 4.0 * strength)
+		return
+	if _target_group == null:
+		return
+	var g2 := _target_group
+	_target_group = null
+	var idx2 := g2.get_index()
+	g2.remove_child(visual)
+	remove_child(g2)
+	add_child(visual)
+	move_child(visual, idx2)
+	g2.queue_free()
+	z_index = _target_z_saved
+
+
+## 강조 숨쉬기 (0~1): 외곽선 두께·몸 밝기. 조준 화면이 실제 시간으로 매 프레임 넣는다.
+func set_target_pulse(k: float) -> void:
+	if _target_group:
+		(_target_group.material as ShaderMaterial).set_shader_parameter("pulse", k)
 
 
 var _glow: Sprite2D
@@ -412,6 +545,8 @@ func attack_anim(toward: Vector2) -> void:
 	if not _pose.is_empty():
 		face(toward.x - position.x)
 		_strike()
+	if _parts:
+		_parts.strike()
 	if _anim_tween:
 		_anim_tween.kill()
 	var dir := (toward - position).normalized()
@@ -477,10 +612,9 @@ func gain_mana(amount: float) -> void:
 	if mana_gain <= 0.0:
 		return
 	var was := mana >= VDData.MAX_MANA
-	mana = minf(VDData.MAX_MANA, mana + amount)
+	mana = minf(VDData.MAX_MANA, mana + amount * (1.0 + mana_mult))
 	if not was and mana >= VDData.MAX_MANA:
 		_ready_t = 0.0
-		mana_ready.emit(self)
 	_redraw()
 
 
@@ -504,11 +638,19 @@ func ult_full() -> bool:
 
 ## 쓰러진 아군을 일으킨다: 체력 ratio 로, 넘어진 자세·회색을 풀고 제자리에 선다. 마나·궁극기 게이지는 0 에서 다시.
 func revive(ratio: float) -> void:
+	set_process(true)
 	if alive:
 		return
 	if _death_tween:
 		_death_tween.kill()
 	revive_full()
+	if team == 1 and visual:
+		# 몬스터(공허 촉수): 녹아내린 비주얼을 제 크기로 되돌린다
+		visual.scale = Vector2(_vis_sx * _facing * _base_dir, _vis_sy)
+		if _hit_tween:
+			_hit_tween.kill()
+		_hit_sq = Vector2.ONE
+		_hit_recoil = 0.0
 	hp = maxf(1.0, floorf(max_hp * ratio))
 	_hp_ghost = hp / max_hp
 	_hp_shown = _hp_ghost
@@ -546,6 +688,30 @@ func cast_pulse() -> void:
 	_anim_tween.tween_property(self, "scale", Vector2.ONE, 0.2)
 
 
+const AIR_HEIGHT := 92.0     # 공중에 뜸 기본 최고 높이(px). 대형·보스는 절반
+
+## 상태이상 [공중에 뜸]: sec 초 동안 포물선으로 떠올랐다 떨어진다. 그동안 행동 불가.
+## 대형·보스는 무거워 절반 높이로만 뜬다. 떨어지는 순간 납작하게 착지하고 air_landed 를 낸다.
+func knock_up(sec: float, height := AIR_HEIGHT) -> void:
+	if not alive or sec <= 0.0:
+		return
+	if air_timer > 0.0 and air_timer > sec:
+		return   # 이미 더 오래 떠 있다
+	air_total = sec
+	air_timer = sec
+	air_height = height * (0.5 if is_boss or size > 1 else 1.0)
+	stun(sec)
+	_redraw()
+
+
+## 지금 떠 있는 높이(px): 0 → 최고 → 0 포물선 (중력처럼 빠르게 솟았다 꼭대기에서 잠깐 머물고 떨어진다)
+func air_lift() -> float:
+	if air_timer <= 0.0 or air_total <= 0.0:
+		return 0.0
+	var p := 1.0 - air_timer / air_total
+	return air_height * 4.0 * p * (1.0 - p)
+
+
 func stun(sec: float, freeze := false) -> void:
 	if not alive:
 		return
@@ -556,11 +722,20 @@ func stun(sec: float, freeze := false) -> void:
 
 
 ## 방어력과 가드를 적용한 실제 피해량을 돌려준다.
-func take_damage(amount: float) -> float:
+## element 는 공격 속성 ("" 물리 · "번개" · "화염" · "서리" · "정수") — 몬스터 피격 색. strength 는 번쩍임 세기 (도트 피해는 약하게)
+func take_damage(amount: float, element := "", strength := 1.0) -> float:
 	if not alive:
+		return 0.0
+	if immune:
+		# 무적(환영): 맞은 티만 내고 피해는 0. 호출한 쪽이 IMMUNE 글자를 띄운다
+		_hit_tint("")
+		hit_punch(0.3)
+		_redraw()
 		return 0.0
 	if armor > 0.0:
 		amount = ceilf(amount * (1.0 - armor))
+	if dmg_reduce > 0.0:
+		amount = floorf(amount * (1.0 - minf(dmg_reduce, 0.75)))
 	if guard_timer > 0.0:
 		amount = floorf(amount * (1.0 - guard_reduce))
 	if shield > 0.0:
@@ -572,8 +747,10 @@ func take_damage(amount: float) -> float:
 		_bar_kick = 1.0
 	hp = maxf(0.0, hp - amount)
 	gain_ult(amount / maxf(max_hp, 1.0) * VDData.ULT_PER_HURT)   # 맞을수록 궁극기가 빨리 찬다
-	_flash = 1.0
+	_hit_tint(element, strength)
 	hit_punch(0.45 + 4.0 * amount / maxf(max_hp, 1.0))
+	if _parts and amount > 0.0:
+		_parts.hurt(0.5 + 3.0 * amount / maxf(max_hp, 1.0))
 	if not _pose.is_empty() and amount > 0.0:
 		# 피격 자세: 고개가 젖혀지고 몸이 뒤로 → 금방 돌아온다 (세게 맞을수록 깊게)
 		if _hurt_tween:
@@ -591,19 +768,34 @@ func take_damage(amount: float) -> float:
 ## 몬스터 피격 스케일 트윈: 발밑 기준으로 확 납작해졌다(+뒤로 밀림) 위로 튀듯 늘어나고, 반대로 한 번 더 출렁인 뒤 제자리.
 ## power 0~1 (피해가 클수록 세게). 대형·보스는 묵직하게 덜 찌그러진다. 시간 배율을 따르므로 히트스탑 동안 납작한 채 멈춘다.
 ## 아군은 같은 모양을 약하게(0.45배): 움찔하고 살짝 밀린다.
+## 몬스터의 모양·시간은 vd_hit_fx.gd "6 몸 반응" 값 (아군은 그 기본값 그대로).
 func hit_punch(power: float) -> void:
 	if visual == null:
 		return
+	var m := team == 1
 	var a := clampf(power, 0.35, 1.0) * (0.6 if is_boss or size > 1 else 1.0) * (0.45 if team == 0 else 1.0)
+	a *= HitFx.g("punch_k") if m else 1.0
+	var sx := HitFx.g("punch_sx") if m else 0.42
+	var sy := HitFx.g("punch_sy") if m else 0.36
+	var rx := HitFx.g("punch_rx") if m else 0.2
+	var ry := HitFx.g("punch_ry") if m else 0.3
+	var wob := HitFx.g("punch_wob") if m else 0.09
+	var up := HitFx.g("punch_sec") if m else 0.07
 	if _hit_tween:
 		_hit_tween.kill()
-	_hit_sq = Vector2(1.0 + 0.42 * a, 1.0 - 0.36 * a)
-	_hit_recoil = 15.0 * a
+	_hit_sq = Vector2(1.0 + sx * a, 1.0 - sy * a)
+	_hit_recoil = (HitFx.g("recoil_px") if m else 15.0) * a
 	_hit_tween = create_tween()
-	_hit_tween.tween_property(self, "_hit_sq", Vector2(1.0 - 0.2 * a, 1.0 + 0.3 * a), 0.07).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	_hit_tween.parallel().tween_property(self, "_hit_recoil", 0.0, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	_hit_tween.tween_property(self, "_hit_sq", Vector2(1.0 + 0.09 * a, 1.0 - 0.08 * a), 0.07).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_hit_tween.tween_property(self, "_hit_sq", Vector2.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_hit_tween.tween_property(self, "_hit_sq", Vector2(1.0 - rx * a, 1.0 + ry * a), up).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_hit_tween.parallel().tween_property(self, "_hit_recoil", 0.0, up * 22.0 / 7.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_hit_tween.tween_property(self, "_hit_sq", Vector2(1.0 + wob * a, 1.0 - wob * 0.89 * a), up).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_hit_tween.tween_property(self, "_hit_sq", Vector2.ONE, HitFx.g("settle_sec") if m else 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## 피격 섬광만 (피해 없이 맞은 티: 연출 연구실)
+func hit_flash(element := "") -> void:
+	_hit_tint(element)
+	_redraw()
 
 
 func heal(amount: float) -> void:
@@ -623,6 +815,7 @@ func heal(amount: float) -> void:
 
 
 func revive_full() -> void:
+	set_process(true)
 	hp = max_hp
 	_hp_ghost = 1.0
 	_hp_shown = 1.0
@@ -638,11 +831,19 @@ func revive_full() -> void:
 	_p_hurt = 0.0
 	_lag = Vector2.ZERO
 	_lag_v = Vector2.ZERO
+	if _parts:
+		_parts.reset()
 	_redraw()
 
 
 func _die() -> void:
 	moving = false
+	if air_timer > 0.0 and visual:
+		# 공중에서 쓰러지면 바닥으로 떨어진 뒤 녹아내린다
+		air_timer = 0.0
+		var fall := create_tween()
+		fall.tween_property(visual, "position", Vector2(visual.position.x, 0.0), 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		fall.parallel().tween_property(visual, "rotation", 0.0, 0.14)
 	if _move_tween:
 		_move_tween.kill()
 	var t := create_tween()
@@ -651,11 +852,10 @@ func _die() -> void:
 		# 몬스터: 마지막 일격에 크게 찌그러졌다가 바닥으로 녹아내리듯 납작해지며 사라진다 (체액은 VDGoo 가 남긴다)
 		if _hit_tween:
 			_hit_tween.kill()
-		var sx := _vis_sx * _facing * _base_dir
-		visual.scale = Vector2(sx * 1.4, _vis_sy * 0.66)
-		t.tween_property(visual, "scale", Vector2(sx * 0.82, _vis_sy * 1.22), 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		t.tween_property(visual, "scale", Vector2(sx * 1.6, _vis_sy * 0.12), 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		t.parallel().tween_property(self, "modulate:a", 0.0, 0.22).set_delay(0.06)
+		# 모양·시간은 vd_kill_fx.gd "3 몸 찌그러짐"
+		KillFx.body_tween(t, self, visual, _vis_sx * _facing * _base_dir, _vis_sy)
+		if _parts:
+			_parts.scatter(self)
 	elif visual:
 		# 아군: 뒤로 튕겨 쓰러진다(발밑 기준 회전 + 통통 튐) → 잠깐 누워 있다가 회색으로 바래며 사라진다
 		winding = false
@@ -685,12 +885,21 @@ func _die() -> void:
 		t.tween_property(self, "modulate:a", 0.0, 0.45)
 	else:
 		t.tween_property(self, "modulate:a", 0.0, 0.3)
-	t.tween_callback(func() -> void: visible = false)
+	t.tween_callback(func() -> void:
+		visible = false
+		_sync_overlay()      # HP 바 층도 숨긴 뒤
+		set_process(false))  # 시체는 스테이지가 끝날 때까지 남아 있으니 매 프레임 갱신을 쉰다 (revive 가 다시 켠다)
 	died.emit(self)
 
 
 ## 전투 시간으로 상태 타이머를 줄인다 (VDBattle 이 전투 중에만 부른다).
 func tick_status(dt: float) -> void:
+	if air_timer > 0.0:
+		air_timer = maxf(0.0, air_timer - dt)
+		if air_timer == 0.0:
+			hit_punch(0.75)   # 착지: 납작하게 쿵
+			air_landed.emit(self)
+		_redraw()
 	if stun_timer > 0.0:
 		stun_timer = maxf(0.0, stun_timer - dt)
 		if stun_timer == 0.0:
@@ -712,10 +921,16 @@ func cd_mult() -> float:
 	return slow_mult if slow_timer > 0.0 else 1.0
 
 
+## 공격 간격 배율: 둔화 + 공격 속도 스킬(속사).
+func atk_cd_mult() -> float:
+	return cd_mult() / (1.0 + atk_speed)
+
+
 ## 방을 넘어갈 때: 상태이상을 비운다. 마나는 다음 전투로 이어진다.
 func reset_combat() -> void:
 	casting = false
 	stun_timer = 0.0
+	air_timer = 0.0
 	frozen = false
 	guard_timer = 0.0
 	shield = 0.0
@@ -726,17 +941,23 @@ func reset_combat() -> void:
 
 
 func _process(delta: float) -> void:
+	_sync_overlay()
 	_cast_glow = maxf(0.0, _cast_glow - delta * 2.5)
 	if visual:
 		# 피격 섬광·시전 빛: 원화를 하얗게 밝힌다 (modulate 1 초과 = 가산 느낌). 빙결이면 얼음빛.
-		var f := 1.0 + 1.6 * _flash + 0.9 * _cast_glow
+		# 몬스터의 피격 섬광은 밝기 곱이 아니라 셰이더로 실루엣을 덮는다 (아래 피격 색). 어두운 원화도 확실히 하얗게
+		var f := 1.0 + 1.6 * _flash * (0.0 if team == 1 else 1.0) + 0.9 * _cast_glow
 		var tint := Color(0.55, 0.85, 1.45) if frozen and stun_timer > 0.0 else Color.WHITE
 		# 회복: 초록빛 / 예비 동작: 적은 붉게, 아군은 하얗게 달아오른다
 		tint = tint.lerp(Color(0.75, 1.5, 0.8), _heal_glow * 0.7)
 		if _wind_glow > 0.0:
 			tint = tint.lerp(Color(1.7, 0.6, 0.7) if team == 1 else Color(1.4, 1.4, 1.4), _wind_glow * 0.55)
 		visual.modulate = Color(tint.r * f, tint.g * f, tint.b * f)
-	_heal_glow = maxf(0.0, _heal_glow - delta * 3.0)
+	if _heal_glow > 0.0:
+		# HP 바도 회복빛(연두)을 빼며 다시 그린다. 예전엔 여기서 다시 그리지 않아, 만피에서 회복을 받으면(체력이 안 움직임)
+		# 다음 피격까지 바가 밝은 연두로 굳어 있었다 (2026-11-09 '가끔 체력바가 살짝 밝다' 버그)
+		_heal_glow = maxf(0.0, _heal_glow - delta * 3.0)
+		_redraw()
 	# HP 바: 채움은 빠르게 스르륵, 잔상은 번쩍인 뒤 일정한 속도로 따라 내려온다. 회복이면 잔상은 바로 맞춘다
 	var ratio := clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0)
 	if absf(_hp_shown - ratio) > 0.0005:
@@ -758,14 +979,33 @@ func _process(delta: float) -> void:
 		_ready_t += delta
 		_redraw()
 	if _flash > 0.0:
-		_flash = maxf(0.0, _flash - delta * 5.0)
+		var fade := 5.0
+		if team == 1:
+			# 물리: 흰빛이 바로 빠진다. 속성: 순백(el_hold) → 형광색 꽉 찬 채(el_keep) 동안은 그대로 → el_fade 로 빠진다
+			if _flash_el == "":
+				fade = HitFx.g("white_fade")
+			else:
+				fade = 0.0 if _flash_age < HitFx.g("el_hold") + HitFx.g("el_keep") else HitFx.g("el_fade")
+		_flash = maxf(0.0, _flash - delta * fade)
 		_redraw()
+	# 몬스터 피격 색: 흰 실루엣 → 속성 형광색 (vd_hit_fx.gd "8 피격 색")
+	if team == 1 and visual:
+		_flash_age += delta
+		if _flash > 0.0:
+			_tint_on = true
+			var colored := _flash_el != "" and _flash_age >= HitFx.g("el_hold")
+			_set_tint(minf(1.0, _flash * HitFx.g("white_k")), _flash_color(), HitFx.g("el_shade") if colored else 0.0)
+		elif _tint_on:
+			_tint_on = false
+			_set_tint(0.0, Color.WHITE, 0.0)
 	if visual and alive:
 		_t += delta
 		_animate_walk(delta)
 		if not _pose.is_empty():
 			_update_lag(delta)
 		_animate_idle()
+		if _parts:
+			_parts.update(delta, _t, _phase, _wind_glow, _walk_amt, _walk_t * PI / STEP_SEC, stun_timer > 0.0)
 	_last_pos = position
 
 
@@ -836,6 +1076,11 @@ func _animate_walk(delta: float) -> void:
 	visual.rotation = deg_to_rad(WALK_SWAY) * s * k
 	visual.position.y -= pose_lift
 	visual.position.x -= _facing * _hit_recoil
+	if air_timer > 0.0:
+		# 공중에 뜸: 위로 떠오르며 뒤로 젖혀진다 (그림자는 바닥에 남아 작아진다 — _draw)
+		var lift := air_lift()
+		visual.position.y -= lift
+		visual.rotation += -_facing * 0.32 * lift / maxf(air_height, 1.0)
 	var sx := _vis_sx * _hit_sq.x
 	if pose_spin != 0.0:
 		var c := cos(pose_spin * TAU)
@@ -895,9 +1140,12 @@ func _draw() -> void:
 		var sh := PackedVector2Array()
 		# 대형(2x2) 적은 네 다리가 2칸 마름모에 걸치므로 다리 폭만큼 넓게
 		var rx := 46.0 if is_boss else (30.0 if size == 1 else 50.0 * size)
+		# 공중에 뜸: 높이 뜰수록 그림자가 작고 옅어진다
+		var up := air_lift() / maxf(air_height, 1.0)
+		rx *= 1.0 - 0.35 * up
 		for i in 24:
 			sh.append(Vector2.from_angle(TAU * i / 24.0) * Vector2(rx, rx * 0.4))
-		draw_colored_polygon(sh, Color(0, 0, 0, 0.35))
+		draw_colored_polygon(sh, Color(0, 0, 0, 0.35 * (1.0 - 0.45 * up)))
 		return
 	var w := 76.0 if is_boss else 44.0
 	var h := 104.0 if is_boss else 66.0
@@ -914,44 +1162,138 @@ func _draw() -> void:
 		draw_rect(body, Color(1, 1, 1, _flash * 0.85))
 
 
+## 유닛 HP 바 (TrioChess hud.gd register_unit 이식): 폭 64(대형·보스 110) × 높이 12, 둥근 먹색 받침(INK) 위에
+## 주황 잔상 → 채움(아군 초록 76cd2b / 적 붉은 ef3f55) → 위쪽 흰 광택 띠. 아군 바 왼쪽엔 금색 레벨 배지.
+## 적 바는 교전이 시작될 때 나타난다 (show_bar). 체력이 가득 차 있어도 늘 그린다.
+const BAR_W := 64.0
+const BAR_W_BIG := 110.0
+const BAR_H := 12.0
+const BAR_INK := Color("16121f")
+const BAR_HERO := Color("76cd2b")
+const BAR_ENEMY := Color("ef3f55")
+const BAR_GLOSS := Color(1, 1, 1, 0.3)
+const BADGE_GOLD := Color("f4c542")
+## HP 바 모양: 검은 테두리 상자(바 + BAR_PAD 사방) 모서리 반지름 BAR_RADIUS, 안쪽 채움은 같은 중심의 BAR_RADIUS - BAR_PAD.
+## 채움·잔상·광택을 둥근 상자(StyleBoxFlat)로 그려 테두리 두께가 모서리에서도 일정하게 (예전엔 각진 사각형이라 모서리가 테두리를 파고들었다)
+const BAR_PAD := 3.0
+const BAR_RADIUS := 8
+const MANA_RADIUS := 2                   # HP 바 아래 마나 바 (높이 4 → 알약 모양)
+static var _bar_box: StyleBoxFlat
+static var _fill_box: StyleBoxFlat       # 채움·잔상·광택 공용 (그리기 직전에 색·모서리를 바꿔 쓴다. draw 는 그 순간 값으로 굽는다)
+static var _kick_box: StyleBoxFlat       # 피격 순간 바 둘레 흰 테
+static var _badge_box: StyleBoxFlat
+var drawn_heal := -1.0                   # 마지막으로 바를 그릴 때 쓴 회복빛 (테스트 확인용)
+
+
+static func _ensure_boxes() -> void:
+	if _bar_box == null:
+		_bar_box = StyleBoxFlat.new()
+		_bar_box.bg_color = BAR_INK
+		_bar_box.set_corner_radius_all(BAR_RADIUS)
+		_bar_box.corner_detail = 12
+		_fill_box = StyleBoxFlat.new()
+		_fill_box.corner_detail = 12
+		_kick_box = StyleBoxFlat.new()
+		_kick_box.draw_center = false
+		_kick_box.set_border_width_all(2)
+		_kick_box.set_corner_radius_all(BAR_RADIUS + 2)
+		_kick_box.corner_detail = 12
+		_badge_box = StyleBoxFlat.new()
+		_badge_box.bg_color = BADGE_GOLD
+		_badge_box.border_color = Color("8a5a12")
+		_badge_box.set_border_width_all(1)
+		_badge_box.set_corner_radius_all(6)
+
+
+## HP 바 안쪽 칸(bar)을 왼쪽부터 ratio 만큼 col 로 채운다. 왼쪽 끝은 늘 안쪽 반지름으로 둥글고, 오른쪽 끝은
+## 채움이 오른쪽 모서리 곡선 구간에 들어설수록 그만큼 둥글어진다 (중간에서 끊긴 채움은 곧게 잘린다).
+## 반지름이 폭의 절반보다 크면 StyleBoxFlat 이 알아서 줄이므로 아주 짧은 채움도 칸 밖으로 삐져나가지 않는다.
+## r_in: 칸 안쪽 모서리 반지름 (HP 바 = BAR_RADIUS - BAR_PAD, 마나 바 = 2).
+static func _bar_fill(o: CanvasItem, bar: Rect2, ratio: float, col: Color, r_in := int(BAR_RADIUS - BAR_PAD)) -> void:
+	var w := bar.size.x * clampf(ratio, 0.0, 1.0)
+	if w <= 0.25:
+		return
+	var r_right := clampi(roundi(r_in - (bar.size.x - w)), 0, r_in)
+	_fill_box.bg_color = col
+	_fill_box.corner_radius_top_left = r_in
+	_fill_box.corner_radius_bottom_left = r_in
+	_fill_box.corner_radius_top_right = r_right
+	_fill_box.corner_radius_bottom_right = r_right
+	o.draw_style_box(_fill_box, Rect2(bar.position, Vector2(w, bar.size.y)))
+
+
 ## 이름 + HP 바. 비주얼 위쪽 끝(_top) 기준.
 func _draw_overlay() -> void:
 	var o := _overlay
+	_ensure_boxes()
 	o.draw_string(VDData.font(), Vector2(-70.0, _top - 8.0), display_name, HORIZONTAL_ALIGNMENT_CENTER, 140.0, 14, Color(1, 1, 1, 0.95))
-	var bw := 60.0 if size == 1 else 90.0
+	var bw := BAR_W if (size == 1 and not is_boss) else BAR_W_BIG
 	var kick := Vector2(sin(Time.get_ticks_msec() * 0.09) * 3.0, -2.0) * _bar_kick
-	var bar := Rect2(Vector2(-bw * 0.5, _top - 28.0) + kick, Vector2(bw, 6.0))
-	o.draw_rect(bar, Color(0, 0, 0, 0.6))
+	var bar := Rect2(Vector2(-bw * 0.5, _top - 24.0 - BAR_H) + kick, Vector2(bw, BAR_H))
 	var ratio := clampf(hp / max_hp, 0.0, 1.0)
-	var hp_col := hp_tint(ratio, Color(0.3, 0.9, 0.4)) if team == 0 else Color(1.0, 0.3, 0.35)
-	if _hp_ghost > _hp_shown:
-		# 잔상: 방금 깎인 만큼 띠 (처음엔 흰색으로 번쩍, 곧 주황으로 일정하게 줄어든다)
-		o.draw_rect(Rect2(bar.position, Vector2(bw * _hp_ghost, 6.0)), ghost_col(_ghost_hold))
-	o.draw_rect(Rect2(bar.position, Vector2(bw * _hp_shown, 6.0)), hp_col.lerp(Color(0.85, 1.0, 0.85), _heal_glow * 0.8))
-	if _bar_kick > 0.6:
-		o.draw_rect(bar.grow(1.0), Color(1, 1, 1, (_bar_kick - 0.6) * 1.5), false, 1.5)
+	if show_bar:
+		o.draw_style_box(_bar_box, bar.grow(BAR_PAD))
+		var hp_col := hp_tint(ratio, BAR_HERO) if team == 0 else BAR_ENEMY
+		if _hp_ghost > _hp_shown:
+			# 잔상: 방금 깎인 만큼 띠 (처음엔 흰색으로 번쩍, 곧 주황으로 일정하게 줄어든다)
+			_bar_fill(o, bar, _hp_ghost, ghost_col(_ghost_hold))
+		_bar_fill(o, bar, _hp_shown, hp_col.lerp(Color(0.85, 1.0, 0.85), _heal_glow * 0.8))
+		drawn_heal = _heal_glow
+		# 광택: 위쪽 가는 흰 띠 (채움 폭만큼, 둥근 끝이 채움 안쪽에 들어오게 양옆을 모서리 반지름만큼 비운다)
+		var r_in := float(BAR_RADIUS) - BAR_PAD
+		var gw := bw * _hp_shown - r_in * 2.0
+		if gw > 1.0:
+			_fill_box.bg_color = BAR_GLOSS
+			_fill_box.set_corner_radius_all(1)
+			o.draw_style_box(_fill_box, Rect2(bar.position + Vector2(r_in, 1.5), Vector2(gw, 3.0)))
+		if _bar_kick > 0.6:
+			_kick_box.border_color = Color(1, 1, 1, (_bar_kick - 0.6) * 1.5)
+			_kick_box.set_border_width_all(2)
+			_kick_box.set_corner_radius_all(BAR_RADIUS + 2)
+			o.draw_style_box(_kick_box, bar.grow(BAR_PAD + 2.0))
+		if team == 0 and level > 0:
+			# 레벨 배지: 바 왼쪽에 금색 알약 "Lv.N" (TrioChess 영웅 바의 레벨 배지)
+			var badge := Rect2(bar.position + Vector2(-34.0, -4.0), Vector2(28.0, 20.0))
+			o.draw_style_box(_badge_box, badge)
+			o.draw_string(VDData.font(), badge.position + Vector2(0, 14.5), "Lv%d" % level, HORIZONTAL_ALIGNMENT_CENTER, badge.size.x, 11, Color(0.2, 0.1, 0.02))
 	if shield > 0.0:
 		# 보호막: HP 바 위에 겹치는 하늘색 띠
-		o.draw_rect(Rect2(bar.position + Vector2(0, -3.0), Vector2(bw * clampf(shield / max_hp, 0.0, 1.0), 3.0)), Color(0.6, 0.95, 1.0))
+		o.draw_rect(Rect2(bar.position + Vector2(0, -5.0), Vector2(bw * clampf(shield / max_hp, 0.0, 1.0), 3.0)), Color(0.6, 0.95, 1.0))
 	if burn_timer > 0.0:
-		# 화상: 몸 옆에서 흔들리는 불꽃 점
-		var bt := Time.get_ticks_msec() * 0.01
+		# 과열(2026-11-09 사이파이, 예전 화상 불꽃 점): 몸 옆에서 깜빡이는 붉은 경고 삼각형 둘
+		var bt := Time.get_ticks_msec() * 0.001
+		var on := fmod(bt * 4.0, 1.0) < 0.65
 		for i in 2:
-			o.draw_circle(Vector2(-14.0 + 28.0 * i, _top * 0.5 + sin(bt + i * 2.0) * 5.0), 4.0, Color(1.0, 0.55, 0.25, 0.85))
+			var c := Vector2(-16.0 + 32.0 * i, _top * 0.5 - 4.0 * i)
+			var tri := PackedVector2Array([c + Vector2(0, -6.0), c + Vector2(6.0, 5.0), c + Vector2(-6.0, 5.0)])
+			o.draw_colored_polygon(tri, Color(1.0, 0.35, 0.4, 0.9 if on else 0.35))
+			o.draw_line(c + Vector2(0, -2.5), c + Vector2(0, 1.5), Color(0.15, 0.02, 0.05, 0.9), 1.5)
 	if slow_timer > 0.0:
-		# 둔화: 발밑 얼음빛 고리
-		o.draw_arc(Vector2(0, -6.0), 22.0, 0.0, TAU, 24, Color(0.7, 0.9, 1.0, 0.7), 2.0)
+		# 정지장(예전 얼음 고리): 발밑 납작한 점선 링이 천천히 돈다
+		var st := Time.get_ticks_msec() * 0.0008
+		for i in 8:
+			var a0 := st + TAU * i / 8.0
+			var pts := PackedVector2Array()
+			for j in 5:
+				var a := a0 + 0.45 * j / 4.0
+				pts.append(Vector2(cos(a) * 24.0, -6.0 + sin(a) * 10.0))
+			o.draw_polyline(pts, Color(0.35, 0.95, 1.0, 0.8), 2.0)
 	if mana_gain > 0.0:
 		# 마나 바 (HP 바 바로 아래). 가득 차면 밝게 빛난다.
-		var mb := Rect2(bar.position + Vector2(0, 8.0), Vector2(bw, 4.0))
-		o.draw_rect(mb, Color(0, 0, 0, 0.6))
+		# 바탕·채움·READY 테두리 모두 같은 중심의 둥근 끝 (HP 바와 같은 모양 규칙)
+		var mb := Rect2(bar.position + Vector2(0, BAR_H + 4.0), Vector2(bw, 4.0))
+		_bar_fill(o, mb, 1.0, Color(0, 0, 0, 0.6), MANA_RADIUS)
 		var full := mana >= VDData.MAX_MANA
-		o.draw_rect(Rect2(mb.position, Vector2(bw * mana / VDData.MAX_MANA, 4.0)), Color(0.55, 0.85, 1.0) if full else Color(0.25, 0.5, 1.0))
+		_bar_fill(o, mb, mana / VDData.MAX_MANA, Color(0.55, 0.85, 1.0) if full else Color(0.25, 0.5, 1.0), MANA_RADIUS)
 		if full:
 			# READY: 막 찼을 때 바가 크게 번쩍 → 이후 은은하게 숨쉰다 + 머리 위 작은 별
 			var pop := clampf(1.0 - _ready_t * 2.5, 0.0, 1.0)
 			var breathe := 0.35 + 0.25 * sin(_ready_t * 6.0)
-			o.draw_rect(mb.grow(1.0 + 3.0 * pop), Color(1.0, 0.95, 0.6, maxf(pop, breathe * 0.6)), false, 1.5 + pop * 2.0)
+			var g := 1.0 + 3.0 * pop
+			_kick_box.border_color = Color(1.0, 0.95, 0.6, maxf(pop, breathe * 0.6))
+			_kick_box.set_border_width_all(roundi(1.5 + pop * 2.0))
+			_kick_box.set_corner_radius_all(MANA_RADIUS + roundi(g))
+			o.draw_style_box(_kick_box, mb.grow(g))
 			var sy := _top - 52.0 - 6.0 * pop + sin(_ready_t * 4.0) * 2.0
 			var sr := 6.0 + 6.0 * pop
 			o.draw_colored_polygon(PackedVector2Array([Vector2(0, sy - sr), Vector2(sr * 0.3, sy - sr * 0.3), Vector2(sr, sy), Vector2(sr * 0.3, sy + sr * 0.3), Vector2(0, sy + sr), Vector2(-sr * 0.3, sy + sr * 0.3), Vector2(-sr, sy), Vector2(-sr * 0.3, sy - sr * 0.3)]), Color(1.0, 0.95, 0.6, 0.9))
@@ -962,12 +1304,14 @@ func _draw_overlay() -> void:
 		o.draw_arc(gr, absf(_top) * 0.55, 0.0, TAU, 40, Color(0.55, 0.8, 1.0, 0.55 * ga), 3.0)
 	if armor > 0.0 and _flash > 0.0:
 		o.draw_arc(Vector2(0, _top * 0.5), absf(_top) * 0.6, 0.0, TAU, 40, Color(0.55, 0.8, 1.0, _flash * 0.65), 2.5, true)
-	if stun_timer > 0.0 and not frozen:
-		# 기절: 머리 위를 도는 별 세 개
+	if stun_timer > 0.0 and not frozen and air_timer <= 0.0:
+		# 기절(2026-11-09 사이파이, 예전 도는 별): 머리 위를 도는 사각 픽셀 셋이 계단식으로 깜빡인다 (시스템 오류 느낌)
 		var tt := Time.get_ticks_msec() * 0.006
+		var flick := int(Time.get_ticks_msec() / 90) % 3
 		for i in 3:
 			var a := tt + TAU * i / 3.0
-			o.draw_circle(Vector2(cos(a) * 18.0, _top - 40.0 + sin(a) * 6.0), 3.5, Color(1.0, 0.92, 0.4))
+			var c := Vector2(cos(a) * 18.0, _top - 40.0 + sin(a) * 6.0)
+			o.draw_rect(Rect2(c - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), Color(1.0, 0.95, 0.45) if i != flick else Color(0.4, 1.0, 1.0))
 
 
 ## 넉백: 바라보는 방향은 그대로 두고 c 로 빠르게 밀려난다 (감속).
@@ -980,3 +1324,47 @@ func knockback_to(c: Vector2i, dur := 0.16) -> void:
 	_move_tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	_move_tween.tween_property(self, "position", foot_at(c), dur)
 	_move_tween.finished.connect(func() -> void: moving = false)
+
+
+# ---------------------------------------------------------------- 이름·HP 바 최상위
+
+func _enter_tree() -> void:
+	_lift_overlay()
+
+
+func _exit_tree() -> void:
+	if _overlay and _overlay.get_parent() != self:
+		_overlay.visible = false
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE and is_instance_valid(_overlay) and _overlay.get_parent() != self:
+		_overlay.queue_free()
+
+
+## 이름·HP 바를 top_root(안개 위 월드 레이어)로 옮긴다. 위치·보이기·투명도는 _sync_overlay 가 매 프레임 맞춘다.
+func _lift_overlay() -> void:
+	if _overlay == null or not is_instance_valid(top_root) or not top_root.is_inside_tree():
+		return
+	if _overlay.get_parent() == top_root:
+		return
+	if _overlay.get_parent():
+		_overlay.get_parent().remove_child(_overlay)
+	_overlay.z_as_relative = true
+	_overlay.z_index = 0
+	top_root.add_child(_overlay)
+	_sync_overlay()
+
+
+func _sync_overlay() -> void:
+	if _overlay == null or _overlay.get_parent() == self:
+		return
+	_overlay.global_position = global_position
+	_overlay.visible = is_visible_in_tree() and not _airborne
+	# 투명도만 따라간다 (사망 페이드·순간이동). 색은 따라가지 않는다: 궁극기·스킬 딤드(modulate 어둡게)가 HP 바까지 어둡게 하지 않게
+	_overlay.modulate = Color(1.0, 1.0, 1.0, modulate.a)
+
+
+## 피해 숫자·상태 글자가 나오는 자리: HP 바 위쪽 끝 (보호막 띠 위) — 월드 좌표
+func bar_top() -> Vector2:
+	return global_position + Vector2(0, _top - 24.0 - BAR_H - 8.0)

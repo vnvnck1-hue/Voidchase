@@ -196,6 +196,9 @@ func select_next(step: int) -> void:
 
 
 func _process(_dt: float) -> void:
+	if not is_visible_in_tree():
+		_clock_us = 0
+		return
 	# 게임 배속·히트스탑·슬로모션과 무관하게 항상 기본 속도로 재생한다
 	var now_us := Time.get_ticks_usec()
 	var dt := clampf((now_us - _clock_us) / 1000000.0, 0.0, 0.1) if _clock_us > 0 else 0.0

@@ -1,4 +1,4 @@
-## 궁극기 준비 카드 불꽃(shaders/card_ult_flame.gdshader) 조절값. VDSummonFx · vd_super_cutin_fx.gd 와 같은 모양(PARAMS · g · save …)이라
+## 궁극기 준비 카드 오버차지(shaders/card_ult_flame.gdshader, 2026-11-09 황금 불꽃 → 사이파이 에너지 줄기) 조절값. VDSummonFx · vd_super_cutin_fx.gd 와 같은 모양(PARAMS · g · save …)이라
 ## 연출 연구실이 그대로 다룬다. 연구실에서 바꾸고 저장하면 user://card_flame_fx.json 에 남아 실제 전투 카드에도 그대로 쓰인다.
 ## PARAMS 의 def 가 코드 기본값(셰이더 uniform 기본값과 같게 둔다). 연구실의 "값 복사" 로 받은 줄을 여기 def 에 옮기면 기본값이 된다.
 ## 키는 셰이더 uniform 이름. 색은 "이름_r/_g/_b" 세 줄로 나눠 두고 apply() 가 Color 로 묶어 넣는다.
@@ -11,27 +11,27 @@ const COLORS := ["hot_color", "gold_color", "edge_color"]
 
 ## [키, 그룹, 이름, 최소, 최대, 단계, 기본값]
 const PARAMS := [
-	["top_reach",      "1 불 혀",   "윗변 불 혀 길이(px)",      0.0,  104.0, 0.5,  100.0],
-	["side_reach",     "1 불 혀",   "옆변 불 혀 길이(px)",      0.0,  104.0, 0.5,  34.0],
-	["bottom_reach",   "1 불 혀",   "아랫변 불 혀 길이(px)",    0.0,  104.0, 0.5,  10.0],
-	["tongue_px",      "1 불 혀",   "불 혀 굵기(무늬 px)",      4.0,  80.0,  0.5,  22.0],
-	["tongue_cut",     "1 불 혀",   "혀 끊김(클수록 가늘게)",   0.0,  1.5,   0.01, 0.45],
-	["rise_speed",     "1 불 혀",   "위로 흐르는 속도",         0.0,  6.0,   0.01, 2.2],
-	["flame_strength", "1 불 혀",   "불 혀 밝기",               0.0,  3.0,   0.01, 1.8],
+	["top_reach",      "1 에너지 줄기", "윗변 줄기 길이(px)",      0.0,  104.0, 0.5,  100.0],
+	["side_reach",     "1 에너지 줄기", "옆변 줄기 길이(px)",      0.0,  104.0, 0.5,  34.0],
+	["bottom_reach",   "1 에너지 줄기", "아랫변 줄기 길이(px)",    0.0,  104.0, 0.5,  10.0],
+	["tongue_px",      "1 에너지 줄기", "줄기 간격(px)",      4.0,  80.0,  0.5,  22.0],
+	["tongue_cut",     "1 에너지 줄기", "줄기 성김(클수록 짧게)",   0.0,  1.5,   0.01, 0.45],
+	["rise_speed",     "1 에너지 줄기", "흐름 속도·박자",         0.0,  6.0,   0.01, 2.2],
+	["flame_strength", "1 에너지 줄기", "줄기 밝기",               0.0,  3.0,   0.01, 1.8],
 	["halo_strength",  "2 후광·테두리", "후광 밝기",            0.0,  2.0,   0.01, 0.55],
 	["halo_px",        "2 후광·테두리", "후광 번짐(px)",        1.0,  60.0,  0.5,  13.0],
-	["rim_strength",   "2 후광·테두리", "안쪽 테두리 밝기",     0.0,  3.0,   0.01, 1.25],
+	["rim_strength",   "2 후광·테두리", "안쪽 테두리·스윕 밝기",     0.0,  3.0,   0.01, 1.25],
 	["rim_px",         "2 후광·테두리", "안쪽 테두리 두께(px)", 0.0,  20.0,  0.1,  5.0],
-	["ember_amount",   "3 불티",    "불티 양",                  0.0,  1.0,   0.01, 0.6],
-	["hot_color_r",    "4 색",      "가장 뜨거운 곳 R",         0.0,  1.0,   0.01, 1.0],
-	["hot_color_g",    "4 색",      "가장 뜨거운 곳 G",         0.0,  1.0,   0.01, 0.98],
-	["hot_color_b",    "4 색",      "가장 뜨거운 곳 B",         0.0,  1.0,   0.01, 0.84],
-	["gold_color_r",   "4 색",      "금빛 R",                   0.0,  1.0,   0.01, 1.0],
-	["gold_color_g",   "4 색",      "금빛 G",                   0.0,  1.0,   0.01, 0.82],
-	["gold_color_b",   "4 색",      "금빛 B",                   0.0,  1.0,   0.01, 0.3],
-	["edge_color_r",   "4 색",      "혀끝 R",                   0.0,  1.0,   0.01, 1.0],
-	["edge_color_g",   "4 색",      "혀끝 G",                   0.0,  1.0,   0.01, 0.58],
-	["edge_color_b",   "4 색",      "혀끝 B",                   0.0,  1.0,   0.01, 0.1],
+	["ember_amount",   "3 픽셀",    "떠오르는 사각 픽셀 양",                  0.0,  1.0,   0.01, 0.6],
+	["hot_color_r",    "4 색",      "가장 밝은 곳 R",           0.0,  1.0,   0.01, 0.9],
+	["hot_color_g",    "4 색",      "가장 밝은 곳 G",           0.0,  1.0,   0.01, 1.0],
+	["hot_color_b",    "4 색",      "가장 밝은 곳 B",           0.0,  1.0,   0.01, 1.0],
+	["gold_color_r",   "4 색",      "본색 R",                   0.0,  1.0,   0.01, 0.3],
+	["gold_color_g",   "4 색",      "본색 G",                   0.0,  1.0,   0.01, 0.85],
+	["gold_color_b",   "4 색",      "본색 B",                   0.0,  1.0,   0.01, 1.0],
+	["edge_color_r",   "4 색",      "끝 색 R",                  0.0,  1.0,   0.01, 0.72],
+	["edge_color_g",   "4 색",      "끝 색 G",                  0.0,  1.0,   0.01, 0.35],
+	["edge_color_b",   "4 색",      "끝 색 B",                  0.0,  1.0,   0.01, 1.0],
 	["flare",          "5 켜짐",    "막 찼을 때 더 세게(배)",   0.0,  2.0,   0.01, 0.8],
 	["flare_sec",      "5 켜짐",    "그 세게 타는 시간(초)",    0.05, 2.0,   0.01, 0.6],
 	["fade_in",        "5 켜짐",    "켜지는 속도(/초)",         0.5,  20.0,  0.1,  4.0],
@@ -39,6 +39,10 @@ const PARAMS := [
 ]
 ## 셰이더로 보내지 않는 값 (카드 쪽 켜짐·꺼짐 타이밍)
 const LOCAL_KEYS := ["flare", "flare_sec", "fade_in", "fade_out"]
+
+## 2026-11-09 사이파이 리스타일: 이보다 낮은 _style 로 저장된 파일에서는 RESTYLED 키(색)를 버리고 새 기본값을 쓴다 (길이·밝기 튜닝은 그대로 살린다)
+const STYLE := 2
+const RESTYLED := ["hot_color_r", "hot_color_g", "hot_color_b", "gold_color_r", "gold_color_g", "gold_color_b", "edge_color_r", "edge_color_g", "edge_color_b"]
 
 static var values := {}
 static var version := 0          # 값이 바뀔 때마다 +1: 전투 카드가 보고 셰이더에 다시 넣는다
@@ -73,8 +77,9 @@ static func load_saved() -> void:
 		return
 	var data = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	if data is Dictionary:
+		var old_style := int(data.get("_style", 1)) < STYLE
 		for k in data:
-			if values.has(k):
+			if values.has(k) and not (old_style and k in RESTYLED):
 				values[k] = float(data[k])
 
 
@@ -82,7 +87,9 @@ static func save() -> bool:
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
 		return false
-	f.store_string(JSON.stringify(values, "\t"))
+	var out := values.duplicate()
+	out["_style"] = STYLE
+	f.store_string(JSON.stringify(out, "\t"))
 	return true
 
 
@@ -115,4 +122,4 @@ static func describe(all := false) -> String:
 
 ## 연구실 머리줄
 static func summary() -> String:
-	return "불 혀 위 %.0f · 옆 %.0f · 아래 %.0f px  ·  밝기 %.2f  ·  막 찼을 때 x%.2f (%.2f초)" % [g("top_reach"), g("side_reach"), g("bottom_reach"), g("flame_strength"), 1.0 + g("flare"), g("flare_sec")]
+	return "줄기 위 %.0f · 옆 %.0f · 아래 %.0f px  ·  밝기 %.2f  ·  막 찼을 때 x%.2f (%.2f초)" % [g("top_reach"), g("side_reach"), g("bottom_reach"), g("flame_strength"), 1.0 + g("flare"), g("flare_sec")]

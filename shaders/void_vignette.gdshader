@@ -4,6 +4,7 @@
 //   - 안개 안쪽도 짙고 옅은 결이 흐르고, 결의 밝은 부분은 wisp_color 로 은은하게 빛난다
 // 파라미터는 VDNebulaTuner(배경 조정 패널)에서 실시간으로 바꾼다. 기본값은 사용자가 패널로 맞춘 값(2026-11-05).
 shader_type canvas_item;
+#include "res://shaders/field_look.gdshaderinc"   // 필드 연구실 색 보정 (fl_*)
 
 uniform vec4 fog_color : source_color = vec4(0.046, 0.028, 0.082, 1.0);
 uniform vec4 wisp_color : source_color = vec4(0.105, 0.046, 0.342, 1.0);  // 기체 결의 밝은 부분
@@ -75,5 +76,5 @@ void fragment() {
 	// 결의 밝은 부분: 안개가 옅어지기 시작하는 경계 근처와 n2 가 높은 곳에서 은은하게
 	float glow = smoothstep(0.55, 0.85, n2) * smoothstep(0.05, 0.6, mask) * (1.0 - mask * 0.5) * wisp_glow;
 	vec3 col = mix(fog_color.rgb, wisp_color.rgb, glow);
-	COLOR = vec4(col, a);
+	COLOR = fl_apply(vec4(col, a));
 }

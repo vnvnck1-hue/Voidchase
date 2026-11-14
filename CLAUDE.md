@@ -1,5 +1,10 @@
 # 프로젝트 지침 (미소녀 카드게임 · Godot 4.7)
 
+## 캐릭터 그림체 최상위 기준
+- 2026-11-10 사용자가 지정한 **그룹 22.png, 그룹 30.png, 그룹 32.png, 레이어 193.png** 네 장을 캐릭터 그림체의 최상위 기준으로 삼는다.
+- 원본 보관 및 세부 적용 지침: [`docs/character_style_reference/README.md`](docs/character_style_reference/README.md). 캐릭터 제작·수정·생성·검수 시 문서와 기준 이미지 네 장을 먼저 확인한다. 이전 캐릭터 스타일 프롬프트나 컨셉과 충돌하면 이 기준을 우선한다.
+- 선화는 필압에 따른 굵기·강약 변화와 자연스럽게 가늘어지는 획 끝, 미세한 붓결이 느껴지는 손그림 선을 기준으로 한다. 일률적인 굵기와 지나치게 매끈한 벡터형 선은 지양하며, 제작 지시와 검수에 함께 반영한다.
+
 ## 빌드는 하나로 통일한다
 - Windows 실행 파일은 **`build/windows/KSC_Touch_Game.exe` 하나**만 만든다. `export_presets.cfg` 의 프리셋도 "Windows Desktop" 하나만 둔다.
 - 씬·프로토타입(VOID DEFENSE 등)마다 별도 exe 나 별도 프리셋을 만들지 않는다. 새 프로토타입은 `scripts/scene_switcher.gd` 의 `SCENES` 에 등록해 같은 exe 안에서 숫자키·버튼으로 전환한다.

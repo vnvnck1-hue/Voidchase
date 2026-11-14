@@ -1,0 +1,716 @@
+[gd_resource type="VisualShader" format=3]
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_gqmrj"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_n4jbp"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_bcb7t"]
+parameter_name = "col_plane2"
+default_value_enabled = true
+default_value = Color(0.95, 0.15, 0.37, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_rlfnn"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_gvf4o"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_buojv"]
+parameter_name = "col_plane3"
+default_value_enabled = true
+default_value = Color(0.98, 0.97, 0.97, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_r3mvq"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_8y3yl"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_y2uvj"]
+parameter_name = "col_plane4"
+default_value_enabled = true
+default_value = Color(0.09, 0.09, 0.105, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_7e5pa"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeGlobalExpression" id="VisualShaderNodeGlobalExpression_bdusw"]
+size = Vector2(900, 1400)
+expression = "
+// ---- 그래픽 와이프(graphic wipe) 도형 함수. 이름은 모두 gw_ 접두사 (uniform 이름과 겹치지 않게).
+float gw_hash(float n) { return fract(sin(n * 127.1 + 311.7) * 43758.5453); }
+// 쓸기 곡선: 급하게 출발해 급하게 멈춘다 (cubic in-out)
+float gw_ease(float k) { k = clamp(k, 0.0, 1.0); return k < 0.5 ? 4.0 * k * k * k : 1.0 - pow(-2.0 * k + 2.0, 3.0) * 0.5; }
+float gw_ease_out(float k) { k = clamp(k, 0.0, 1.0); return 1.0 - (1.0 - k) * (1.0 - k) * (1.0 - k); }
+// 변의 위치: u 0..1 동안 lo → hi
+float gw_pos(float u, float lo, float hi) { return mix(lo, hi, gw_ease(u)); }
+float gw_tri(float c) { return 1.0 - abs(fract(c) * 2.0 - 1.0); }
+// lo < x < hi 띠 (aa 폭으로 부드럽게)
+float gw_band(float x, float lo, float hi, float aa) { return smoothstep(lo - aa, lo + aa, x) * (1.0 - smoothstep(hi - aa, hi + aa, x)); }
+
+// 톱니 가시: 변을 따라가는 좌표 x 를 freq 칸으로 나눠 칸마다 직선 변 삼각형 하나. 길이(0.35~1배)·폭(칸의 55~95%)을 칸 해시로 변주.
+float gw_saw(float x, float freq, float phase, float len, float sd) {
+	float c = x * freq + phase;
+	float cell = floor(c);
+	float h = gw_hash(cell * 7.13 + sd);
+	float w = mix(0.55, 0.95, gw_hash(cell * 3.71 + sd + 5.0));
+	float s = clamp((gw_tri(c) - (1.0 - w)) / w, 0.0, 1.0);
+	return len * mix(0.35, 1.0, h) * s;
+}
+
+// 하프톤: 45° 격자 셀 중심까지의 거리(셀 단위), 반지름 r 의 점 덮임
+float gw_dotd(vec2 px, float dotpx) {
+	vec2 gp = vec2(0.70710678 * (px.x - px.y), 0.70710678 * (px.x + px.y)) / dotpx;
+	return length(fract(gp) - 0.5);
+}
+float gw_dotcov(float d, float r, float aa) { return r < 0.03 ? 0.0 : 1.0 - smoothstep(r - aa, r + aa, d); }
+
+// 별 폭발 크기 배율: t0 부터 0.08 동안 튀어 오르며 나타나고, t0 + 0.22 부터 0.06 동안 줄어 사라진다
+float gw_pop(float t, float t0) {
+	float k = clamp((t - t0) / 0.08, 0.0, 1.0);
+	float s = gw_ease_out(k) * (1.0 + 0.35 * sin(k * 3.14159));
+	float v = clamp((t - (t0 + 0.22)) / 0.06, 0.0, 1.0);
+	return s * (1.0 - v * v);
+}
+
+// 별 폭발: 기울인 어두운 마름모 바탕 + n 꼭짓점 별. 반환 (바탕, 별)
+vec2 gw_star(vec2 d, float s, float n, float rot, float aa) {
+	if (s <= 0.001) return vec2(0.0);
+	float Rb = 0.085 * s;
+	float Rs = 0.072 * s;
+	vec2 dr = vec2(cos(rot) * d.x - sin(rot) * d.y, sin(rot) * d.x + cos(rot) * d.y);
+	float sq = max(abs(dr.x), abs(dr.y));
+	float bg = 1.0 - smoothstep(Rb - aa, Rb + aa, sq);
+	float a = atan(d.y, d.x) - rot * 0.6;
+	float m = 1.0 - abs(fract(a * n / 6.2831853) * 2.0 - 1.0);
+	float re = Rs * mix(0.38, 1.0, pow(m, 2.4));
+	float st = 1.0 - smoothstep(re - aa, re + aa, length(d));
+	return vec2(bg, st);
+}
+
+// 변 좌표 x 를 따라 띄엄띄엄 놓인 가는 속도선: x 방향 띠 [x0, x0 + len]. ucoord 는 변을 따라가는 좌표.
+float gw_streaks(float x, float ucoord, float x0, float dirsign, float freq, float sd, float aa) {
+	float cs = ucoord * freq + gw_hash(sd + 3.0) * 9.0;
+	float cl = floor(cs);
+	float on = step(0.55, gw_hash(cl * 2.9 + sd + 50.0));
+	float thin = smoothstep(0.78, 0.86, gw_tri(cs));
+	float o0 = mix(0.03, 0.2, gw_hash(cl + sd + 60.0));
+	float ol = mix(0.18, 0.5, gw_hash(cl * 1.3 + sd + 70.0));
+	float a0 = x0 + dirsign * o0;
+	float a1 = x0 + dirsign * (o0 + ol);
+	return on * thin * gw_band(x, min(a0, a1), max(a0, a1), aa);
+}
+
+// 색판 안쪽 속도 줄무늬: 변 뒤쪽 [x0 - far, x0 - near] 구간에 진행 방향으로 뻗은 가는 줄 (칸의 절반만, 길이 변주)
+float gw_stripes(float x, float ucoord, float x0, float dirsign, float freq, float sd, float aa) {
+	float cs = ucoord * freq + gw_hash(sd + 5.0) * 9.0;
+	float cl = floor(cs);
+	float on = step(0.45, gw_hash(cl * 3.3 + sd + 80.0));
+	float thin = smoothstep(0.74, 0.82, gw_tri(cs));
+	float near = mix(0.08, 0.16, gw_hash(cl + sd + 90.0));
+	float far = near + mix(0.14, 0.42, gw_hash(cl * 1.9 + sd + 100.0));
+	float a0 = x0 - dirsign * near;
+	float a1 = x0 - dirsign * far;
+	return on * thin * gw_band(x, min(a0, a1), max(a0, a1), aa);
+}
+
+// ---- 프리셋 0: 슬래시 스택
+// s = 진행 좌표(왼쪽 아래 → 오른쪽 위로 기운 변), v = 변을 따라가는 좌표. 판 k 의 앞변은 A[k] 부터, 뒷변(퇴장)은 B[k] 부터 0.24 동안 쓸고 간다.
+void gw_slash(vec2 q, float t, float asp, float sd, float aa, float dd, float dotaa,
+		out float mv, out float my, out float mm, out float md, out float mp, out float mo) {
+	float slope = 0.42;
+	float s = q.x + q.y * slope;
+	float v = q.y - q.x * slope;
+	float smax = 0.5 * asp + 0.5 * slope + 0.5;
+	float smin = -smax;
+	float A[4] = float[4](0.0, 0.087, 0.173, 0.26);     // 마지막 판이 0.26 + 0.24 = 0.5 에 다 들어온다
+	float B[4] = float[4](0.76, 0.673, 0.587, 0.5);     // 위 판(어두운 보라)부터 0.5 에 바로 빠져나가기 시작, 마지막(보라)은 1.0 에 끝
+	float FQ[4] = float[4](2.2, 3.4, 2.8, 4.2);
+	float LN[4] = float[4](0.46, 0.3, 0.36, 0.22);
+	float M[4];
+	float LIP[4] = float[4](0.0, 0.0, 0.0, 0.0);   // 판 k 앞에 나는 작은 파편: 다음 판 색 (보라→분홍 · 노랑→어두운 보라 · 자홍→노랑 · 어두운 보라→보라)
+	float LEAD[4];
+	float TRAIL[4];
+	for (int k = 0; k < 4; k++) {
+		float fk = float(k);
+		float lead = t < 0.5 ? gw_pos((t - A[k]) / 0.24, smin, smax) : smax + 1.0;
+		float trail = t < 0.5 ? smin - 1.0 : gw_pos((t - B[k]) / 0.24, smin, smax);
+		LEAD[k] = lead;
+		TRAIL[k] = trail;
+		float ph = gw_hash(sd + fk) * 9.0;
+		// 큰 가시 + 사이사이 작은 가시를 겹쳐 계단처럼 규칙적이지 않게
+		float jf = max(gw_saw(v, FQ[k], ph, LN[k], sd + fk), gw_saw(v, FQ[k] * 2.7, ph + 4.1, LN[k] * 0.45, sd + fk + 3.0));
+		float jb = max(gw_saw(v, FQ[k] * 1.4, ph + 2.3, LN[k] * 0.7, sd + fk + 7.0), gw_saw(v, FQ[k] * 3.1, ph + 6.0, LN[k] * 0.3, sd + fk + 9.0));
+		float m = gw_band(s, trail - jb, lead + jf, aa);
+		// 앞변에서 떨어져 앞서 나는 파편 (칸의 절반 가까이) — 두 줄
+		float c = v * FQ[k] + ph;
+		float cell = floor(c);
+		if (gw_hash(cell * 5.3 + sd + fk + 20.0) > 0.5) {
+			float sh = clamp((gw_tri(c) - 0.45) / 0.55, 0.0, 1.0);
+			float gap = mix(0.06, 0.2, gw_hash(cell + sd + 30.0 + fk));
+			float ln = mix(0.2, 0.45, gw_hash(cell * 1.7 + sd + 40.0 + fk));
+			float b0 = lead + LN[k] + gap;
+			m = max(m, gw_band(s, b0, b0 + ln * sh, aa) * step(0.03, sh));
+		}
+		float c2 = v * FQ[k] * 1.9 + ph + 2.7;
+		float cell2 = floor(c2);
+		if (gw_hash(cell2 * 4.7 + sd + fk + 80.0) > 0.6) {
+			float sh2 = clamp((gw_tri(c2) - 0.55) / 0.45, 0.0, 1.0);
+			float gap2 = mix(0.25, 0.5, gw_hash(cell2 + sd + 90.0 + fk));
+			float ln2 = mix(0.1, 0.25, gw_hash(cell2 * 1.3 + sd + 100.0 + fk));
+			float b2 = lead + LN[k] + gap2;
+			// 작은 파편은 다음 판 색(입술 색)으로
+			LIP[k] = max(LIP[k], gw_band(s, b2, b2 + ln2 * sh2, aa) * step(0.03, sh2));
+		}
+		M[k] = m;
+	}
+	// 색판 안쪽 속도 줄무늬 (다음 판 색): 앞변 뒤 · 뒷변 앞
+	for (int k = 0; k < 3; k++) {
+		float fk = float(k);
+		float st = gw_stripes(s, v, LEAD[k], 1.0, 30.0, sd + fk * 13.0, aa) + gw_stripes(s, v, TRAIL[k], -1.0, 30.0, sd + fk * 13.0 + 7.0, aa);
+		LIP[k] = max(LIP[k], min(st, 1.0) * M[k] * (k == 2 ? 1.0 : 1.0 - M[k + 1]));
+	}
+	// 맨 앞을 가르는 분홍 선: 보라 판보다 먼저 0.14 동안 화면을 가로지른다 (퇴장 끝에도 한 번)
+	float pre = gw_pos((t + 0.03) / 0.15, smin, smax);
+	float post = gw_pos((t - 0.84) / 0.15, smin, smax);
+	float line_a = t < 0.5 ? gw_band(s, pre - 0.05, pre, aa) : 0.0;
+	float line_b = t >= 0.5 ? gw_band(s, post - 0.05, post, aa) : 0.0;
+	mv = max(M[0], LIP[3]);
+	my = max(M[1], LIP[2]);
+	mm = M[2];
+	md = max(M[3], LIP[1]);
+	mp = max(LIP[0], max(line_a, line_b));
+	// 노랑 앞변 앞 망점 띠: 보라 판 위에 노랑 점이 작아지며 사라진다
+	float gy = (s - LEAD[1]) / 0.26;
+	if (gy > 0.0 && gy < 1.0) my = max(my, gw_dotcov(dd, 0.72 * (1.0 - gy), dotaa) * mv);
+	// 자홍 뒷변 뒤 망점 띠: 노랑 판 위에 분홍 점
+	float gm = (TRAIL[2] - s) / 0.26;
+	if (gm > 0.0 && gm < 1.0) mp = gw_dotcov(dd, 0.72 * (1.0 - gm), dotaa) * my;
+	// 어두운 보라 판 위 분홍 망점 그라데이션 (오른쪽 위 모서리에서 번진다)
+	vec2 corner = vec2(0.5 * asp, -0.5);
+	float gc = clamp(1.0 - length(q - corner) / 0.95, 0.0, 1.0);
+	mp = max(mp, gw_dotcov(dd, 0.62 * gc, dotaa) * md);
+	// 색면 그라데이션 (레퍼런스의 자홍→분홍, 노랑→주황): 자홍 판은 변을 따라 분홍으로, 노랑 판은 왼쪽 아래로 갈수록 주황으로
+	float gv = clamp((v + 0.6) / 1.2, 0.0, 1.0);
+	mp = max(mp, M[2] * (1.0 - md) * smoothstep(0.25, 1.0, gv) * 0.85);
+	float gyo = clamp((-(s) + 0.3) / 1.4, 0.0, 1.0);
+	float orange_grad = M[1] * (1.0 - max(M[2], md)) * smoothstep(0.35, 1.0, gyo) * 0.7;
+	// 속도선(주황): 첫 판(보라) 앞변 앞 · 마지막으로 빠지는 보라 판 뒷변 뒤
+	mo = gw_streaks(s, v, LEAD[0] + LN[0], 1.0, 16.0, sd, aa) + gw_streaks(s, v, TRAIL[0] - LN[0], -1.0, 16.0, sd + 11.0, aa);
+	mo = min(mo + orange_grad, 1.0);
+}
+
+void gw_put(int ci, float val, inout float a, inout float b, inout float c, inout float d) {
+	if (ci == 0) a = max(a, val);
+	else if (ci == 1) b = max(b, val);
+	else if (ci == 2) c = max(c, val);
+	else d = max(d, val);
+}
+
+// ---- 프리셋 1: 슬라이스. 기운 가로 띠 6장, 짝수 띠는 왼쪽에서 홀수 띠는 오른쪽에서, 위부터 시간차로.
+void gw_slice(vec2 q, float t, float asp, float sd, float aa, float dd, float dotaa,
+		out float mv, out float my, out float mm, out float md, out float mp, out float mo) {
+	mv = 0.0; my = 0.0; mm = 0.0; md = 0.0; mp = 0.0; mo = 0.0;
+	float tilt = 0.22;
+	float bh = 0.25;
+	float vv = q.y - q.x * tilt + 0.75;
+	float fi = clamp(floor(vv / bh), 0.0, 5.0);
+	float vl = vv - fi * bh;
+	float dir = mod(fi, 2.0) < 0.5 ? 1.0 : -1.0;
+	float x = q.x * dir;
+	float xmax = 0.5 * asp + 0.35;
+	float xmin = -xmax;
+	float a = fi * 0.052 + gw_hash(sd + fi) * 0.016;        // 마지막 띠가 <= 0.276 + 0.22 = 0.5 에 다 들어온다
+	float b = 0.5 + fi * 0.052 + gw_hash(sd + fi + 9.0) * 0.016;
+	float lead = t < 0.5 ? gw_pos((t - a) / 0.22, xmin, xmax) : xmax + 1.0;
+	float trail = t < 0.5 ? xmin - 1.0 : gw_pos((t - b) / 0.22, xmin, xmax);
+	float slant = (vl / bh - 0.5) * 0.12;
+	float ph = gw_hash(sd + fi + 4.0) * 9.0;
+	float jf = gw_saw(vv, 12.0, ph, 0.11, sd + fi);
+	float jb = gw_saw(vv, 14.0, ph + 1.7, 0.08, sd + fi + 7.0);
+	float front = lead + slant + jf;
+	float back = trail + slant - jb;
+	float m = gw_band(x, back, front, aa);
+	// 입술: 앞변(입장) · 뒷변(퇴장) 안쪽 0.09 폭의 대비색 띠
+	float lipw = 0.09;
+	float lip = m * max(smoothstep(front - lipw - aa, front - lipw + aa, x), 1.0 - smoothstep(back + lipw - aa, back + lipw + aa, x));
+	// 망점: 앞변 앞 · 뒷변 뒤 0.14 폭, 입술 색 점이 작아지며 사라진다
+	float gf = (x - front) / 0.14;
+	float gb = (back - x) / 0.14;
+	float dots = 0.0;
+	if (gf > 0.0 && gf < 1.0) dots = gw_dotcov(dd, 0.7 * (1.0 - gf), dotaa);
+	if (gb > 0.0 && gb < 1.0) dots = max(dots, gw_dotcov(dd, 0.7 * (1.0 - gb), dotaa));
+	int ci = int(mod(fi * 3.0 + 1.0, 4.0));
+	int li = (ci + 2) % 4;
+	// 띠 안쪽 속도 줄무늬 (입술 색): 앞변 뒤 · 뒷변 앞
+	float st = min(gw_stripes(x, vv, front - lipw, 1.0, 64.0, sd + fi * 13.0, aa) + gw_stripes(x, vv, back + lipw, -1.0, 64.0, sd + fi * 13.0 + 7.0, aa), 1.0) * m;
+	gw_put(ci, m * (1.0 - lip) * (1.0 - st), mv, my, mm, md);
+	gw_put(li, max(max(lip, dots), st), mv, my, mm, md);
+	// 속도선(주황): 앞변 앞 · 뒷변 뒤
+	mo = min(gw_streaks(x, vv, front + 0.02, 1.0, 40.0, sd + fi, aa) + gw_streaks(x, vv, back - 0.02, -1.0, 40.0, sd + fi + 11.0, aa), 1.0);
+	// 다 덮이는 순간의 어두운 보라 슬랩: 0.38 부터 위에서 내려와 줄무늬를 가리고(0.5 전부), 0.5 부터 아래로 벗겨진다. 변은 톱니, 위에 분홍 망점 그라데이션
+	float jag = gw_saw(q.x, 5.0, gw_hash(sd + 21.0) * 9.0, 0.14, sd + 21.0);
+	float top = t < 0.5 ? -0.75 : gw_pos((t - 0.5) / 0.13, -0.75, 0.75);
+	float bottom = t < 0.5 ? gw_pos((t - 0.37) / 0.13, -0.75, 0.75) : 0.75 + 1.0;
+	float slab = gw_band(q.y, top + jag, bottom + jag, aa);
+	if (slab > 0.001) {
+		mv *= 1.0 - slab; my *= 1.0 - slab; mm *= 1.0 - slab; mo *= 1.0 - slab;
+		md = max(md, slab);
+		vec2 corner = vec2(-0.5 * asp, 0.5);
+		float gc = clamp(1.0 - length(q - corner) / 1.0, 0.0, 1.0);
+		mp = max(mp, gw_dotcov(dd, 0.62 * gc, dotaa) * slab);
+	}
+}
+"
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_twewh"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_i6r1o"]
+parameter_name = "col_accent"
+default_value_enabled = true
+default_value = Color(1, 0.47, 0.64, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_s6rab"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_whorf"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_7cfwv"]
+parameter_name = "col_accent2"
+default_value_enabled = true
+default_value = Color(0.78, 0.07, 0.28, 1)
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id="VisualShaderNodeVectorDecompose_euln1"]
+default_input_values = [0, Quaternion(0, 0, 0, 0)]
+op_type = 2
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_kli8l"]
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_yakcj"]
+input_name = "uv"
+
+[sub_resource type="VisualShaderNodeExpression" id="VisualShaderNodeExpression_xa5xe"]
+size = Vector2(620, 366)
+expression = "
+vec2 q = (p_uv - 0.5) * vec2(p_aspect, 1.0);
+float aa = 1.2 / p_view.y;
+float t = clamp(p_prog, 0.0, 1.0);
+float dd = gw_dotd(p_uv * p_view, p_dot);
+float dotaa = 1.0 / p_dot;
+float mv; float my; float mm; float md; float mp; float mo;
+if (p_preset < 0.5) gw_slash(q, t, p_aspect, p_seed, aa, dd, dotaa, mv, my, mm, md, mp, mo);
+else gw_slice(q, t, p_aspect, p_seed, aa, dd, dotaa, mv, my, mm, md, mp, mo);
+o_v = mv;
+o_y = my;
+o_m = mm;
+o_d = md;
+o_p = mp;
+o_o = mo;
+// 별 폭발 (다 덮인 동안): 오른쪽 위 · 왼쪽 아래
+vec2 s1 = gw_star(q - vec2(0.5 * p_aspect - 0.3, -0.33), gw_pop(t, 0.4), 9.0, 0.4 + t * 4.0, aa);
+vec2 s2 = gw_star(q - vec2(-0.5 * p_aspect + 0.3, 0.3), gw_pop(t, 0.44) * 0.8, 9.0, 1.1 - t * 5.0, aa);
+o_sbg = max(s1.x, s2.x);
+o_star = max(s1.y, s2.y);
+o_alpha = max(max(max(mv, my), max(mm, md)), max(max(mp, mo), max(o_sbg, o_star)));
+"
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_lsukh"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_2jrue"]
+parameter_name = "progress"
+hint = 1
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_18ss7"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_ht7ji"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_fr8ve"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_ivrp3"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_4nii6"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_dmr4b"]
+default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, 0.5]
+op_type = 4
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_xdsva"]
+parameter_name = "preset"
+hint = 1
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_53cnp"]
+parameter_name = "aspect"
+hint = 1
+min = 0.5
+max = 4.0
+default_value_enabled = true
+default_value = 1.7778
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_584xg"]
+parameter_name = "seed"
+hint = 1
+max = 100.0
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeVec2Parameter" id="VisualShaderNodeVec2Parameter_gd8nw"]
+parameter_name = "view_size"
+default_value_enabled = true
+default_value = Vector2(1920, 1080)
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_qee7e"]
+parameter_name = "dot_size"
+hint = 1
+min = 4.0
+max = 40.0
+default_value_enabled = true
+default_value = 14.0
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_fmrid"]
+parameter_name = "col_plane1"
+default_value_enabled = true
+default_value = Color(0.16, 0.165, 0.19, 1)
+
+[resource]
+mode = 1
+flags/light_only = false
+nodes/fragment/2/node = SubResource("VisualShaderNodeGlobalExpression_bdusw")
+nodes/fragment/2/position = Vector2(-2600, -1800)
+nodes/fragment/2/size = Vector2(900, 1400)
+nodes/fragment/2/input_ports = ""
+nodes/fragment/2/output_ports = ""
+nodes/fragment/2/expression = "
+// ---- 그래픽 와이프(graphic wipe) 도형 함수. 이름은 모두 gw_ 접두사 (uniform 이름과 겹치지 않게).
+float gw_hash(float n) { return fract(sin(n * 127.1 + 311.7) * 43758.5453); }
+// 쓸기 곡선: 급하게 출발해 급하게 멈춘다 (cubic in-out)
+float gw_ease(float k) { k = clamp(k, 0.0, 1.0); return k < 0.5 ? 4.0 * k * k * k : 1.0 - pow(-2.0 * k + 2.0, 3.0) * 0.5; }
+float gw_ease_out(float k) { k = clamp(k, 0.0, 1.0); return 1.0 - (1.0 - k) * (1.0 - k) * (1.0 - k); }
+// 변의 위치: u 0..1 동안 lo → hi
+float gw_pos(float u, float lo, float hi) { return mix(lo, hi, gw_ease(u)); }
+float gw_tri(float c) { return 1.0 - abs(fract(c) * 2.0 - 1.0); }
+// lo < x < hi 띠 (aa 폭으로 부드럽게)
+float gw_band(float x, float lo, float hi, float aa) { return smoothstep(lo - aa, lo + aa, x) * (1.0 - smoothstep(hi - aa, hi + aa, x)); }
+
+// 톱니 가시: 변을 따라가는 좌표 x 를 freq 칸으로 나눠 칸마다 직선 변 삼각형 하나. 길이(0.35~1배)·폭(칸의 55~95%)을 칸 해시로 변주.
+float gw_saw(float x, float freq, float phase, float len, float sd) {
+	float c = x * freq + phase;
+	float cell = floor(c);
+	float h = gw_hash(cell * 7.13 + sd);
+	float w = mix(0.55, 0.95, gw_hash(cell * 3.71 + sd + 5.0));
+	float s = clamp((gw_tri(c) - (1.0 - w)) / w, 0.0, 1.0);
+	return len * mix(0.35, 1.0, h) * s;
+}
+
+// 하프톤: 45° 격자 셀 중심까지의 거리(셀 단위), 반지름 r 의 점 덮임
+float gw_dotd(vec2 px, float dotpx) {
+	vec2 gp = vec2(0.70710678 * (px.x - px.y), 0.70710678 * (px.x + px.y)) / dotpx;
+	return length(fract(gp) - 0.5);
+}
+float gw_dotcov(float d, float r, float aa) { return r < 0.03 ? 0.0 : 1.0 - smoothstep(r - aa, r + aa, d); }
+
+// 별 폭발 크기 배율: t0 부터 0.08 동안 튀어 오르며 나타나고, t0 + 0.22 부터 0.06 동안 줄어 사라진다
+float gw_pop(float t, float t0) {
+	float k = clamp((t - t0) / 0.08, 0.0, 1.0);
+	float s = gw_ease_out(k) * (1.0 + 0.35 * sin(k * 3.14159));
+	float v = clamp((t - (t0 + 0.22)) / 0.06, 0.0, 1.0);
+	return s * (1.0 - v * v);
+}
+
+// 별 폭발: 기울인 어두운 마름모 바탕 + n 꼭짓점 별. 반환 (바탕, 별)
+vec2 gw_star(vec2 d, float s, float n, float rot, float aa) {
+	if (s <= 0.001) return vec2(0.0);
+	float Rb = 0.085 * s;
+	float Rs = 0.072 * s;
+	vec2 dr = vec2(cos(rot) * d.x - sin(rot) * d.y, sin(rot) * d.x + cos(rot) * d.y);
+	float sq = max(abs(dr.x), abs(dr.y));
+	float bg = 1.0 - smoothstep(Rb - aa, Rb + aa, sq);
+	float a = atan(d.y, d.x) - rot * 0.6;
+	float m = 1.0 - abs(fract(a * n / 6.2831853) * 2.0 - 1.0);
+	float re = Rs * mix(0.38, 1.0, pow(m, 2.4));
+	float st = 1.0 - smoothstep(re - aa, re + aa, length(d));
+	return vec2(bg, st);
+}
+
+// 변 좌표 x 를 따라 띄엄띄엄 놓인 가는 속도선: x 방향 띠 [x0, x0 + len]. ucoord 는 변을 따라가는 좌표.
+float gw_streaks(float x, float ucoord, float x0, float dirsign, float freq, float sd, float aa) {
+	float cs = ucoord * freq + gw_hash(sd + 3.0) * 9.0;
+	float cl = floor(cs);
+	float on = step(0.55, gw_hash(cl * 2.9 + sd + 50.0));
+	float thin = smoothstep(0.78, 0.86, gw_tri(cs));
+	float o0 = mix(0.03, 0.2, gw_hash(cl + sd + 60.0));
+	float ol = mix(0.18, 0.5, gw_hash(cl * 1.3 + sd + 70.0));
+	float a0 = x0 + dirsign * o0;
+	float a1 = x0 + dirsign * (o0 + ol);
+	return on * thin * gw_band(x, min(a0, a1), max(a0, a1), aa);
+}
+
+// 색판 안쪽 속도 줄무늬: 변 뒤쪽 [x0 - far, x0 - near] 구간에 진행 방향으로 뻗은 가는 줄 (칸의 절반만, 길이 변주)
+float gw_stripes(float x, float ucoord, float x0, float dirsign, float freq, float sd, float aa) {
+	float cs = ucoord * freq + gw_hash(sd + 5.0) * 9.0;
+	float cl = floor(cs);
+	float on = step(0.45, gw_hash(cl * 3.3 + sd + 80.0));
+	float thin = smoothstep(0.74, 0.82, gw_tri(cs));
+	float near = mix(0.08, 0.16, gw_hash(cl + sd + 90.0));
+	float far = near + mix(0.14, 0.42, gw_hash(cl * 1.9 + sd + 100.0));
+	float a0 = x0 - dirsign * near;
+	float a1 = x0 - dirsign * far;
+	return on * thin * gw_band(x, min(a0, a1), max(a0, a1), aa);
+}
+
+// ---- 프리셋 0: 슬래시 스택
+// s = 진행 좌표(왼쪽 아래 → 오른쪽 위로 기운 변), v = 변을 따라가는 좌표. 판 k 의 앞변은 A[k] 부터, 뒷변(퇴장)은 B[k] 부터 0.24 동안 쓸고 간다.
+void gw_slash(vec2 q, float t, float asp, float sd, float aa, float dd, float dotaa,
+		out float mv, out float my, out float mm, out float md, out float mp, out float mo) {
+	float slope = 0.42;
+	float s = q.x + q.y * slope;
+	float v = q.y - q.x * slope;
+	float smax = 0.5 * asp + 0.5 * slope + 0.5;
+	float smin = -smax;
+	float A[4] = float[4](0.0, 0.087, 0.173, 0.26);     // 마지막 판이 0.26 + 0.24 = 0.5 에 다 들어온다
+	float B[4] = float[4](0.76, 0.673, 0.587, 0.5);     // 위 판(어두운 보라)부터 0.5 에 바로 빠져나가기 시작, 마지막(보라)은 1.0 에 끝
+	float FQ[4] = float[4](2.2, 3.4, 2.8, 4.2);
+	float LN[4] = float[4](0.46, 0.3, 0.36, 0.22);
+	float M[4];
+	float LIP[4] = float[4](0.0, 0.0, 0.0, 0.0);   // 판 k 앞에 나는 작은 파편: 다음 판 색 (보라→분홍 · 노랑→어두운 보라 · 자홍→노랑 · 어두운 보라→보라)
+	float LEAD[4];
+	float TRAIL[4];
+	for (int k = 0; k < 4; k++) {
+		float fk = float(k);
+		float lead = t < 0.5 ? gw_pos((t - A[k]) / 0.24, smin, smax) : smax + 1.0;
+		float trail = t < 0.5 ? smin - 1.0 : gw_pos((t - B[k]) / 0.24, smin, smax);
+		LEAD[k] = lead;
+		TRAIL[k] = trail;
+		float ph = gw_hash(sd + fk) * 9.0;
+		// 큰 가시 + 사이사이 작은 가시를 겹쳐 계단처럼 규칙적이지 않게
+		float jf = max(gw_saw(v, FQ[k], ph, LN[k], sd + fk), gw_saw(v, FQ[k] * 2.7, ph + 4.1, LN[k] * 0.45, sd + fk + 3.0));
+		float jb = max(gw_saw(v, FQ[k] * 1.4, ph + 2.3, LN[k] * 0.7, sd + fk + 7.0), gw_saw(v, FQ[k] * 3.1, ph + 6.0, LN[k] * 0.3, sd + fk + 9.0));
+		float m = gw_band(s, trail - jb, lead + jf, aa);
+		// 앞변에서 떨어져 앞서 나는 파편 (칸의 절반 가까이) — 두 줄
+		float c = v * FQ[k] + ph;
+		float cell = floor(c);
+		if (gw_hash(cell * 5.3 + sd + fk + 20.0) > 0.5) {
+			float sh = clamp((gw_tri(c) - 0.45) / 0.55, 0.0, 1.0);
+			float gap = mix(0.06, 0.2, gw_hash(cell + sd + 30.0 + fk));
+			float ln = mix(0.2, 0.45, gw_hash(cell * 1.7 + sd + 40.0 + fk));
+			float b0 = lead + LN[k] + gap;
+			m = max(m, gw_band(s, b0, b0 + ln * sh, aa) * step(0.03, sh));
+		}
+		float c2 = v * FQ[k] * 1.9 + ph + 2.7;
+		float cell2 = floor(c2);
+		if (gw_hash(cell2 * 4.7 + sd + fk + 80.0) > 0.6) {
+			float sh2 = clamp((gw_tri(c2) - 0.55) / 0.45, 0.0, 1.0);
+			float gap2 = mix(0.25, 0.5, gw_hash(cell2 + sd + 90.0 + fk));
+			float ln2 = mix(0.1, 0.25, gw_hash(cell2 * 1.3 + sd + 100.0 + fk));
+			float b2 = lead + LN[k] + gap2;
+			// 작은 파편은 다음 판 색(입술 색)으로
+			LIP[k] = max(LIP[k], gw_band(s, b2, b2 + ln2 * sh2, aa) * step(0.03, sh2));
+		}
+		M[k] = m;
+	}
+	// 색판 안쪽 속도 줄무늬 (다음 판 색): 앞변 뒤 · 뒷변 앞
+	for (int k = 0; k < 3; k++) {
+		float fk = float(k);
+		float st = gw_stripes(s, v, LEAD[k], 1.0, 30.0, sd + fk * 13.0, aa) + gw_stripes(s, v, TRAIL[k], -1.0, 30.0, sd + fk * 13.0 + 7.0, aa);
+		LIP[k] = max(LIP[k], min(st, 1.0) * M[k] * (k == 2 ? 1.0 : 1.0 - M[k + 1]));
+	}
+	// 맨 앞을 가르는 분홍 선: 보라 판보다 먼저 0.14 동안 화면을 가로지른다 (퇴장 끝에도 한 번)
+	float pre = gw_pos((t + 0.03) / 0.15, smin, smax);
+	float post = gw_pos((t - 0.84) / 0.15, smin, smax);
+	float line_a = t < 0.5 ? gw_band(s, pre - 0.05, pre, aa) : 0.0;
+	float line_b = t >= 0.5 ? gw_band(s, post - 0.05, post, aa) : 0.0;
+	mv = max(M[0], LIP[3]);
+	my = max(M[1], LIP[2]);
+	mm = M[2];
+	md = max(M[3], LIP[1]);
+	mp = max(LIP[0], max(line_a, line_b));
+	// 노랑 앞변 앞 망점 띠: 보라 판 위에 노랑 점이 작아지며 사라진다
+	float gy = (s - LEAD[1]) / 0.26;
+	if (gy > 0.0 && gy < 1.0) my = max(my, gw_dotcov(dd, 0.72 * (1.0 - gy), dotaa) * mv);
+	// 자홍 뒷변 뒤 망점 띠: 노랑 판 위에 분홍 점
+	float gm = (TRAIL[2] - s) / 0.26;
+	if (gm > 0.0 && gm < 1.0) mp = gw_dotcov(dd, 0.72 * (1.0 - gm), dotaa) * my;
+	// 어두운 보라 판 위 분홍 망점 그라데이션 (오른쪽 위 모서리에서 번진다)
+	vec2 corner = vec2(0.5 * asp, -0.5);
+	float gc = clamp(1.0 - length(q - corner) / 0.95, 0.0, 1.0);
+	mp = max(mp, gw_dotcov(dd, 0.62 * gc, dotaa) * md);
+	// 색면 그라데이션 (레퍼런스의 자홍→분홍, 노랑→주황): 자홍 판은 변을 따라 분홍으로, 노랑 판은 왼쪽 아래로 갈수록 주황으로
+	float gv = clamp((v + 0.6) / 1.2, 0.0, 1.0);
+	mp = max(mp, M[2] * (1.0 - md) * smoothstep(0.25, 1.0, gv) * 0.85);
+	float gyo = clamp((-(s) + 0.3) / 1.4, 0.0, 1.0);
+	float orange_grad = M[1] * (1.0 - max(M[2], md)) * smoothstep(0.35, 1.0, gyo) * 0.7;
+	// 속도선(주황): 첫 판(보라) 앞변 앞 · 마지막으로 빠지는 보라 판 뒷변 뒤
+	mo = gw_streaks(s, v, LEAD[0] + LN[0], 1.0, 16.0, sd, aa) + gw_streaks(s, v, TRAIL[0] - LN[0], -1.0, 16.0, sd + 11.0, aa);
+	mo = min(mo + orange_grad, 1.0);
+}
+
+void gw_put(int ci, float val, inout float a, inout float b, inout float c, inout float d) {
+	if (ci == 0) a = max(a, val);
+	else if (ci == 1) b = max(b, val);
+	else if (ci == 2) c = max(c, val);
+	else d = max(d, val);
+}
+
+// ---- 프리셋 1: 슬라이스. 기운 가로 띠 6장, 짝수 띠는 왼쪽에서 홀수 띠는 오른쪽에서, 위부터 시간차로.
+void gw_slice(vec2 q, float t, float asp, float sd, float aa, float dd, float dotaa,
+		out float mv, out float my, out float mm, out float md, out float mp, out float mo) {
+	mv = 0.0; my = 0.0; mm = 0.0; md = 0.0; mp = 0.0; mo = 0.0;
+	float tilt = 0.22;
+	float bh = 0.25;
+	float vv = q.y - q.x * tilt + 0.75;
+	float fi = clamp(floor(vv / bh), 0.0, 5.0);
+	float vl = vv - fi * bh;
+	float dir = mod(fi, 2.0) < 0.5 ? 1.0 : -1.0;
+	float x = q.x * dir;
+	float xmax = 0.5 * asp + 0.35;
+	float xmin = -xmax;
+	float a = fi * 0.052 + gw_hash(sd + fi) * 0.016;        // 마지막 띠가 <= 0.276 + 0.22 = 0.5 에 다 들어온다
+	float b = 0.5 + fi * 0.052 + gw_hash(sd + fi + 9.0) * 0.016;
+	float lead = t < 0.5 ? gw_pos((t - a) / 0.22, xmin, xmax) : xmax + 1.0;
+	float trail = t < 0.5 ? xmin - 1.0 : gw_pos((t - b) / 0.22, xmin, xmax);
+	float slant = (vl / bh - 0.5) * 0.12;
+	float ph = gw_hash(sd + fi + 4.0) * 9.0;
+	float jf = gw_saw(vv, 12.0, ph, 0.11, sd + fi);
+	float jb = gw_saw(vv, 14.0, ph + 1.7, 0.08, sd + fi + 7.0);
+	float front = lead + slant + jf;
+	float back = trail + slant - jb;
+	float m = gw_band(x, back, front, aa);
+	// 입술: 앞변(입장) · 뒷변(퇴장) 안쪽 0.09 폭의 대비색 띠
+	float lipw = 0.09;
+	float lip = m * max(smoothstep(front - lipw - aa, front - lipw + aa, x), 1.0 - smoothstep(back + lipw - aa, back + lipw + aa, x));
+	// 망점: 앞변 앞 · 뒷변 뒤 0.14 폭, 입술 색 점이 작아지며 사라진다
+	float gf = (x - front) / 0.14;
+	float gb = (back - x) / 0.14;
+	float dots = 0.0;
+	if (gf > 0.0 && gf < 1.0) dots = gw_dotcov(dd, 0.7 * (1.0 - gf), dotaa);
+	if (gb > 0.0 && gb < 1.0) dots = max(dots, gw_dotcov(dd, 0.7 * (1.0 - gb), dotaa));
+	int ci = int(mod(fi * 3.0 + 1.0, 4.0));
+	int li = (ci + 2) % 4;
+	// 띠 안쪽 속도 줄무늬 (입술 색): 앞변 뒤 · 뒷변 앞
+	float st = min(gw_stripes(x, vv, front - lipw, 1.0, 64.0, sd + fi * 13.0, aa) + gw_stripes(x, vv, back + lipw, -1.0, 64.0, sd + fi * 13.0 + 7.0, aa), 1.0) * m;
+	gw_put(ci, m * (1.0 - lip) * (1.0 - st), mv, my, mm, md);
+	gw_put(li, max(max(lip, dots), st), mv, my, mm, md);
+	// 속도선(주황): 앞변 앞 · 뒷변 뒤
+	mo = min(gw_streaks(x, vv, front + 0.02, 1.0, 40.0, sd + fi, aa) + gw_streaks(x, vv, back - 0.02, -1.0, 40.0, sd + fi + 11.0, aa), 1.0);
+	// 다 덮이는 순간의 어두운 보라 슬랩: 0.38 부터 위에서 내려와 줄무늬를 가리고(0.5 전부), 0.5 부터 아래로 벗겨진다. 변은 톱니, 위에 분홍 망점 그라데이션
+	float jag = gw_saw(q.x, 5.0, gw_hash(sd + 21.0) * 9.0, 0.14, sd + 21.0);
+	float top = t < 0.5 ? -0.75 : gw_pos((t - 0.5) / 0.13, -0.75, 0.75);
+	float bottom = t < 0.5 ? gw_pos((t - 0.37) / 0.13, -0.75, 0.75) : 0.75 + 1.0;
+	float slab = gw_band(q.y, top + jag, bottom + jag, aa);
+	if (slab > 0.001) {
+		mv *= 1.0 - slab; my *= 1.0 - slab; mm *= 1.0 - slab; mo *= 1.0 - slab;
+		md = max(md, slab);
+		vec2 corner = vec2(-0.5 * asp, 0.5);
+		float gc = clamp(1.0 - length(q - corner) / 1.0, 0.0, 1.0);
+		mp = max(mp, gw_dotcov(dd, 0.62 * gc, dotaa) * slab);
+	}
+}
+"
+nodes/fragment/3/node = SubResource("VisualShaderNodeFloatParameter_2jrue")
+nodes/fragment/3/position = Vector2(-1600, -400)
+nodes/fragment/4/node = SubResource("VisualShaderNodeFloatParameter_xdsva")
+nodes/fragment/4/position = Vector2(-1600, -250)
+nodes/fragment/5/node = SubResource("VisualShaderNodeFloatParameter_53cnp")
+nodes/fragment/5/position = Vector2(-1600, -100)
+nodes/fragment/6/node = SubResource("VisualShaderNodeFloatParameter_584xg")
+nodes/fragment/6/position = Vector2(-1600, 50)
+nodes/fragment/7/node = SubResource("VisualShaderNodeVec2Parameter_gd8nw")
+nodes/fragment/7/position = Vector2(-1600, 200)
+nodes/fragment/8/node = SubResource("VisualShaderNodeFloatParameter_qee7e")
+nodes/fragment/8/position = Vector2(-1600, 350)
+nodes/fragment/9/node = SubResource("VisualShaderNodeColorParameter_fmrid")
+nodes/fragment/9/position = Vector2(-1600, 500)
+nodes/fragment/10/node = SubResource("VisualShaderNodeVectorDecompose_gqmrj")
+nodes/fragment/10/position = Vector2(-1600, 650)
+nodes/fragment/11/node = SubResource("VisualShaderNodeVectorCompose_n4jbp")
+nodes/fragment/11/position = Vector2(-1600, 800)
+nodes/fragment/12/node = SubResource("VisualShaderNodeColorParameter_bcb7t")
+nodes/fragment/12/position = Vector2(-1600, 950)
+nodes/fragment/13/node = SubResource("VisualShaderNodeVectorDecompose_rlfnn")
+nodes/fragment/13/position = Vector2(-1600, 1100)
+nodes/fragment/14/node = SubResource("VisualShaderNodeVectorCompose_gvf4o")
+nodes/fragment/14/position = Vector2(-1600, 1250)
+nodes/fragment/15/node = SubResource("VisualShaderNodeColorParameter_buojv")
+nodes/fragment/15/position = Vector2(-1600, 1400)
+nodes/fragment/16/node = SubResource("VisualShaderNodeVectorDecompose_r3mvq")
+nodes/fragment/16/position = Vector2(-1600, 1550)
+nodes/fragment/17/node = SubResource("VisualShaderNodeVectorCompose_8y3yl")
+nodes/fragment/17/position = Vector2(-1600, 1700)
+nodes/fragment/18/node = SubResource("VisualShaderNodeColorParameter_y2uvj")
+nodes/fragment/18/position = Vector2(-1600, 1850)
+nodes/fragment/19/node = SubResource("VisualShaderNodeVectorDecompose_7e5pa")
+nodes/fragment/19/position = Vector2(-1600, 2000)
+nodes/fragment/20/node = SubResource("VisualShaderNodeVectorCompose_twewh")
+nodes/fragment/20/position = Vector2(-1600, 2150)
+nodes/fragment/21/node = SubResource("VisualShaderNodeColorParameter_i6r1o")
+nodes/fragment/21/position = Vector2(-1600, 2300)
+nodes/fragment/22/node = SubResource("VisualShaderNodeVectorDecompose_s6rab")
+nodes/fragment/22/position = Vector2(-1600, 2450)
+nodes/fragment/23/node = SubResource("VisualShaderNodeVectorCompose_whorf")
+nodes/fragment/23/position = Vector2(-1600, 2600)
+nodes/fragment/24/node = SubResource("VisualShaderNodeColorParameter_7cfwv")
+nodes/fragment/24/position = Vector2(-1600, 2750)
+nodes/fragment/25/node = SubResource("VisualShaderNodeVectorDecompose_euln1")
+nodes/fragment/25/position = Vector2(-1600, 2900)
+nodes/fragment/26/node = SubResource("VisualShaderNodeVectorCompose_kli8l")
+nodes/fragment/26/position = Vector2(-1600, 3050)
+nodes/fragment/27/node = SubResource("VisualShaderNodeInput_yakcj")
+nodes/fragment/27/position = Vector2(-1300, -400)
+nodes/fragment/28/node = SubResource("VisualShaderNodeExpression_xa5xe")
+nodes/fragment/28/position = Vector2(-1300, -250)
+nodes/fragment/28/size = Vector2(620, 366)
+nodes/fragment/28/input_ports = "0,3,p_uv;1,0,p_prog;2,0,p_preset;3,0,p_aspect;4,0,p_seed;5,3,p_view;6,0,p_dot;"
+nodes/fragment/28/output_ports = "0,0,o_alpha;1,0,o_v;2,0,o_y;3,0,o_m;4,0,o_d;5,0,o_p;6,0,o_o;7,0,o_sbg;8,0,o_star;"
+nodes/fragment/28/expression = "
+vec2 q = (p_uv - 0.5) * vec2(p_aspect, 1.0);
+float aa = 1.2 / p_view.y;
+float t = clamp(p_prog, 0.0, 1.0);
+float dd = gw_dotd(p_uv * p_view, p_dot);
+float dotaa = 1.0 / p_dot;
+float mv; float my; float mm; float md; float mp; float mo;
+if (p_preset < 0.5) gw_slash(q, t, p_aspect, p_seed, aa, dd, dotaa, mv, my, mm, md, mp, mo);
+else gw_slice(q, t, p_aspect, p_seed, aa, dd, dotaa, mv, my, mm, md, mp, mo);
+o_v = mv;
+o_y = my;
+o_m = mm;
+o_d = md;
+o_p = mp;
+o_o = mo;
+// 별 폭발 (다 덮인 동안): 오른쪽 위 · 왼쪽 아래
+vec2 s1 = gw_star(q - vec2(0.5 * p_aspect - 0.3, -0.33), gw_pop(t, 0.4), 9.0, 0.4 + t * 4.0, aa);
+vec2 s2 = gw_star(q - vec2(-0.5 * p_aspect + 0.3, 0.3), gw_pop(t, 0.44) * 0.8, 9.0, 1.1 - t * 5.0, aa);
+o_sbg = max(s1.x, s2.x);
+o_star = max(s1.y, s2.y);
+o_alpha = max(max(max(mv, my), max(mm, md)), max(max(mp, mo), max(o_sbg, o_star)));
+"
+nodes/fragment/29/node = SubResource("VisualShaderNodeMix_lsukh")
+nodes/fragment/29/position = Vector2(-1000, -400)
+nodes/fragment/30/node = SubResource("VisualShaderNodeMix_18ss7")
+nodes/fragment/30/position = Vector2(-1000, -250)
+nodes/fragment/31/node = SubResource("VisualShaderNodeMix_ht7ji")
+nodes/fragment/31/position = Vector2(-1000, -100)
+nodes/fragment/32/node = SubResource("VisualShaderNodeMix_fr8ve")
+nodes/fragment/32/position = Vector2(-1000, 50)
+nodes/fragment/33/node = SubResource("VisualShaderNodeMix_ivrp3")
+nodes/fragment/33/position = Vector2(-700, -400)
+nodes/fragment/34/node = SubResource("VisualShaderNodeMix_4nii6")
+nodes/fragment/34/position = Vector2(-700, -250)
+nodes/fragment/35/node = SubResource("VisualShaderNodeMix_dmr4b")
+nodes/fragment/35/position = Vector2(-700, -100)
+nodes/fragment/connections = PackedInt32Array(9, 0, 10, 0, 10, 0, 11, 0, 10, 1, 11, 1, 10, 2, 11, 2, 12, 0, 13, 0, 13, 0, 14, 0, 13, 1, 14, 1, 13, 2, 14, 2, 15, 0, 16, 0, 16, 0, 17, 0, 16, 1, 17, 1, 16, 2, 17, 2, 18, 0, 19, 0, 19, 0, 20, 0, 19, 1, 20, 1, 19, 2, 20, 2, 21, 0, 22, 0, 22, 0, 23, 0, 22, 1, 23, 1, 22, 2, 23, 2, 24, 0, 25, 0, 25, 0, 26, 0, 25, 1, 26, 1, 25, 2, 26, 2, 27, 0, 28, 0, 3, 0, 28, 1, 4, 0, 28, 2, 5, 0, 28, 3, 6, 0, 28, 4, 7, 0, 28, 5, 8, 0, 28, 6, 11, 0, 29, 0, 14, 0, 29, 1, 28, 2, 29, 2, 29, 0, 30, 0, 17, 0, 30, 1, 28, 3, 30, 2, 30, 0, 31, 0, 20, 0, 31, 1, 28, 4, 31, 2, 31, 0, 32, 0, 23, 0, 32, 1, 28, 5, 32, 2, 32, 0, 33, 0, 26, 0, 33, 1, 28, 6, 33, 2, 33, 0, 34, 0, 14, 0, 34, 1, 28, 7, 34, 2, 34, 0, 35, 0, 17, 0, 35, 1, 28, 8, 35, 2, 35, 0, 0, 0, 28, 0, 0, 1)

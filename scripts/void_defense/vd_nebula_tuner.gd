@@ -1,12 +1,14 @@
-## 공허 배경 실시간 조정 패널(디버그 창). F10(또는 F2) 이나 오른쪽 위 설정 버튼 → [배경 조정] 으로 연다. 화면 왼쪽에 뜬다.
-## [배경] shaders/void_nebula.gdshader
+## 선택한 테마의 배경 실시간 조정 패널. F10(또는 F2) / 설정 → [배경 조정].
+## [배경] 공허 void_nebula.gdshader / 사막 desert_sand.gdshader
 ##   모양  : 구름 덩어리 크기 (왼쪽 = 크고 둥근 덩어리, 오른쪽 = 잘고 촘촘한 무늬) → scale
 ##   속도  : 기체가 흐르고 섞이는 속도 → flow_speed
 ##   컬러  : 기체의 주 색. 하늘·라일락·빛·알갱이·앞 안개 색은 기본 팔레트와의 색상/채도/밝기 차이를 유지한 채 따라간다
-## [앞 안개] shaders/void_vignette.gdshader — 화면 가장자리를 덮는 흐르는 기체 (FOG_PARAMS 표 하나로 슬라이더·저장·복사가 정해진다)
+## [앞 안개] 공허 void_vignette.gdshader / 사막 desert_dust.gdshader (FOG_PARAMS가 슬라이더·저장·복사를 정의한다)
+##   스타일(2026-11-09): 기체(위 셰이더) / 하프톤(halftone_fog.gdshader, 테마 공통·HALFTONE_PARAMS). 패널의 스타일 버튼과 설정 메뉴 [앞 안개 스타일]로 고른다.
+##   스타일별 슬라이더는 uniform 이름이 달라(ht_*) 서로 값이 섞이지 않고, 둘 다 같은 cfg 에 저장된다.
 ## 위험 연출: danger_flash()(아군 사망 — 잠시 붉고 빠르게), set_boss()(보스 전투 — 더 강렬하고 빠르게)가 패널 값 위에 얹힌다.
 ## 흐름은 셰이더의 TIME 대신 여기서 쌓은 위상(phase)으로 움직여, 속도가 바뀌어도 무늬가 튀지 않는다.
-## 값은 바뀔 때마다 user://vd_nebula.cfg 에 저장되어 다음 실행에도 유지된다. [값 복사] 는 클립보드에 한 줄로 복사한다.
+## 공허는 기존 user://vd_nebula.cfg, 사막은 user://vd_desert.cfg에 따로 저장한다. [값 복사]는 한 줄로 복사한다.
 class_name VDNebulaTuner
 extends Control
 
@@ -25,12 +27,31 @@ const FOG_PARAMS := [
 	["wisp_amount", "일렁임", 0.0, 1.0, 0.01],
 	["wisp_glow", "결 빛", 0.0, 1.0, 0.01],
 ]
+## 하프톤 스타일 슬라이더 (halftone_fog.gdshader)
+const HALFTONE_PARAMS := [
+	["ht_strength", "세기", 0.0, 1.0, 0.01],
+	["ht_reach", "범위 (안쪽으로 파고듦)", 0.0, 1.0, 0.01],
+	["ht_size", "도트 간격 (1080p 기준 px)", 4.0, 40.0, 0.5],
+	["ht_angle", "격자 각도", 0.0, 90.0, 1.0],
+	["ht_light", "밝은 도트 띠", 0.0, 1.0, 0.01],
+	["ht_wobble", "경계 일렁임", 0.0, 1.0, 0.01],
+	["ht_speed", "흐름 속도", 0.0, 0.3, 0.002],
+]
+const ALL_FOG_PARAMS := FOG_PARAMS + HALFTONE_PARAMS
 ## 셰이더 기본값을 못 읽을 때 쓰는 값 (void_nebula.gdshader · void_vignette.gdshader 와 같게)
 const FALLBACK := {
 	"col_deep": Color(0.054, 0.033, 0.096), "col_night": Color(0.099, 0.065, 0.192), "col_lilac": Color(0.283, 0.195, 0.384),
 	"col_gas": Color(0.161, 0.071, 0.525), "col_glow": Color(0.293, 0.277, 0.640),
 	"scale": 1.724, "flow_speed": 0.11,
 	"strength": 0.82, "reach": 0.33, "wisp_scale": 7.05, "wisp_speed": 0.25, "wisp_amount": 0.84, "wisp_glow": 0.73,
+	"ht_strength": 0.92, "ht_reach": 0.33, "ht_size": 14.0, "ht_angle": 45.0, "ht_light": 0.70, "ht_wobble": 0.35, "ht_speed": 0.06,
+}
+const DESERT_FALLBACK := {
+	"col_deep": Color(0.30, 0.13, 0.09), "col_night": Color(0.49, 0.25, 0.145), "col_lilac": Color(0.61, 0.34, 0.20),
+	"col_gas": Color(0.68, 0.405, 0.24), "col_glow": Color(0.78, 0.525, 0.33),
+	"scale": 1.7, "flow_speed": 0.04, "glow_amount": 0.20,
+	"strength": 0.30, "reach": 0.22, "wisp_scale": 2.4, "wisp_speed": 0.07, "wisp_amount": 0.45, "wisp_glow": 0.35,
+	"ht_strength": 0.80, "ht_reach": 0.22, "ht_size": 14.0, "ht_angle": 45.0, "ht_light": 0.60, "ht_wobble": 0.35, "ht_speed": 0.06,
 }
 ## 앞 안개 색은 하늘 위쪽(col_deep)보다 조금 더 어둡게, 결의 빛은 기체 색을 어둡게 눌러서
 const FOG_DARKEN := 0.15
@@ -53,6 +74,10 @@ const GLOW_BOOST := 0.6                       # 위험 연출 중 기체 빛(glo
 
 var bg_mat: ShaderMaterial
 var fog_mat: ShaderMaterial
+var style_setter: Callable      # 스타일 버튼 → VDBattle.set_fog_style (셰이더 교체 후 setup 을 다시 부른다)
+var config_directory := "user://"  # 검증 도구는 프로젝트 안의 임시 설정 폴더를 사용한다.
+var _profile := "void"
+var _config_path := CFG_PATH
 
 var _defaults := {}          # 셰이더 기본값
 var _shape := 0.0            # 0..1
@@ -77,18 +102,29 @@ var _l_speed: Label
 var _fog_sliders := {}       # uniform -> HSlider
 var _fog_labels := {}        # uniform -> Label
 var _loading := false
+var _title: Label
+var _shape_hint: Label
+var _color_caption: Label
+var _fog_caption: Label
+var _style_buttons: Array[Button] = []
 
 
-func setup(bg: ShaderMaterial, fog: ShaderMaterial) -> void:
+func setup(bg: ShaderMaterial, fog: ShaderMaterial, profile := "void") -> void:
 	bg_mat = bg
 	fog_mat = fog
+	_profile = profile
+	_config_path = config_directory.path_join("vd_desert.cfg" if profile == "desert" else "vd_nebula.cfg")
+	_defaults.clear()
+	var fallback: Dictionary = DESERT_FALLBACK if profile == "desert" else FALLBACK
 	for p in PALETTE + ["scale", "flow_speed"]:
-		_defaults[p] = _default_of(bg.shader, p, FALLBACK[p])
-	for fp in FOG_PARAMS:
-		_defaults[fp[0]] = _default_of(fog.shader, fp[0], FALLBACK[fp[0]])
-	_defaults["glow_amount"] = _default_of(bg.shader, "glow_amount", 0.8)
+		_defaults[p] = _default_of(bg.shader, p, fallback[p])
+	for fp in ALL_FOG_PARAMS:
+		_defaults[fp[0]] = _default_of(fog.shader, fp[0], fallback[fp[0]])
+	_defaults["glow_amount"] = _default_of(bg.shader, "glow_amount", fallback.get("glow_amount", 0.8))
 	_reset_values()
 	_load()
+	_sync_controls()
+	_apply()
 
 
 ## 아군 사망: 배경·앞 안개가 잠시 붉게 물들고 빠르게 흐르다가 원래대로 돌아온다. 연달아 오면 다시 붉어진다.
@@ -149,7 +185,7 @@ func _process(_delta: float) -> void:
 	_last_us = now
 	var mul := _speed_mul()
 	_phase += dt * _speed * mul
-	_wisp_phase += dt * float(_fogv["wisp_speed"]) * mul
+	_wisp_phase += dt * float(_fogv[_speed_key()]) * mul
 	bg_mat.set_shader_parameter("phase", _phase)
 	fog_mat.set_shader_parameter("wisp_phase", _wisp_phase)
 	# 연출 중에는 매 프레임, 끝난 직후 한 번 더 (원래 색으로 정확히 되돌리기)
@@ -175,8 +211,21 @@ func _reset_values() -> void:
 	_shape = inverse_lerp(SCALE_MIN, SCALE_MAX, float(_defaults["scale"]))
 	_speed = float(_defaults["flow_speed"])
 	_color = _defaults["col_gas"]
-	for fp in FOG_PARAMS:
+	for fp in ALL_FOG_PARAMS:
 		_fogv[fp[0]] = float(_defaults[fp[0]])
+
+
+func _halftone() -> bool:
+	return VDWorldTheme.fog_style == VDWorldTheme.FogStyle.HALFTONE
+
+
+## 현재 스타일의 슬라이더 목록 / 흐름 속도 키
+func _style_params() -> Array:
+	return HALFTONE_PARAMS if _halftone() else FOG_PARAMS
+
+
+func _speed_key() -> String:
+	return "ht_speed" if _halftone() else "wisp_speed"
 
 
 func _ready() -> void:
@@ -198,21 +247,24 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 5)
 	_panel.add_child(box)
-	box.add_child(_label("공허 배경 조정  (F10)", 18, Color(0.75, 0.85, 1.0)))
+	_title = _label("", 18, Color(0.75, 0.85, 1.0))
+	box.add_child(_title)
 
 	box.add_child(_label("배경", 14, Color(0.6, 0.75, 1.0)))
 	_l_shape = _label("", 15)
 	box.add_child(_l_shape)
 	_s_shape = _slider(0.0, 1.0, 0.01, _on_shape)
 	box.add_child(_s_shape)
-	box.add_child(_hint("← 크고 둥근 덩어리        잘고 촘촘한 무늬 →"))
+	_shape_hint = _hint("")
+	box.add_child(_shape_hint)
 	_l_speed = _label("", 15)
 	box.add_child(_l_speed)
 	_s_speed = _slider(0.0, SPEED_MAX, 0.001, _on_speed)
 	box.add_child(_s_speed)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	row.add_child(_label("컬러 (기체 주 색)", 15))
+	_color_caption = _label("", 15)
+	row.add_child(_color_caption)
 	_picker = ColorPickerButton.new()
 	_picker.custom_minimum_size = Vector2(120, 32)
 	_picker.edit_alpha = false
@@ -222,8 +274,25 @@ func _ready() -> void:
 	box.add_child(row)
 
 	box.add_child(HSeparator.new())
-	box.add_child(_label("앞 안개 (가장자리를 덮는 기체 · 색은 컬러를 따라감)", 14, Color(0.6, 0.75, 1.0)))
-	for fp in FOG_PARAMS:
+	_fog_caption = _label("", 14, Color(0.6, 0.75, 1.0))
+	box.add_child(_fog_caption)
+	# 스타일 버튼: 기체 / 하프톤 (설정 메뉴 [앞 안개 스타일]과 같은 값)
+	var style_row := HBoxContainer.new()
+	style_row.add_theme_constant_override("separation", 8)
+	style_row.add_child(_label("스타일", 15))
+	var group := ButtonGroup.new()
+	for i in VDWorldTheme.FOG_LABELS.size():
+		var b := Button.new()
+		b.text = VDWorldTheme.FOG_LABELS[i]
+		b.toggle_mode = true
+		b.button_group = group
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(90, 30)
+		b.pressed.connect(_on_style.bind(i))
+		style_row.add_child(b)
+		_style_buttons.append(b)
+	box.add_child(style_row)
+	for fp in ALL_FOG_PARAMS:
 		var key: String = fp[0]
 		var l := _label("", 15)
 		box.add_child(l)
@@ -271,8 +340,8 @@ func is_open() -> bool:
 
 
 func values_text() -> String:
-	var s := "배경: 모양=%.2f (scale %.2f)  속도=%.3f  컬러=#%s  |  앞 안개:" % [_shape, _scale(), _speed, _color.to_html(false)]
-	for fp in FOG_PARAMS:
+	var s := "배경: 모양=%.2f (scale %.2f)  속도=%.3f  컬러=#%s  |  앞 안개(%s):" % [_shape, _scale(), _speed, _color.to_html(false), VDWorldTheme.FOG_LABELS[VDWorldTheme.fog_style]]
+	for fp in _style_params():
 		s += "  %s=%.3f" % [fp[0], _fogv[fp[0]]]
 	return s
 
@@ -286,7 +355,7 @@ func _on_shape(v: float) -> void:
 		return
 	_shape = v
 	_apply()
-	_save()
+	_save_soon()
 
 
 func _on_speed(v: float) -> void:
@@ -294,13 +363,15 @@ func _on_speed(v: float) -> void:
 		return
 	_speed = v
 	_apply()
-	_save()
+	_save_soon()
 
 
 func _on_color(c: Color) -> void:
+	if _loading:
+		return
 	_color = c
 	_apply()
-	_save()
+	_save_soon()
 
 
 func _on_fog(v: float, key: String) -> void:
@@ -308,7 +379,17 @@ func _on_fog(v: float, key: String) -> void:
 		return
 	_fogv[key] = v
 	_apply()
-	_save()
+	_save_soon()
+
+
+func _on_style(style: int) -> void:
+	if _loading or style == VDWorldTheme.fog_style:
+		return
+	if style_setter.is_valid():
+		style_setter.call(style)   # 셰이더를 바꾸고 setup() 을 다시 불러 이 패널도 새로 맞춘다
+	else:
+		VDWorldTheme.select_fog_style(style)
+		_apply()
 
 
 ## 현재 값 → 셰이더 파라미터. 팔레트는 기본 col_gas 와의 HSV 차이를 유지한 채 새 주 색을 따라간다.
@@ -317,9 +398,21 @@ func _apply() -> void:
 		return
 	_apply_shader()
 	if _l_shape:
-		_l_shape.text = "모양 (구름 크기)   %.2f" % _shape
+		var desert := _profile == "desert"
+		_title.text = "%s 배경 조정  (F10)" % ("사막" if desert else "공허")
+		_shape_hint.text = "← 넓은 모래 물결        촘촘한 모래 물결 →" if desert else "← 크고 둥근 덩어리        잘고 촘촘한 무늬 →"
+		_color_caption.text = "컬러 (모래 주 색)" if desert else "컬러 (기체 주 색)"
+		if _halftone():
+			_fog_caption.text = "앞 안개 · 하프톤 (망점 그라데이션 · 색은 컬러를 따라감)"
+		else:
+			_fog_caption.text = "앞 모래바람 (가장자리 먼지 · 색은 컬러를 따라감)" if desert else "앞 안개 (가장자리를 덮는 기체 · 색은 컬러를 따라감)"
+		_l_shape.text = "모양 (%s 크기)   %.2f" % ["모래 물결" if desert else "구름", _shape]
 		_l_speed.text = "속도 (흐름)   x%.1f" % (_speed / maxf(float(_defaults["flow_speed"]), 0.0001))
-		for fp in FOG_PARAMS:
+		var shown := _style_params()
+		for fp in ALL_FOG_PARAMS:
+			var on: bool = fp in shown
+			(_fog_labels[fp[0]] as Label).visible = on
+			(_fog_sliders[fp[0]] as HSlider).visible = on
 			(_fog_labels[fp[0]] as Label).text = "%s   %.2f" % [fp[1], _fogv[fp[0]]]
 
 
@@ -333,10 +426,34 @@ func _apply_shader() -> void:
 	for p in PALETTE:
 		bg_mat.set_shader_parameter(p, _follow(_defaults[p], base, col))
 	var deep := _follow(_defaults["col_deep"], base, col)
-	fog_mat.set_shader_parameter("fog_color", deep.darkened(FOG_DARKEN))
-	fog_mat.set_shader_parameter("wisp_color", col.darkened(WISP_DARKEN))
-	for fp in FOG_PARAMS:
+	if _halftone():
+		# 하프톤: 안개 본색은 어두운 톤, 밝은 도트는 기체 빛 색 — 두 톤 차이가 커야 망점이 또렷하다
+		var dark := _follow(_defaults["col_lilac"], base, col) if _profile == "desert" else deep
+		fog_mat.set_shader_parameter("fog_color", dark)
+		fog_mat.set_shader_parameter("wisp_color", _follow(_defaults["col_glow"], base, col))
+	elif _profile == "desert":
+		fog_mat.set_shader_parameter("fog_color", _follow(_defaults["col_lilac"], base, col))
+		fog_mat.set_shader_parameter("wisp_color", col)
+	else:
+		fog_mat.set_shader_parameter("fog_color", deep.darkened(FOG_DARKEN))
+		fog_mat.set_shader_parameter("wisp_color", col.darkened(WISP_DARKEN))
+	for fp in _style_params():
 		fog_mat.set_shader_parameter(fp[0], _fogv[fp[0]])
+
+
+## 입장 연출(VDFogReveal: 안개가 중앙에서 열림)이 쓰는, 지금 저장값 기준 하프톤 앞 안개 파라미터 (색 + ht_*).
+## 앞 안개 스타일이 기체여도 하프톤 슬라이더 값(같은 cfg 에 저장)으로 준다. 색은 _apply_shader 의 하프톤 분기와 같다.
+func halftone_params() -> Dictionary:
+	var col := _mood_color()
+	var base: Color = _defaults["col_gas"]
+	var deep := _follow(_defaults["col_deep"], base, col)
+	var out := {
+		"fog_color": _follow(_defaults["col_lilac"], base, col) if _profile == "desert" else deep,
+		"wisp_color": _follow(_defaults["col_glow"], base, col),
+	}
+	for fp in HALFTONE_PARAMS:
+		out[fp[0]] = _fogv[fp[0]]
+	return out
 
 
 static func _follow(orig: Color, base: Color, now: Color) -> Color:
@@ -352,9 +469,11 @@ func _sync_controls() -> void:
 	_loading = true
 	_s_shape.value = _shape
 	_s_speed.value = _speed
-	for fp in FOG_PARAMS:
+	for fp in ALL_FOG_PARAMS:
 		(_fog_sliders[fp[0]] as HSlider).value = _fogv[fp[0]]
 	_picker.color = _color
+	for i in _style_buttons.size():
+		_style_buttons[i].button_pressed = i == VDWorldTheme.fog_style
 	_loading = false
 
 
@@ -363,21 +482,23 @@ func _save() -> void:
 	cf.set_value("nebula", "shape", _shape)
 	cf.set_value("nebula", "speed", _speed)
 	cf.set_value("nebula", "color", _color)
-	for fp in FOG_PARAMS:
+	for fp in ALL_FOG_PARAMS:
 		cf.set_value("fog", fp[0], _fogv[fp[0]])
-	cf.save(CFG_PATH)
+	cf.save(_config_path)
 
 
 func _load() -> void:
 	var cf := ConfigFile.new()
-	if cf.load(CFG_PATH) != OK:
+	if cf.load(_config_path) != OK:
 		return
 	_shape = clampf(float(cf.get_value("nebula", "shape", _shape)), 0.0, 1.0)
 	_speed = clampf(float(cf.get_value("nebula", "speed", _speed)), 0.0, SPEED_MAX)
-	_color = cf.get_value("nebula", "color", _color)
+	var col = cf.get_value("nebula", "color", _color)
+	if col is Color:   # 손으로 고친·깨진 파일의 엉뚱한 값은 무시
+		_color = col
 	# 예전 저장 파일의 [nebula] fog 는 앞 안개 세기
 	_fogv["strength"] = float(cf.get_value("nebula", "fog", _fogv["strength"]))
-	for fp in FOG_PARAMS:
+	for fp in ALL_FOG_PARAMS:
 		_fogv[fp[0]] = clampf(float(cf.get_value("fog", fp[0], _fogv[fp[0]])), fp[2], fp[3])
 
 
@@ -404,3 +525,28 @@ func _slider(lo: float, hi: float, step: float, cb: Callable) -> HSlider:
 	s.focus_mode = Control.FOCUS_NONE
 	s.value_changed.connect(cb)
 	return s
+
+
+## 슬라이더를 끄는 동안 값이 바뀔 때마다 파일을 쓰지 않고, 멈춘 뒤 한 번 쓴다 (씬을 떠날 때 남은 것도 쓴다).
+const SAVE_DELAY := 0.4
+var _save_queued := false
+
+
+func _save_soon() -> void:
+	if not is_inside_tree():
+		_flush_save()
+		return
+	if _save_queued:
+		return
+	_save_queued = true
+	get_tree().create_timer(SAVE_DELAY, true, false, true).timeout.connect(_flush_save)
+
+
+func _flush_save() -> void:
+	_save_queued = false
+	_save()
+
+
+func _exit_tree() -> void:
+	if _save_queued:
+		_flush_save()

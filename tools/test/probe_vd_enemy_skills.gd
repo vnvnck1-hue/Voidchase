@@ -1,15 +1,16 @@
 ## 적 특수 스킬 점검: 지정 구역으로 다시 소환 → 전투를 돌리며
 ##  - 공허 망루 공허 섬광포: 시전되고 1.5초 동안 레이저 10타가 들어가는지
 ##  - 공허 군주 공허 강하: 시전 순간 체력이 가장 낮은 아군 바로 옆(1칸)에 내려앉는지
-##   godot --headless --path . res://tools/test/VDEnemySkillProbe.tscn -- --wave=6
-##   godot --headless --path . res://tools/test/VDEnemySkillProbe.tscn -- --wave=5
+##   godot --headless --path . res://tools/test/VDEnemySkillProbe.tscn -- --stage=5   (보스 스테이지 → 공허 군주)
+##   godot --headless --path . res://tools/test/VDEnemySkillProbe.tscn -- --stage=3   (대형 적 스테이지 → 공허 망루)
+## 적 구성은 스테이지·스테이지 안 웨이브로 정해진다 (2026-11-08 스테이지/웨이브 이식): 그 스테이지의 마지막 웨이브를 바로 소환한다.
 ## 창으로 띄우고 --out=<폴더> 를 주면 시전 강조·레이저·강하 착지 순간 스크린샷을 남긴다 (서브 모니터 인자 필수).
 extends Node
 
 var _b: VDBattle
 var _t := 0.0
 var _phase := 0
-var _wave := 6
+var _stage := 5
 var _out := ""
 var _fail := 0
 var _cast_t := -1.0
@@ -22,8 +23,8 @@ var _land_t := -1.0
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--wave="):
-			_wave = int(a.substr(7))
+		if a.begins_with("--stage="):
+			_stage = int(a.substr(8))
 		elif a.begins_with("--out="):
 			_out = a.substr(6)
 		elif a == "--trace":
@@ -33,7 +34,7 @@ func _ready() -> void:
 
 
 func _id() -> String:
-	return "boss" if _wave % VDData.WAVES_PER_STAGE == 0 else "longneck"
+	return "boss" if VDData.is_boss_stage(_stage) else "longneck"
 
 
 func _process(delta: float) -> void:
@@ -44,7 +45,9 @@ func _process(delta: float) -> void:
 				for e in _b.enemies:
 					e.queue_free()
 				_b.enemies.clear()
-				_b.wave = _wave
+				_b.stage = _stage
+				_b.wave_in_stage = VDData.waves_in_stage(_stage)
+				_b.gimmick = ""
 				_b._spawn_wave(_b._run_id)
 				_phase = 1
 		1:
@@ -103,7 +106,7 @@ func _shot_at(dt: float, at: float, name: String) -> void:
 	if _out == "" or DisplayServer.get_name() == "headless":
 		return
 	DirAccess.make_dir_recursive_absolute(_out)
-	get_viewport().get_texture().get_image().save_png(_out.path_join("eskill_w%d_%s.png" % [_wave, name]))
+	get_viewport().get_texture().get_image().save_png(_out.path_join("eskill_s%d_%s.png" % [_stage, name]))
 
 
 func _judge() -> void:

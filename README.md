@@ -136,6 +136,35 @@ Godot --headless --path . --import
   입장 연출은 `stand_character` 위치 트랙을 그대로 타고, 리그 원점이 발이라 추가 보정이 없습니다. 이름 이미지는 여전히 Olivia 전용입니다.
   검수: `probe_standing.gd`(헤드리스, 패널 5 ↔ 7 전환까지 확인) 와 `tools/test/capture_maid_panel.gd`(창 필요, `docs/maid_rig/panel_shots/`).
 
+## 화면 글리치 (아군 피격 · 성좌판 침식)
+
+`scripts/void_defense/vd_screen_glitch.gd` + `shaders/screen_glitch.gdshader`. 아군이 피해를 받거나 공허가 성좌판을 침식하면 HUD 위 전체 화면 레이어(CanvasLayer 13)에서 화면이 가로 띠로 찢어지며 왼쪽은 청록, 오른쪽은 자홍으로 갈라지고, 밝은 부분(캐릭터·HUD)에 납작한 청록/자홍 잔상이 남습니다 (틱톡식 글리치). '나쁜 피해'를 강조하는 연출이라 전체가 살짝 어두워집니다.
+
+- **피격**: 기존 카드 피격 글리치(`VDHurtGlitch.on_hit`)와 같은 순간·같은 세기로 발동. 약 0.3초, 빠르게 사그라듦. 세기는 피해 비율·보스 여부를 따르고 `hit_scale`(피격 세기 배율, 기본 0.5)을 곱합니다.
+- **침식**: `VDBattle._relic_rewards` 에서 성좌판이 침식될 때. 약 1초, 세 번 맥동하며 더 어둡게.
+- 실제 시간으로 돌아 히트스탑 중에도 움직입니다. 설정 → **화면 글리치** 로 끄고, **F9 글리치 조정** 패널 아래 '화면 글리치' 칸에서 값을 바꿉니다 (`user://vd_screen_glitch.cfg`). [화면 침식] 버튼으로 침식 연출을 바로 볼 수 있습니다.
+- **패배**: `VDBattle._do_game_over` 에서 `kick(1.0, "defeat")`. 약 2.6초 — 처음 1/4 동안 큰 폭발이 가라앉고, 그 뒤로 낮게 들끓으며 박자마다 가끔 튀고 굵은 띠가 통째로 검정/청록/자홍 평면으로 끊깁니다(`dropout`). 흑백 바램과 겹치고, "거점 함락" 배너와 패널이 뜨는 자리는 `burst_rect` 로 그 영역만 글리치되며 가라앉습니다. 캡처: `tools/test/DefeatCapture.tscn` → `docs/defeat_glitch/`.
+- 캡처: `tools/test/ScreenGlitchCapture.tscn` → `docs/screen_glitch/` (슬로모션 연속 프레임 strip_hit/strip_corrupt, 최고점 peak_*, 실제 전투 real_*).
+
+## 유물 보상 카드 글리치 등장
+
+`shaders/ui_glitch_in.gdshader` 를 건 CanvasGroup 으로 보상 카드와 제목을 한 장씩 감싸, 흰 섬광 실루엣 → 청록/자홍 띠 → 가로 띠가 좌우로 튀며 난수 순서로 켜짐 → 또렷해짐 순으로 물질화합니다 (사이파이 UI). 카드마다 0.14초씩 늦게 시작하고 한 장이 0.55초에 끝나며, 끝나면 머티리얼을 떼어 평소대로 그립니다 (`VDRelicHud._glitch_in`). 캡처: `tools/test/RelicOfferCapture.tscn` → `docs/relic_offer/`.
+
+## 화면 CRT 효과 (전 씬 공통)
+
+`scripts/crt_overlay.gd` + `shaders/crt.gdshader`. SceneSwitcher 가 모든 씬 위(CanvasLayer 99)에 전체 화면 ColorRect 하나를 두고 스크린 텍스처를 브라운관처럼 다시 그립니다. 오른쪽 위 **설정 → CRT 효과**에서 프리셋을 고르고, **F6** 으로 다음 프리셋, **F7** 로 조정 패널(`scripts/crt_tuner.gd`)을 엽니다. 설정 메뉴·조정 패널은 CRT 위 레이어라 선명합니다.
+
+| 프리셋 | 느낌 |
+| --- | --- |
+| 끄기 | 효과 없음 |
+| 은은한 모니터 | 평면 · 가는 주사선 · 살짝 번짐. 원화 선을 거의 건드리지 않음 |
+| 클래식 브라운관 | 살짝 휜 유리 · 주사선 · RGB 줄무늬 · 색수차 |
+| 아케이드 | 굵은 주사선 · 진한 형광체 · 강한 블룸 · 높은 채도 |
+| 공허 보라 형광체 | 보라 기운 도는 형광체 · 부드러운 블룸 · 느리게 흘러내리는 띠 (게임 색감에 맞춘 것) |
+| 낡은 TV | 많이 휜 화면 · 색 번짐 · 노이즈 · 떨림 · 흘러내리는 띠 |
+
+슬라이더로 손본 값과 고른 프리셋은 `user://crt.cfg` 에 저장되고, **[값 복사]** 로 `PRESETS` 에 붙여 넣을 사전 문자열을 복사합니다. 주사선·줄무늬 간격은 실제 픽셀 정수로 맞춰 해상도가 달라도 모아레가 생기지 않습니다. 캡처: `tools/test/CrtCapture.tscn` → `docs/crt/` (전투·로비 × 프리셋, 확대, 모음 시트).
+
 ## 알려진 차이
 
 - 3D 큐브의 조명은 Unity 기본 스카이박스 앰비언트를 근사한 것입니다.
@@ -167,6 +196,17 @@ Godot --path . --screen 1 --position 4380,80 --resolution 1280x720 res://tools/t
 ```
 
 마지막 실행 스크린샷: `docs/greybox_shots/`.
+
+### 배경 테마
+
+VOID DEFENSE 전투 화면에서 오른쪽 위 **설정 → 배경 테마**로 전환합니다.
+
+- **공허**: 기존 보라색 유적 타일·푸른 공허 기체·앞 안개·떠 있는 유적 프랍.
+- **사막**: 원화에서 직접 추출한 사막 타일·황토색 모래 물결·한 방향으로 흐르는 잔모래와 먼지. 공허 프랍은 숨깁니다.
+
+전투나 방 이동을 다시 시작하지 않고 즉시 전환됩니다. 마지막 선택은 `user://vd_world_theme.cfg`에 저장하며, 선택 기록이 없으면 사막으로 시작합니다. **배경 조정(F10)** 값은 공허의 기존 `user://vd_nebula.cfg`와 사막의 `user://vd_desert.cfg`에 각각 보존합니다.
+
+구현·화면·검증 결과는 `docs/world_themes/README.md`를 참고하세요.
 
 ### 실행 파일
 
